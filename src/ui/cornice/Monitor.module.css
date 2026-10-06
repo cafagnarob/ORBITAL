@@ -1,0 +1,102 @@
+/*
+ * Monitor.module.css — guscio, incavo e schermo a fosfori.
+ * I valori dei gradienti vengono dal prototipo (render "Fase 2 · Missione").
+ * Si parte dal mobile; il desktop aggiunge la cornice piena.
+ */
+
+/* ===== MOBILE / TABLET ===================================================== */
+.monitor {
+  /* Altezza della fascia frontale: la barra comandi la usa per stare sopra. */
+  --altezza-frontale: 52px;
+  min-height: 100dvh;
+  padding: 6px;
+  background: radial-gradient(ellipse at 50% 40%, #161a17 0%, #060706 75%);
+}
+
+.corpo {
+  min-height: calc(100dvh - 12px);
+  display: flex;
+  flex-direction: column;
+  border-radius: 22px;
+  padding: 8px 8px 0;
+  background: linear-gradient(180deg, #2a2e2b 0%, #1a1d1b 45%, #111312 100%);
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.7),
+    inset 0 2px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -6px 18px rgba(0, 0, 0, 0.6);
+}
+
+.alloggio {
+  flex: 1;
+  display: flex;
+  border-radius: 18px;
+  padding: 4px;
+  background: #0b0d0c;
+  box-shadow:
+    inset 0 4px 14px rgba(0, 0, 0, 0.9),
+    0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.schermo {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  border-radius: 14px;
+  /* clip (e non hidden) non crea un contenitore di scorrimento:
+     così gli elementi "sticky" all'interno continuano a funzionare. */
+  overflow: clip;
+  background: radial-gradient(ellipse at 50% 45%, #08170d 0%, #030805 75%);
+}
+
+/* Linee di scansione: solo sul vetro, non sulla plastica. */
+.schermo::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 40;
+  background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.22) 0 1px, transparent 1px 3px);
+}
+
+/* Vignettatura del tubo catodico + riflesso del vetro in alto a sinistra. */
+.schermo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 41;
+  border-radius: inherit;
+  box-shadow:
+    inset 0 0 120px rgba(0, 0, 0, 0.85),
+    inset 0 0 40px rgba(125, 245, 165, 0.06);
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.035) 0%, transparent 35%),
+    radial-gradient(ellipse at 50% 50%, transparent 65%, rgba(0, 0, 0, 0.45) 100%);
+}
+
+/* ===== DESKTOP ============================================================= */
+@media (min-width: 1100px) {
+  .monitor {
+    --altezza-frontale: 64px;
+    height: 100dvh;
+    padding: 14px 18px 12px;
+  }
+
+  .corpo {
+    height: 100%;
+    min-height: 0;
+    border-radius: 52px;
+    padding: 26px 34px 0;
+  }
+
+  .alloggio {
+    min-height: 0;
+    border-radius: 42px;
+    padding: 12px;
+  }
+
+  .schermo {
+    border-radius: 34px;
+    overflow: hidden; /* su desktop i pannelli scorrono al loro interno */
+  }
+}

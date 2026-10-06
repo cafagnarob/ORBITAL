@@ -32,6 +32,11 @@
 import { avanzaTempo, prossimoMomento } from "../clock";
 import { controllaEventi, risolviEvento, verificaScelta } from "../eventi/attivazione";
 import type { MomentoEventi } from "../eventi/condizioni";
+import { inserisciCodice, segnalaVoce, verificaSegnalazione } from "../terminale/terminale";
+import { contesta, verificaContestazione } from "../vale/contestazioni";
+import { interrogaVale, scriviAVale } from "../vale/domande";
+import { controllaFine, ordinaRientro, verificaRientro } from "../storia/fine";
+import { iniziativeMattino } from "../storia/iniziative";
 import { createRng } from "../rng";
 import type { StatoGioco, StatoMissione } from "../types";
 import { assegnaTask, rimuoviDallaCoda, verificaAssegnazione, verificaRimozione } from "./assegnazione";
@@ -57,6 +62,8 @@ function azioneNonGestita(azione: never): never {
 }
 
 export function applicaAzione(stato: StatoMissione, azione: Azione, contesto: ContestoMissione): StatoMissione {
+  // A missione conclusa il gioco è fermo: resta solo l'epilogo.
+  if (stato.statoGioco === "CONCLUSA") throw new Error(`Missione conclusa: ${azione.tipo} non permessa`);
   const bozza = structuredClone(stato);
   const rng = createRng(bozza.rngState);
 
@@ -104,19 +111,25 @@ export function applicaAzione(stato: StatoMissione, azione: Azione, contesto: Co
             perEventi.tasksConclusi.push(motivo.idTask);
             break;
           case "RAPPORTO_SERALE":
-            rapportoSerale(bozza);
+            rapportoSerale(bozza, contesto);
             perEventi.rapportoSerale = true;
             break;
           case "RISVEGLIO":
-            risveglio(bozza);
+            risveglio(bozza, contesto);
             perEventi.risveglio = true;
             break;
         }
       }
 
+      // Al mattino la crew può prendere iniziative da sola (v3.0).
+      if (perEventi.risveglio) iniziativeMattino(bozza, contesto, rng);
+
       // Può accadere un evento; se chiede una decisione, il gioco si ferma
       // in DECISIONE e i task in coda partiranno dopo la scelta.
       controllaEventi(bozza, contesto, rng, perEventi);
+
+      // Tutti morti, o finestra di rientro chiusa: la missione finisce.
+      controllaFine(bozza, contesto, perEventi.risveglio);
 
       // Chi si è liberato inizia il task successivo (se siamo ancora operativi).
       if (bozza.statoGioco === "IN_ESECUZIONE") avviaTaskPronti(bozza, contesto);
@@ -133,8 +146,47 @@ export function applicaAzione(stato: StatoMissione, azione: Azione, contesto: Co
       richiediStato(bozza, ["DECISIONE"], azione);
       const errore = verificaScelta(bozza, contesto, azione.idScelta);
       if (errore !== null) throw new Error(errore);
-      risolviEvento(bozza, contesto, azione.idScelta);
+      risolviEvento(bozza, contesto, azione.idScelta, rng);
+      controllaFine(bozza, contesto, false);
       if (bozza.statoGioco === "IN_ESECUZIONE") avviaTaskPronti(bozza, contesto);
+      break;
+    }
+
+    // Il terminale non fa scorrere il tempo: nessun controllo sullo stato di gioco.
+    case "SEGNALA_VOCE": {
+      const errore = verificaSegnalazione(bozza, azione.indice);
+      if (errore !== null) throw new Error(errore);
+      segnalaVoce(bozza, azione.indice);
+      break;
+    }
+
+    case "INSERISCI_CODICE": {
+      inserisciCodice(bozza, contesto, azione.codice);
+      break;
+    }
+
+    // V.A.L.E.: contestare e fare domande non fa scorrere il tempo.
+    case "CONTESTA": {
+      const errore = verificaContestazione(bozza, azione.indice);
+      if (errore !== null) throw new Error(errore);
+      contesta(bozza, contesto, azione.indice);
+      break;
+    }
+
+    case "INTERROGA_VALE": {
+      interrogaVale(bozza, contesto, azione.domanda);
+      break;
+    }
+
+    case "SCRIVI_VALE": {
+      scriviAVale(bozza, contesto, azione.testo);
+      break;
+    }
+
+    case "RIENTRA": {
+      const errore = verificaRientro(bozza);
+      if (errore !== null) throw new Error(errore);
+      ordinaRientro(bozza, contesto);
       break;
     }
 

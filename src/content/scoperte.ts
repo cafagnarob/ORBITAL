@@ -47,8 +47,37 @@ export const CATALOGO_SCOPERTE: Readonly<Record<IdScoperta, DefinizioneScoperta>
     titolo: "Geometria regolare",
     descrizione: "Sotto il fondo del cratere la scansione mostra linee rette e angoli di 90°.",
   },
+  PROTOCOLLO_P7: {
+    titolo: "Protocollo VL-P7-04",
+    descrizione: "Un protocollo di osservazione prioritaria attivato da V.A.L.E. Origine dell'istruzione non documentata.",
+  },
+  RIFERIMENTO_DIRETTIVA: {
+    titolo: "Riferimento VL-D7-X",
+    descrizione: "Un riferimento interno di classe DIRETTIVA. Il contenuto richiede un accesso più alto.",
+  },
+  MEMORIA_KESTREL: {
+    titolo: "Memoria MEM-12",
+    descrizione: "Un registro sigillato nella memoria di V.A.L.E. Riferimento: missione KESTREL-4.",
+  },
+  DIRETTIVA_RIVELATA: {
+    titolo: "Direttiva di V.A.L.E.",
+    descrizione: "Il terminale SVC-07 ha rivelato la direttiva interna di V.A.L.E.",
+  },
   OBIETTIVO_DISCESA: {
     titolo: "Obiettivo di discesa",
     descrizione: "Il Capitano ha indicato il cratere come zona d'interesse per l'atterraggio.",
+  },
+  // --- Storia emergente (v3.0) ------------------------------------------------
+  BLOCCO_VALE: {
+    titolo: "Porte chiuse",
+    descrizione: "V.A.L.E. può chiudere i compartimenti della nave. Lo ha già fatto.",
+  },
+  COMPLOTTO: {
+    titolo: "Il piano",
+    descrizione: "Una parte della crew vuole isolare V.A.L.E. dalle comunicazioni.",
+  },
+  VALE_SPENTA: {
+    titolo: "V.A.L.E. spenta",
+    descrizione: "Il nucleo di V.A.L.E. è stato disattivato dall'equipaggio. La nave si pilota a mano.",
   },
 };

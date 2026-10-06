@@ -21,11 +21,14 @@
  * ============================================================================
  */
 
-import type { IdEquipaggiamento, IdEvento, IdScoperta, Minuti, Tag } from "./comuni";
+import type { IdDefinizioneTask, IdEquipaggiamento, IdEvento, IdMembro, IdScoperta, Minuti, Tag } from "./comuni";
+import type { Ruolo, StatoMembro } from "./crew";
 import type { FonteLog } from "./log";
-import type { SistemaCore } from "./nave";
+import type { Compartimento, SistemaCore, StatoAccesso } from "./nave";
 import type { Risorse } from "./risorse";
+import type { CausaFine, EsitoCasuale, Fazione, SelettoreMembro } from "./storia";
 import type { EsitoTask } from "./task";
+import type { ClasseDirettiva, FiltroVale } from "./vale";
 
 export const CATEGORIE_EVENTO = [
   "SISTEMA",
@@ -64,7 +67,34 @@ export type Condizione =
   /** Un equipaggiamento è a bordo (tipico requisito di una scelta). */
   | { tipo: "EQUIPAGGIAMENTO"; id: IdEquipaggiamento }
   /** Almeno UNA delle condizioni interne è vera (le liste normali sono "tutte"). */
-  | { tipo: "UNO_TRA"; condizioni: Condizione[] };
+  | { tipo: "UNO_TRA"; condizioni: Condizione[] }
+  /** La condizione interna è FALSA. */
+  | { tipo: "NON"; condizione: Condizione }
+
+  // --- Storia emergente (v3.0) ---------------------------------------------
+  /** Siamo almeno al giorno indicato (il giorno 1 è il primo). */
+  | { tipo: "GIORNO_ALMENO"; giorno: number }
+  | { tipo: "TENSIONE_ALMENO"; valore: number }
+  /** Autonomia di V.A.L.E. (0 ASSISTENZA … 4 AUTONOMA), derivata. */
+  | { tipo: "AUTONOMIA_ALMENO"; livello: number }
+  /** Almeno N membri vivi a bordo stanno in questa fazione. */
+  | { tipo: "FAZIONE"; fazione: Fazione; almeno: number }
+  | { tipo: "RISORSA_SOTTO"; risorsa: keyof Risorse; valore: number }
+  | { tipo: "SISTEMA_SOTTO"; sistema: SistemaCore; valore: number }
+  /** La classe della direttiva NASCOSTA: serve a scrivere eventi diversi per partite diverse. */
+  | { tipo: "CLASSE_DIRETTIVA"; classi: ClasseDirettiva[] }
+  /** C'è a bordo qualcuno vivo con questo ruolo. */
+  | { tipo: "RUOLO_A_BORDO"; ruolo: Ruolo }
+  /** Almeno un membro è in questo stato (es. FERITO). */
+  | { tipo: "MEMBRO_IN_STATO"; stato: StatoMembro }
+  /** V.A.L.E. è stata smentita almeno N volte da una verifica. */
+  | { tipo: "SMENTITE_ALMENO"; n: number }
+  /** L'override del nucleo (ORD-01) è attivo. */
+  | { tipo: "OVERRIDE" }
+  /** L'imprevisto di partenza di questa partita. */
+  | { tipo: "IMPREVISTO"; id: string }
+  /** V.A.L.E. ha bloccato almeno un compartimento. */
+  | { tipo: "COMPARTIMENTO_BLOCCATO" };
 
 // ----------------------------------------------------------------------------
 // EFFETTI: "cosa cambia?"
@@ -79,10 +109,37 @@ export type Effetto =
   | { tipo: "SISTEMA"; sistema: SistemaCore; delta: number }
   /** Variazione dell'integrità dello scafo, limitata a 0–100. */
   | { tipo: "SCAFO"; delta: number }
-  /** Variazione della fatica: del responsabile del task d'origine, o di tutti. */
-  | { tipo: "FATICA"; chi: "RESPONSABILE" | "TUTTI"; delta: number }
+  /** Variazione della fatica: del responsabile del task d'origine, dei protagonisti o di tutti. */
+  | { tipo: "FATICA"; chi: Destinatario; delta: number }
   /** Una voce di log in più (con eventuali codici nascosti). */
-  | { tipo: "LOG"; fonte: FonteLog; testo: string; codici?: string[] };
+  | { tipo: "LOG"; fonte: FonteLog; testo: string; codici?: string[] }
+  /** Variazione della fiducia in V.A.L.E. di tutta la crew. */
+  | { tipo: "FIDUCIA"; delta: number }
+  /** Variazione della tensione tra V.A.L.E. e il Capitano. */
+  | { tipo: "TENSIONE"; delta: number }
+  /** Il terminale rivela la direttiva nascosta (codice DIR-07). */
+  | { tipo: "RIVELA_DIRETTIVA" }
+  /** Override del nucleo (codice ORD-01): l'autonomia di V.A.L.E. torna al minimo. */
+  | { tipo: "OVERRIDE_VALE" }
+
+  // --- Storia emergente (v3.0) ---------------------------------------------
+  /** Fiducia in V.A.L.E. di un solo membro (protagonista o secondo). */
+  | { tipo: "FIDUCIA_MEMBRO"; chi: "PROTAGONISTA" | "SECONDO"; delta: number }
+  /** Salute (negativa = ferita). Aggiorna anche lo stato del membro. */
+  | { tipo: "SALUTE"; chi: Destinatario; delta: number }
+  /** V.A.L.E. (o la crew) cambia l'accesso a un compartimento. */
+  | { tipo: "ACCESSO"; compartimento: Compartimento; stato: StatoAccesso }
+  /** Tutti i compartimenti tornano APERTI. */
+  | { tipo: "SBLOCCA_COMPARTIMENTI" }
+  /** Il protagonista mette in coda un task di sua iniziativa. */
+  | { tipo: "TASK_AUTONOMO"; chi: "PROTAGONISTA" | "SECONDO"; task: IdDefinizioneTask }
+  /** Una riga in più nel giornale di bordo (con {P} e {S}). */
+  | { tipo: "DIARIO"; testo: string }
+  /** La missione finisce: il finale si sceglie tra quelli compatibili con la causa. */
+  | { tipo: "FINE_MISSIONE"; causa: CausaFine };
+
+/** Su chi agisce un effetto "personale". */
+export type Destinatario = "RESPONSABILE" | "PROTAGONISTA" | "SECONDO" | "TUTTI";
 
 // ----------------------------------------------------------------------------
 // SCELTE ED EVENTI
@@ -97,6 +154,13 @@ export interface SceltaEvento {
   /** Se non sono tutte vere, la scelta è visibile ma non selezionabile. */
   requisiti: Condizione[];
   effetti: Effetto[];
+  /** Riga del giornale di bordo quando il Capitano sceglie questa opzione. */
+  diario?: string;
+  /**
+   * Esiti casuali (v3.0): dopo gli effetti fissi se ne estrae UNO, tra
+   * quelli i cui requisiti sono veri, in base al peso. Vuoto = nessun caso.
+   */
+  esiti?: EsitoCasuale[];
 }
 
 export interface DefinizioneEvento {
@@ -124,6 +188,16 @@ export interface DefinizioneEvento {
   effetti: Effetto[];
   /** Scelte per il Capitano. Vuoto = evento solo informativo. */
   scelte: SceltaEvento[];
+  /** Come V.A.L.E. può filtrare questo evento, in base alla direttiva (Fase 3). */
+  filtri?: FiltroVale[];
+
+  // --- Storia emergente (v3.0) ---------------------------------------------
+  /** Chi vive l'evento: i testi lo chiamano {P}. Nessun candidato = niente evento. */
+  protagonista?: SelettoreMembro;
+  /** Un secondo membro, diverso dal primo ({S}): litigi, alleanze. */
+  secondo?: SelettoreMembro;
+  /** Riga del giornale di bordo quando l'evento accade. */
+  diario?: string;
 }
 
 /** Traccia di un evento accaduto, conservata nello stato. */
@@ -132,4 +206,8 @@ export interface RegistroEvento {
   tempo: Minuti;
   /** ID della scelta fatta, o null per gli eventi informativi. */
   scelta: string | null;
+  /** Chi l'ha vissuto (v3.0); null negli eventi senza protagonista. */
+  protagonista?: IdMembro | null;
+  /** L'esito casuale uscito, se la scelta ne aveva. */
+  esito?: string | null;
 }

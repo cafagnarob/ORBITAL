@@ -1,0 +1,110 @@
+/* StivaScorte.module.css — righe delle casse con contatore − n +. */
+
+.spazio {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--sp-1);
+  margin-bottom: var(--sp-3);
+  font-family: var(--font-terminale);
+  font-size: var(--fs-terminale);
+  letter-spacing: 0.08em;
+  color: var(--c-fosforo);
+}
+.spazio > :last-child {
+  grid-column: 1 / -1;
+}
+.critico {
+  color: var(--c-critico);
+}
+
+.lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.riga {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) 0;
+  border-bottom: 1px solid var(--c-griglia);
+}
+.riga:last-child {
+  border-bottom: none;
+}
+
+.info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+}
+.nome {
+  font-family: var(--font-terminale);
+  font-size: var(--fs-terminale);
+  line-height: 1.05;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--c-fosforo);
+}
+.descrizione {
+  color: var(--c-testo);
+}
+.dati {
+  font-size: var(--fs-piccolo);
+  color: var(--c-fosforo-tenue);
+}
+.resa {
+  color: var(--c-fosforo);
+  text-transform: uppercase;
+}
+.inArrivo {
+  font-size: var(--fs-piccolo);
+  color: var(--c-fosforo-tenue);
+}
+
+/* --- Contatore ------------------------------------------------------------ */
+.contatore {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+}
+.contatore button {
+  width: 40px;
+  height: 40px; /* bersaglio comodo al tocco */
+  border: 1.5px solid var(--c-fosforo);
+  background: transparent;
+  color: var(--c-fosforo);
+  font-family: var(--font-terminale);
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+}
+.contatore button:hover:not(:disabled) {
+  background: var(--c-fosforo);
+  color: var(--c-vuoto);
+}
+.contatore button:disabled {
+  border-style: dashed;
+  border-color: var(--c-fosforo-tenue);
+  color: var(--c-fosforo-tenue);
+  cursor: not-allowed;
+}
+.contatore output {
+  min-width: 44px;
+  text-align: center;
+  font-family: var(--font-terminale);
+  font-size: var(--fs-terminale-grande);
+  line-height: 1;
+  color: var(--c-fosforo-alto);
+}
+.contatore small {
+  font-size: 14px;
+  color: var(--c-fosforo-tenue);
+}

@@ -12,7 +12,9 @@
  * ============================================================================
  */
 
+import { STORIA_DI_PROVA } from "./storiaDiProva";
 import type { ContestoMissione } from "../../src/engine/mission/contesto";
+import { TESTI_VALE_DI_PROVA } from "./valeDiProva";
 import type { DefinizioneTask } from "../../src/engine/types";
 
 export const DIAGNOSTICA: DefinizioneTask = {
@@ -26,6 +28,7 @@ export const DIAGNOSTICA: DefinizioneTask = {
   rischioBase: 30,
   luogo: "INGEGNERIA",
   equipaggiamentoRichiesto: [],
+  moduliRichiesti: [],
     scoperteRichieste: [],
   costoRisorse: { energia: 2 },
   costoFatica: 10,
@@ -43,6 +46,7 @@ export const MANOVRA_ORBITALE: DefinizioneTask = {
   rischioBase: 35,
   luogo: "COMANDO",
   equipaggiamentoRichiesto: [],
+  moduliRichiesti: [],
     scoperteRichieste: [],
   costoRisorse: { carburante: 2 },
   costoFatica: 8,
@@ -60,6 +64,7 @@ export const ISPEZIONE_ESTERNA: DefinizioneTask = {
   rischioBase: 40,
   luogo: "ESTERNO_NAVE",
   equipaggiamentoRichiesto: ["TUTA_EVA_MK2"],
+  moduliRichiesti: [],
     scoperteRichieste: [],
   costoRisorse: { energia: 3 },
   costoFatica: 20,
@@ -73,6 +78,7 @@ export const SCAVO_MINERARIO: DefinizioneTask = {
   nome: "Scavo minerario",
   luogo: "SUPERFICIE",
   equipaggiamentoRichiesto: ["TRIVELLA"],
+  moduliRichiesti: [],
 };
 
 /** Il contesto da passare al reducer nei test: un catalogo con questi task. */
@@ -86,4 +92,15 @@ export const CONTESTO_DI_PROVA: ContestoMissione = {
   // Nessun evento: i test della missione restano indipendenti dalla storia.
   // I test degli eventi usano un catalogo dedicato (eventiDiProva.ts).
   catalogoEventi: {},
+  catalogoCodici: {},
+  // Una direttiva neutra che non contrasta nessun task: i test della
+  // missione restano indipendenti da V.A.L.E.
+  catalogoDirettive: {
+    "D-NEUTRA": { id: "D-NEUTRA", nome: "Direttiva di prova", classe: "NEUTRALE", peso: 1, tagContrari: [], richiede: [] },
+  },
+  testiVale: TESTI_VALE_DI_PROVA,
+  // Nessun modulo nel catalogo: la nave usa i valori base di balance.ts.
+  catalogoModuli: {},
+  // Storia emergente: finali e battute brevi, senza eventi narrativi.
+  storia: STORIA_DI_PROVA,
 };

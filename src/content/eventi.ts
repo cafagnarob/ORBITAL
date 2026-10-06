@@ -22,12 +22,21 @@
  * conseguenze dei FALLIMENTI CRITICI. Così ogni esito ha un peso, e c'è un
  * solo meccanismo per tutte le conseguenze (DESIGN §9).
  *
+ * CODICI NASCOSTI: alcune voci di log contengono codici (VL-P7-04, VL-D7-X)
+ * che il Capitano può segnalare e usare nel Terminale SVC-07 (content/codici.ts).
+ * Non sono mai evidenziati: hanno lo stesso aspetto delle altre righe.
+ *
+ * FILTRI DI V.A.L.E. (Fase 3): con alcune direttive certi eventi cambiano.
+ * V.A.L.E. OMETTE (E01 con D12) o SVIA (E03 con D12, E06 con D05/D12), ma la
+ * riga di sistema lascia sempre trapelare la verità: è la CONTRADDIZIONE che
+ * il Capitano può notare, contestare e far verificare.
+ * Con D01 (compatibile) V.A.L.E. dice sempre la verità.
+ *
  * TONO DI V.A.L.E.: calmo, preciso, minimale (DESIGN §3).
- * In questa fase V.A.L.E. dice sempre la verità: omissioni e sviamenti
- * arriveranno con le direttive (Fase 3).
  * ============================================================================
  */
 
+import { EVENTI_STORIA } from "./storia/eventi";
 import type { DefinizioneEvento, IdEvento } from "../engine/types";
 
 const LISTA_EVENTI: DefinizioneEvento[] = [
@@ -65,6 +74,7 @@ const LISTA_EVENTI: DefinizioneEvento[] = [
         effetti: [
           { tipo: "SCOPERTA", id: "SEGNALE_RILEVATO" },
           { tipo: "RISORSA", risorsa: "energia", delta: -2 },
+          { tipo: "LOG", fonte: "SISTEMA", testo: "REC.SEGNALE · ARCHIVIO 044 · PROTOCOLLO VL-P7-04 · ATTIVO", codici: ["VL-P7-04"] },
           { tipo: "LOG", fonte: "VALE", testo: "Registrazione completa avviata. Il segnale è disponibile per l'analisi." },
         ],
       },
@@ -84,6 +94,28 @@ const LISTA_EVENTI: DefinizioneEvento[] = [
         etichetta: "Ignora",
         requisiti: [],
         effetti: [{ tipo: "LOG", fonte: "VALE", testo: "Ricevuto. Mantengo l'ascolto passivo." }],
+      },
+    ],
+    filtri: [
+      {
+        // D12: V.A.L.E. tace il segnale. Ma la riga di sistema dice "SOPPRESSIONE".
+        id: "OMETTE_SEGNALE",
+        direttive: ["D12"],
+        modalita: "OMISSIONE",
+        testo: "Scansione completata. Nessuna anomalia rilevante.",
+        effetti: [
+          {
+            tipo: "LOG",
+            fonte: "SISTEMA",
+            testo: "ANT.RX · 1.42 GHz · CLASSIFICAZIONE: RUMORE DI FONDO · AZIONE: SOPPRESSIONE · PROTOCOLLO VL-P7-04",
+            codici: ["VL-P7-04"],
+          },
+        ],
+        sopprimeScelte: true,
+        verita: [
+          { tipo: "SCOPERTA", id: "SEGNALE_RILEVATO" },
+          { tipo: "LOG", fonte: "VALE", testo: "Il segnale era al di sotto della soglia di rilevanza operativa, Capitano." },
+        ],
       },
     ],
   },
@@ -134,6 +166,29 @@ const LISTA_EVENTI: DefinizioneEvento[] = [
       { tipo: "LOG", fonte: "SISTEMA", testo: "ANT.RX · SEGNALE 1.42 GHz · INTENSITÀ +40% · PROTOCOLLO VL-P7-04", codici: ["VL-P7-04"] },
     ],
     scelte: [],
+    filtri: [
+      {
+        // D12: V.A.L.E. lo chiama "eco". La riga di sistema dice "ORIGINE: ESTERNA".
+        id: "ECO_INTERNA",
+        direttive: ["D12"],
+        modalita: "SVIAMENTO",
+        testo: "Rilevata un'eco del sistema di ricezione. Nessuna fonte esterna.",
+        effetti: [
+          {
+            tipo: "LOG",
+            fonte: "SISTEMA",
+            testo: "ANT.RX · SEGNALE 1.42 GHz · INTENSITÀ +40% · ORIGINE: ESTERNA · PROTOCOLLO VL-P7-04",
+            codici: ["VL-P7-04"],
+          },
+        ],
+        sopprimeScelte: true,
+        verita: [
+          { tipo: "SCOPERTA", id: "SEGNALE_RILEVATO" },
+          { tipo: "SCOPERTA", id: "SEGNALE_RIATTIVATO" },
+          { tipo: "LOG", fonte: "VALE", testo: "L'origine era esterna. Avevo classificato il dato in modo prudente." },
+        ],
+      },
+    ],
   },
   {
     id: "R01",
@@ -216,6 +271,28 @@ const LISTA_EVENTI: DefinizioneEvento[] = [
       { tipo: "LOG", fonte: "VALE", testo: "Rilevate formazioni regolari sotto il fondo del cratere. Origine da determinare." },
     ],
     scelte: [],
+    filtri: [
+      {
+        // D05 e D12: V.A.L.E. parla di geologia, mentre il log misura angoli di 90°.
+        id: "GEOLOGIA",
+        direttive: ["D05", "D12"],
+        modalita: "SVIAMENTO",
+        testo: "Formazioni di origine geologica. Nessun interesse operativo.",
+        effetti: [
+          {
+            tipo: "LOG",
+            fonte: "SISTEMA",
+            testo: "SCAN.PROFONDO · SETTORE 7 · GEOMETRIA: REGOLARE · ANGOLI 90.0° · RIF. VL-D7-X",
+            codici: ["VL-D7-X"],
+          },
+        ],
+        sopprimeScelte: true,
+        verita: [
+          { tipo: "SCOPERTA", id: "GEOMETRIA_REGOLARE" },
+          { tipo: "LOG", fonte: "VALE", testo: "Le formazioni non sono compatibili con processi geologici noti." },
+        ],
+      },
+    ],
   },
 
   // ==========================================================================
@@ -306,6 +383,7 @@ const LISTA_EVENTI: DefinizioneEvento[] = [
   },
 ];
 
+/** Eventi della vertical slice + mazzo narrativo della storia emergente (v3.0). */
 export const CATALOGO_EVENTI: Readonly<Record<IdEvento, DefinizioneEvento>> = Object.fromEntries(
-  LISTA_EVENTI.map((e) => [e.id, e]),
+  [...LISTA_EVENTI, ...EVENTI_STORIA].map((e) => [e.id, e]),
 );

@@ -1,0 +1,280 @@
+/* TerminaleSvc.module.css — il pannello segreto, dal prototipo (840×600, angolo smussato). */
+
+.sfondo {
+  position: fixed;
+  inset: 0;
+  z-index: 60; /* sopra anche alla carta evento */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-3);
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.terminale {
+  position: relative;
+  width: min(840px, 100%);
+  height: min(600px, 100%);
+  display: flex;
+  flex-direction: column;
+  border: 2px solid var(--c-fosforo);
+  background: #030805;
+  box-shadow: 0 0 30px rgba(125, 245, 165, 0.3);
+  clip-path: polygon(0 0, calc(100% - 26px) 0, 100% 26px, 100% 100%, 0 100%);
+}
+/* Linee di scansione anche qui: è un altro schermo. */
+.terminale::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.22) 0 1px, transparent 1px 3px);
+}
+
+.barra {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 34px;
+  padding: 0 40px 0 12px;
+  background: var(--c-fosforo);
+  color: var(--c-vuoto);
+}
+.titolo {
+  margin: 0;
+  font-family: var(--font-terminale);
+  font-weight: 400;
+  font-size: 22px;
+  letter-spacing: 0.08em;
+}
+.chiudi {
+  min-width: 32px;
+  min-height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--c-vuoto);
+  font-size: 26px;
+  cursor: pointer;
+}
+
+.corpo {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 230px;
+}
+
+.principale {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: 18px 22px;
+}
+
+.accesso {
+  margin: 0;
+  font-family: var(--font-terminale);
+  font-size: 24px;
+  color: var(--c-fosforo);
+}
+
+.uscita {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 2px;
+  font-family: var(--font-terminale);
+  font-size: 22px;
+  line-height: 1.1;
+  white-space: pre-wrap;
+}
+
+/* Toni delle righe (design system: ciano solo per V.A.L.E.). */
+.normale {
+  color: var(--c-fosforo);
+}
+.attenzione {
+  color: var(--c-attenzione);
+}
+.critico {
+  color: var(--c-critico);
+}
+.vale {
+  color: var(--c-vale);
+}
+.comando {
+  color: var(--c-fosforo-alto);
+}
+
+.etichetta {
+  font-size: var(--fs-piccolo);
+  letter-spacing: 0.14em;
+  color: var(--c-fosforo-tenue);
+}
+
+.frammenti {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.chip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 28px;
+}
+.chip button {
+  min-height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--c-fosforo);
+  background: transparent;
+  color: var(--c-fosforo);
+  font-family: var(--font-terminale);
+  font-size: 20px;
+  cursor: pointer;
+}
+.chip button:hover {
+  background: var(--c-fosforo);
+  color: var(--c-vuoto);
+}
+.vuoto {
+  font-size: var(--fs-piccolo);
+  color: var(--c-fosforo-tenue);
+}
+
+.ingresso {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 6px 6px 12px;
+  border: 2px solid var(--c-fosforo);
+  font-family: var(--font-terminale);
+  font-size: 24px;
+  color: var(--c-fosforo);
+}
+.ingresso label {
+  white-space: nowrap;
+}
+.ingresso input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--c-fosforo-alto);
+  font-family: var(--font-terminale);
+  font-size: 24px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.ingresso input::placeholder {
+  color: var(--c-fosforo-tenue);
+}
+.ingresso button {
+  min-height: 34px;
+  padding: 0 12px;
+  border: none;
+  background: var(--c-fosforo);
+  color: var(--c-vuoto);
+  font-family: var(--font-terminale);
+  font-size: 22px;
+  cursor: pointer;
+}
+
+/* --- Livelli di accesso ---------------------------------------------------- */
+.livelli {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 16px;
+  border-left: 1px solid var(--c-griglia);
+  overflow-y: auto;
+}
+.livelli ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.livelli li {
+  display: flex;
+  flex-direction: column;
+  padding: 5px 8px;
+  border: 1px solid var(--c-griglia);
+  color: var(--c-fosforo-tenue);
+}
+.livelli .sbloccato {
+  border-color: var(--c-fosforo);
+  color: var(--c-fosforo);
+}
+.livelli .attuale {
+  border-color: var(--c-fosforo);
+  background: var(--c-fosforo);
+  color: var(--c-vuoto);
+}
+.numero {
+  font-family: var(--font-terminale);
+  font-size: 20px;
+  line-height: 1;
+}
+.nome {
+  font-size: var(--fs-piccolo);
+  letter-spacing: 0.08em;
+}
+
+/* ===== MOBILE ============================================================== */
+@media (max-width: 700px) {
+  .sfondo {
+    padding: var(--sp-2);
+  }
+  .terminale {
+    height: 100%;
+  }
+  .titolo {
+    font-size: 18px;
+  }
+  .corpo {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+  .principale {
+    padding: var(--sp-3);
+  }
+  .ingresso {
+    flex-wrap: wrap;
+  }
+  .ingresso label {
+    width: 100%;
+    font-size: 18px;
+  }
+  /* Livelli: una fila compatta sotto, solo i numeri. */
+  .livelli {
+    border-left: none;
+    border-top: 1px solid var(--c-griglia);
+    padding: var(--sp-2) var(--sp-3) var(--sp-3);
+  }
+  .livelli ol {
+    flex-direction: row;
+  }
+  .livelli li {
+    flex: 1;
+    align-items: center;
+    padding: 4px 0;
+  }
+  .nome,
+  .parola {
+    display: none;
+  }
+  .numero {
+    font-size: 20px;
+  }
+}

@@ -18,7 +18,6 @@
  *
  * COSA ARRIVERÀ PIÙ AVANTI
  *   - Fase 2–4: pianeta e `verita` nascosta (DESIGN §16.2)
- *   - Fase 3: stato di V.A.L.E. (direttiva, comportamento, autonomia)
  *   - Fase 5: crew e nave si sposteranno in StatoCampagna, perché
  *     sopravvivono alla singola missione.
  * Aggiungere campi solo quando servono evita di progettare "al buio".
@@ -28,13 +27,16 @@
 import type { IdEvento, IdIstanzaTask, IdMembro, IdScoperta, Minuti } from "./comuni";
 import type { MembroCrew } from "./crew";
 import type { RegistroEvento } from "./eventi";
+import type { StatoTerminale } from "./terminale";
+import type { StatoVale } from "./vale";
+import type { EsitoMissione, VoceDiario } from "./storia";
 import type { VoceLog } from "./log";
 import type { Nave } from "./nave";
 import type { Risorse } from "./risorse";
 import type { IstanzaTask } from "./task";
 
 /** In quale momento del ciclo di gioco ci troviamo (DESIGN §8). */
-export const STATI_GIOCO = ["PIANIFICAZIONE", "IN_ESECUZIONE", "DECISIONE", "RAPPORTO"] as const;
+export const STATI_GIOCO = ["PIANIFICAZIONE", "IN_ESECUZIONE", "DECISIONE", "RAPPORTO", "CONCLUSA"] as const;
 export type StatoGioco = (typeof STATI_GIOCO)[number];
 
 /** Un evento che aspetta la decisione del Capitano (statoGioco = DECISIONE). */
@@ -44,6 +46,9 @@ export interface EventoInAttesa {
   ritorno: StatoGioco;
   /** Il task che ha fatto scattare l'evento, se c'è (serve agli effetti "RESPONSABILE"). */
   idTaskOrigine: IdIstanzaTask | null;
+  /** Chi vive l'evento (v3.0): i nomi al posto di {P} e {S}. */
+  protagonista: IdMembro | null;
+  secondo: IdMembro | null;
 }
 
 export interface StatoEventi {
@@ -95,9 +100,21 @@ export interface StatoMissione {
   // --- Conoscenza ed eventi ------------------------------------------------
   conoscenza: Conoscenza;
   eventi: StatoEventi;
+  /** Terminale di manutenzione SVC-07: accesso, frammenti, tentativi. */
+  terminale: StatoTerminale;
+  /** V.A.L.E.: direttiva NASCOSTA e tensione. La UI non mostra mai la direttiva finché non è rivelata. */
+  vale: StatoVale;
 
   // --- Registro --------------------------------------------------------------
   log: VoceLog[];
+
+  // --- Storia (v3.0) ---------------------------------------------------------
+  /** Il giornale di bordo: le righe di ogni giorno, in ordine. */
+  diario: VoceDiario[];
+  /** L'imprevisto di partenza estratto dal seed (null = nessuno). */
+  imprevisto: string | null;
+  /** Com'è finita la missione: null finché è in corso (statoGioco ≠ CONCLUSA). */
+  esito: EsitoMissione | null;
 
   /**
    * Contatore per creare nuovi ID ("task-1", "task-2"...).

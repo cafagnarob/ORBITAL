@@ -42,6 +42,22 @@
   margin-left: auto;
 }
 
+.integrita {
+  color: var(--c-fosforo-tenue);
+}
+.integrita strong {
+  font-weight: 400;
+}
+.normale {
+  color: var(--c-fosforo);
+}
+.attenzione {
+  color: var(--c-attenzione);
+}
+.critico {
+  color: var(--c-critico);
+}
+
 /* Su schermi stretti: si nasconde il superfluo, resta tempo + stato. */
 @media (max-width: 700px) {
   .intestazione {
@@ -51,10 +67,8 @@
     font-size: 18px;
   }
   .sistema,
-  .fase {
-    display: none;
-  }
+  .fase,
   .luogo {
-    margin-left: 0;
+    display: none;
   }
 }

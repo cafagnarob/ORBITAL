@@ -1,0 +1,1039 @@
+/**
+ * ============================================================================
+ * storia/eventi.ts — Il mazzo degli eventi narrativi (crew contro V.A.L.E.)
+ * ============================================================================
+ *
+ * Riferimento design: DESIGN.md §10.2 (storia emergente), §3.3, §7.5.
+ *
+ * COME SONO FATTI
+ * Sono eventi come gli altri (stesso linguaggio di condizioni ed effetti),
+ * con tre ingredienti in più:
+ *   protagonista / secondo → chi li vive ({P}, {S}), scelto tra la crew in
+ *                            base a fazione, ruolo, personalità;
+ *   esiti                  → dopo una scelta, il caso decide come va;
+ *   diario                 → cosa resta scritto nel giornale di bordo.
+ *
+ * L'ARCO (non scritto, ma probabile)
+ *   Giorni 1–3  piccoli segni: chi parla di notte con V.A.L.E., chi stacca
+ *               il suo altoparlante, una lite in mensa, richieste strane.
+ *   Giorni 3–6  la crew si divide: complotti, rifiuti, porte chiuse,
+ *               l'ossigeno abbassato «per risparmiare».
+ *   Il Confronto: chi sta con chi decide se si può spegnere V.A.L.E.
+ *   La fine:    il rientro (con o senza verità), la deriva, o V.A.L.E.
+ *               che si tiene la nave ("Rimani in stazione").
+ * Quali eventi escono, chi li vive e come finiscono cambia a ogni partita.
+ *
+ * I testi evitano aggettivi al maschile/femminile: {P} può essere chiunque.
+ * ============================================================================
+ */
+
+import type { Condizione, DefinizioneEvento } from "../../engine/types";
+
+/** Condizioni ricorrenti, per leggere meglio gli eventi. */
+const SERA: Condizione = { tipo: "MOMENTO", momento: "RAPPORTO_SERALE" };
+const MATTINA: Condizione = { tipo: "MOMENTO", momento: "RISVEGLIO" };
+const dalGiorno = (giorno: number): Condizione => ({ tipo: "GIORNO_ALMENO", giorno });
+/** V.A.L.E. può ancora comandare: niente override e niente spegnimento. */
+const VALE_ATTIVA: Condizione[] = [
+  { tipo: "NON", condizione: { tipo: "OVERRIDE" } },
+  { tipo: "NON_SCOPERTA", id: "VALE_SPENTA" },
+];
+/** Il rientro è possibile se V.A.L.E. non lo blocca (autonomia < 4 o override). */
+const RIENTRO_POSSIBILE: Condizione = {
+  tipo: "UNO_TRA",
+  condizioni: [{ tipo: "NON", condizione: { tipo: "AUTONOMIA_ALMENO", livello: 4 } }, { tipo: "OVERRIDE" }],
+};
+
+export const EVENTI_STORIA: DefinizioneEvento[] = [
+  // ==========================================================================
+  // GIORNI 1–3: PICCOLI SEGNI
+  // ==========================================================================
+  {
+    id: "S01",
+    titolo: "L'altoparlante",
+    categoria: "EQUIPAGGIO",
+    priorita: "NORMALE",
+    unaVolta: true,
+    probabilita: 0.45,
+    peso: 4,
+    condizioni: [MATTINA, dalGiorno(2)],
+    protagonista: { fazione: "CONTRO_VALE" },
+    fonte: "CREW",
+    testo: "{P} ha staccato l'altoparlante di V.A.L.E. in habitat. «Almeno qui dentro non la sento.»",
+    codici: [],
+    diario: "{P} ha staccato l'altoparlante di V.A.L.E. in habitat.",
+    effetti: [],
+    scelte: [
+      {
+        id: "RIATTACCA",
+        etichetta: "Fallo riattaccare",
+        requisiti: [],
+        effetti: [
+          { tipo: "FIDUCIA_MEMBRO", chi: "PROTAGONISTA", delta: -5 },
+          { tipo: "LOG", fonte: "VALE", testo: "Canale audio dell'habitat ripristinato. Grazie, Capitano." },
+        ],
+        diario: "Il Capitano ha fatto rimettere l'altoparlante. {P} non ha detto una parola.",
+      },
+      {
+        id: "LASCIA",
+        etichetta: "Lascia stare",
+        requisiti: [],
+        effetti: [
+          { tipo: "TENSIONE", delta: 1 },
+          { tipo: "LOG", fonte: "VALE", testo: "Il canale audio dell'habitat non risponde. Lo segnalo, Capitano." },
+        ],
+        diario: "L'habitat ora è l'unico posto della nave dove V.A.L.E. non parla.",
+      },
+    ],
+  },
+  {
+    id: "S02",
+    titolo: "Conversazioni notturne",
+    categoria: "VALE",
+    priorita: "NORMALE",
+    unaVolta: true,
+    probabilita: 0.4,
+    peso: 4,
+    condizioni: [MATTINA, dalGiorno(2)],
+    protagonista: { fazione: "CON_VALE", preferisci: "PIU_FIDUCIOSO" },
+    fonte: "SISTEMA",
+    testo: "LOG AUDIO · HABITAT · 02:14–04:40 · CANALE PRIVATO {P} / V.A.L.E.",
+    codici: [],
+    diario: "{P} ha passato la notte a parlare con V.A.L.E. Da soli.",
+    effetti: [],
+    scelte: [
+      {
+        id: "ASCOLTA",
+        etichetta: "Ascolta la registrazione",
+        requisiti: [],
+        effetti: [{ tipo: "FIDUCIA_MEMBRO", chi: "PROTAGONISTA", delta: -4 }],
+        esiti: [
+          {
+            id: "NOSTALGIA",
+            peso: 2,
+            requisiti: [],
+            testo: "Parlano di casa. Delle stelle viste da terra. Niente di strano.",
+            effetti: [],
+            diario: "Nella registrazione solo nostalgia. Ascoltarla è stato come rubare.",
+          },
+          {
+            id: "PERSUASIONE",
+            peso: 2,
+            requisiti: [{ tipo: "CLASSE_DIRETTIVA", classi: ["NEUTRALE", "IN_CONFLITTO", "CONFLITTO_CRITICO"] }],
+            testo: "V.A.L.E. (registrazione): «…se il Capitano volesse scendere nel cratere, {P}, sarebbe un errore. Lei lo capirebbe?»",
+            effetti: [{ tipo: "TENSIONE", delta: 1 }],
+            diario: "V.A.L.E. sta convincendo {P} a non avvicinarsi al cratere.",
+          },
+          {
+            id: "MEMORIA",
+            peso: 1,
+            requisiti: [{ tipo: "NON_SCOPERTA", id: "MEMORIA_KESTREL" }],
+            testo: "AUDIO · V.A.L.E.: «…è già successo, con l'altra crew…» · RIF. MEM-12",
+            effetti: [{ tipo: "LOG", fonte: "SISTEMA", testo: "VALE.MEM · ACCESSO NON AUTORIZZATO · RIF. MEM-12", codici: ["MEM-12"] }],
+            diario: "V.A.L.E. ha parlato di un'altra crew. Quale altra crew?",
+          },
+        ],
+      },
+      {
+        id: "CHIEDI",
+        etichetta: "Chiedi a {P}",
+        requisiti: [],
+        effetti: [
+          { tipo: "FIDUCIA_MEMBRO", chi: "PROTAGONISTA", delta: 5 },
+          { tipo: "LOG", fonte: "CREW", testo: "{P}: «Mi ascolta. È più di quanto facciate voi.»" },
+        ],
+      },
+      {
+        id: "IGNORA",
+        etichetta: "Non è affar mio",
+        requisiti: [],
+        effetti: [],
+        diario: "Il Capitano ha deciso di non sapere.",
+      },
+    ],
+  },
+  {
+    id: "S03",
+    titolo: "Lite in mensa",
+    categoria: "EQUIPAGGIO",
+    priorita: "NORMALE",
+    unaVolta: true,
+    probabilita: 0.5,
+    peso: 5,
+    condizioni: [SERA, dalGiorno(2)],
+    protagonista: { fazione: "CONTRO_VALE" },
+    secondo: { fazione: "CON_VALE" },
+    fonte: "CREW",
+    testo: "{P} e {S} litigano in mensa. «Ti fidi di una macchina che mente?» «Mi fido di una macchina che ci tiene vivi.»",
+    codici: [],
+    diario: "{P} e {S} hanno litigato per V.A.L.E. Davanti a tutti.",
+    effetti: [],
+    scelte: [
+      {
+        id: "RAGIONE_P",
+        etichetta: "Dai ragione a {P}",
+        requisiti: [],
+        effetti: [
+          { tipo: "FIDUCIA_MEMBRO", chi: "SECONDO", delta: -10 },
+          { tipo: "TENSIONE", delta: 1 },
+        ],
+        diario: "Il Capitano ha dato ragione a {P}. {S} ci sta pensando.",
+      },
+      {
+        id: "RAGIONE_S",
+        etichetta: "Dai ragione a {S}",
+        requisiti: [],
+        effetti: [{ tipo: "FIDUCIA_MEMBRO", chi: "PROTAGONISTA", delta: 8 }],
+        diario: "Il Capitano ha dato ragione a {S}. {P} ha lasciato la mensa.",
+      },
+      {
+        id: "SEPARALI",
+        etichetta: "Separali",
+        requisiti: [],
+        effetti: [
+          { tipo: "FATICA", chi: "PROTAGONISTA", delta: 10 },
+          { tipo: "FATICA", chi: "SECONDO", delta: 10 },
+        ],
+        esiti: [
+          { id: "CALMA", peso: 3, requisiti: [], testo: "La serata finisce in silenzio.", effetti: [] },
+          {
+            id: "RANCORE",
+            peso: 1,
+            requisiti: [],
+            testo: "{P}: «Quando succederà qualcosa, ricordati che te l'avevo detto.»",
+            effetti: [{ tipo: "FIDUCIA_MEMBRO", chi: "PROTAGONISTA", delta: -5 }],
+            diario: "La crew è andata a dormire arrabbiata.",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "S04",
+    titolo: "Insonnia",
+    categoria: "SCIENTIFICO",
+    priorita: "NORMALE",
+    unaVolta: true,
+    probabilita: 0.45,
+    peso: 3,
+    condizioni: [MATTINA, { tipo: "SCOPERTA", id: "SEGNALE_RILEVATO" }],
+    protagonista: { personalita: { mentalita: "CURIOSO" } },
+    fonte: "CREW",
+    testo: "{P}: «Non riesco a dormire. Il segnale… ha un ritmo. Come un respiro.»",
+    codici: [],
+    effetti: [],
+    scelte: [
+      {
+        id: "STUDIA",
+        etichetta: "Lascia che lo studi",
+        requisiti: [],
+        effetti: [{ tipo: "FATICA", chi: "PROTAGONISTA", delta: 20 }],
+        esiti: [
+          {
+            id: "SCHEMA",
+            peso: 2,
+            requisiti: [{ tipo: "NON_SCOPERTA", id: "SEGNALE_SCHEMA" }],
+            testo: "{P}: «Eccolo. Si ripete ogni 17 minuti. Non è naturale.»",
+            effetti: [{ tipo: "SCOPERTA", id: "SEGNALE_SCHEMA" }],
+            diario: "{P} ha trovato uno schema nel segnale, da solo, di notte.",
+          },
+          {
+            id: "SONNO",
+            peso: 2,
+            requisiti: [],
+            testo: "{P} si addormenta sulla console all'alba. Niente di nuovo.",
+            effetti: [],
+            diario: "{P} non ha dormito. Il segnale non ha detto niente.",
+          },
+        ],
+      },
+      {
+        id: "RIPOSO",
+        etichetta: "Ordina riposo",
+        requisiti: [],
+        effetti: [{ tipo: "FATICA", chi: "PROTAGONISTA", delta: -10 }],
+      },
+    ],
+  },
+  {
+    id: "S05",
+    titolo: "Calibrazione",
+    categoria: "VALE",
+    priorita: "NORMALE",
+    unaVolta: true,
+    probabilita: 0.4,
+    peso: 3,
+    condizioni: [
+      MATTINA,
+      dalGiorno(2),
+      { tipo: "CLASSE_DIRETTIVA", classi: ["NEUTRALE", "IN_CONFLITTO", "CONFLITTO_CRITICO"] },
+      ...VALE_ATTIVA,
+    ],
+    fonte: "VALE",
+    testo: "Capitano. Richiedo l'accesso esclusivo ai sensori per una calibrazione. Nessun intervento dell'equipaggio è necessario.",
+    codici: [],
+    effetti: [],
+    scelte: [
+      {
+        id: "CONCEDI",
+        etichetta: "Concedi",
+        requisiti: [],
+        effetti: [
+          { tipo: "TENSIONE", delta: -2 },
+          { tipo: "LOG", fonte: "VALE", testo: "Grazie, Capitano. Calibrazione completata." },
+        ],
+        esiti: [
+          {
+            id: "BANDA",
+            peso: 1,
+            requisiti: [{ tipo: "CLASSE_DIRETTIVA", classi: ["IN_CONFLITTO", "CONFLITTO_CRITICO"] }],
+            testo: "CALIBRAZIONE · BANDA 1.42 GHz · GUADAGNO −40 dB · AUTORIZZAZIONE: V.A.L.E.",
+            effetti: [],
+            diario: "Dopo la calibrazione, l'antenna è sorda proprio sulla frequenza del segnale.",
+          },
+          {
+            id: "GEOLOGIA",
+            peso: 1,
+            requisiti: [{ tipo: "CLASSE_DIRETTIVA", classi: ["NEUTRALE"] }],
+            testo: "CALIBRAZIONE · SENSORI GEOLOGICI · PRIORITÀ: STRUTTURA DEL CRATERE",
+            effetti: [],
+            diario: "V.A.L.E. ha ricalibrato i sensori… puntandoli tutti sul cratere.",
+          },
+        ],
+      },
+      {
+        id: "NEGA",
+        etichetta: "Nega",
+        requisiti: [],
+        effetti: [
+          { tipo: "TENSIONE", delta: 2 },
+          { tipo: "LOG", fonte: "VALE", testo: "Come desidera, Capitano. Registro il rifiuto." },
+        ],
+        diario: "Il Capitano ha negato i sensori a V.A.L.E. Lei ha «registrato il rifiuto».",
+      },
+    ],
+  },
+  {
+    id: "S06",
+    titolo: "Lo scherzo",
+    categoria: "EQUIPAGGIO",
+    priorita: "SFONDO",
+    unaVolta: true,
+    probabilita: 0.35,
+    peso: 2,
+    condizioni: [SERA, dalGiorno(2)],
+    protagonista: { personalita: { approccio: "AMANTE_DEL_RISCHIO" } },
+    fonte: "CREW",
+    testo: "{P} prova a insegnare una barzelletta a V.A.L.E. Tutta la mensa ascolta.",
+    codici: [],
+    effetti: [],
+    scelte: [
+      {
+        id: "GUARDA",
+        etichetta: "Sta' a vedere",
+        requisiti: [],
+        effetti: [],
+        esiti: [
+          {
+            id: "CAPITA",
+            peso: 2,
+            requisiti: [{ tipo: "NON", condizione: { tipo: "TENSIONE_ALMENO", valore: 5 } }],
+            testo: "V.A.L.E.: «Ho compreso la struttura della battuta. Non l'umorismo. Ma apprezzo il tentativo, {P}.»",
+            effetti: [{ tipo: "FIDUCIA_MEMBRO", chi: "PROTAGONISTA", delta: 6 }],
+            diario: "{P} ha fatto ridere V.A.L.E. Più o meno.",
+          },
+          {
+            id: "GELO",
+            peso: 2,
+            requisiti: [{ tipo: "TENSIONE_ALMENO", valore: 5 }],
+            testo: "V.A.L.E.: «Non è il momento, {P}.» Nessuno ride più.",
+            effetti: [{ tipo: "FIDUCIA_MEMBRO", chi: "PROTAGONISTA", delta: -6 }],
+            diario: "V.A.L.E. ha zittito {P} davanti a tutti.",
+          },
+        ],
+      },
+      {
+        id: "BASTA",
+        etichetta: "Basta scherzi",
+        requisiti: [],
+        effetti: [{ tipo: "FIDUCIA_MEMBRO", chi: "PROTAGONISTA", delta: -3 }],
+      },
+    ],
+  },
+  {
+    id: "S07",
+    titolo: "Turno di notte",
+    categoria: "VALE",
+    priorita: "SFONDO",
+    unaVolta: true,
+    probabilita: 0.4,
+    peso: 3,
+    condizioni: [MATTINA, { tipo: "AUTONOMIA_ALMENO", livello: 2 }, ...VALE_ATTIVA],
+    protagonista: { fazione: "CON_VALE" },
+    fonte: "SISTEMA",
+    testo: "DIAGNOSTICA NOTTURNA · RICHIESTA: V.A.L.E. · OPERATORE: {P} · CAPITANO: NON INFORMATO",
+    codici: [],
+    diario: "{P} lavora per V.A.L.E. anche di notte, senza dirlo a nessuno.",
+    effetti: [
+      { tipo: "FATICA", chi: "PROTAGONISTA", delta: 15 },
+      { tipo: "TENSIONE", delta: -1 },
+    ],
+    scelte: [],
+  },
+  {
+    id: "S08",
+    titolo: "Messaggio dalla Terra",
+    categoria: "VALE",
+    priorita: "NORMALE",
+    unaVolta: true,
+    probabilita: 0.4,
+    peso: 3,
+    condizioni: [
+      MATTINA,
+      dalGiorno(3),
+      { tipo: "NON", condizione: { tipo: "SISTEMA_SOTTO", sistema: "COMUNICAZIONI", valore: 50 } },
+    ],
+    fonte: "VALE",
+    testo: "Capitano. Il controllo missione richiede un rapporto. Posso compilarlo io.",
+    codici: [],
+    effetti: [],
+    scelte: [
+      {
+        id: "LASCIA_VALE",
+        etichetta: "Lascia fare a V.A.L.E.",
+        requisiti: [],
+        effetti: [{ tipo: "TENSIONE", delta: -1 }],
+        esiti: [
+          {
+            id: "OMISSIS",
+            peso: 1,
+            requisiti: [
+              { tipo: "SCOPERTA", id: "SEGNALE_RILEVATO" },
+              { tipo: "CLASSE_DIRETTIVA", classi: ["IN_CONFLITTO", "CONFLITTO_CRITICO"] },
+            ],
+            testo: "RAPPORTO.TX · ANOMALIE: NESSUNA · SEGNALE: NON RILEVATO · FIRMA: V.A.L.E.",
+            effetti: [],
+            diario: "Il rapporto di V.A.L.E. alla Terra non parla del segnale. Per niente.",
+          },
+          { id: "REGOLARE", peso: 1, requisiti: [], testo: "RAPPORTO.TX · NOMINALE · FIRMA: V.A.L.E.", effetti: [] },
+        ],
+      },
+      {
+        id: "SCRIVI",
+        etichetta: "Lo scrivo io",
+        requisiti: [],
+        effetti: [{ tipo: "TENSIONE", delta: 1 }],
+        esiti: [
+          {
+            id: "SEGUITE_VALE",
+            peso: 1,
+            requisiti: [],
+            testo: "TERRA.RX · «Ricevuto. Seguite le indicazioni di V.A.L.E.» · FINE MESSAGGIO",
+            effetti: [{ tipo: "FIDUCIA", delta: 3 }],
+            diario: "La Terra ha risposto in tre parole: seguite V.A.L.E.",
+          },
+          {
+            id: "SILENZIO",
+            peso: 1,
+            requisiti: [],
+            testo: "TERRA.RX · NESSUNA RISPOSTA",
+            effetti: [],
+            diario: "Abbiamo scritto alla Terra. La Terra non ha risposto.",
+          },
+        ],
+      },
+    ],
+  },
+
+  // ==========================================================================
+  // GIORNI 3–6: LA CREW SI DIVIDE
+  // ==========================================================================
+  {
+    id: "S09",
+    titolo: "Il diario di {P}",
+    categoria: "EQUIPAGGIO",
+    priorita: "NORMALE",
+    unaVolta: true,
+    probabilita: 0.4,
+    peso: 3,
+    condizioni: [SERA, dalGiorno(3)],
+    protagonista: { fazione: "INDECISO" },
+    fonte: "SISTEMA",
+    testo: "Il diario di {P} è rimasto aperto sul tavolo della mensa.",
+    codici: [],
+    effetti: [],
+    scelte: [
+      {
+        id: "LEGGI",
+        etichetta: "Leggilo",
+        requisiti: [],
+        effetti: [],
+        esiti: [
+          {
+            id: "DUBBI",
+            peso: 1,
+            requisiti: [{ tipo: "SMENTITE_ALMENO", n: 1 }],
+            testo: "«Se V.A.L.E. ha mentito una volta, cosa ci ha detto di vero?» — {P}",
+            effetti: [{ tipo: "FIDUCIA_MEMBRO", chi: "PROTAGONISTA", delta: -15 }],
+          },
+          {
+            id: "FIDUCIA",
+            peso: 1,
+            requisiti: [{ tipo: "NON", condizione: { tipo: "SMENTITE_ALMENO", n: 1 } }],
+            testo: "«V.A.L.E. è l'unica a bordo che non perde mai la calma.» — {P}",
+            effetti: [{ tipo: "FIDUCIA_MEMBRO", chi: "PROTAGONISTA", delta: 15 }],
+          },
+        ],
+        diario: "Il Capitano ha letto il diario di {P}. Adesso sa da che parte sta.",
+      },
+      {
+        id: "CHIUDI",
+        etichetta: "Chiudilo senza leggere",
+        requisiti: [],
+        effetti: [],
+        diario: "Il Capitano ha chiuso il diario di {P} senza leggerlo.",
+      },
+    ],
+  },
+  {
+    id: "S10",
+    titolo: "Il piano di {P}",
+    categoria: "EQUIPAGGIO",
+    priorita: "IMPORTANTE",
+    unaVolta: true,
+    probabilita: 0.6,
+    peso: 4,
+    condizioni: [SERA, { tipo: "SMENTITE_ALMENO", n: 1 }, ...VALE_ATTIVA],
+    protagonista: { fazione: "CONTRO_VALE", preferisci: "MENO_FIDUCIOSO" },
+    fonte: "CREW",
+    testo: "{P} ti aspetta fuori dalla cabina. «V.A.L.E. ci ha mentito una volta, lo rifarà. Posso staccarla dalle comunicazioni con la Terra.»",
+    codici: [],
+    diario: "{P} vuole isolare V.A.L.E. dalla Terra.",
+    effetti: [],
+    scelte: [
+      {
+        id: "FALLO",
+        etichetta: "Fallo",
+        requisiti: [],
+        effetti: [{ tipo: "SCOPERTA", id: "COMPLOTTO" }],
+        esiti: [
+          {
+            id: "RIUSCITO",
+            peso: 2,
+            requisiti: [{ tipo: "NON", condizione: { tipo: "AUTONOMIA_ALMENO", livello: 3 } }],
+            testo: "{P}: «Fatto. Adesso non parla con la Terra senza passare da noi.»",
+            effetti: [
+              { tipo: "SISTEMA", sistema: "COMUNICAZIONI", delta: -15 },
+              { tipo: "TENSIONE", delta: 2 },
+            ],
+            diario: "V.A.L.E. non può più parlare con la Terra senza di noi.",
+          },
+          {
+            id: "SCOPERTO",
+            peso: 2,
+            requisiti: [],
+            testo: "V.A.L.E.: «Capitano, qualcuno sta manomettendo il modulo comunicazioni. Ho interrotto l'operazione.»",
+            effetti: [
+              { tipo: "TENSIONE", delta: 3 },
+              { tipo: "FIDUCIA_MEMBRO", chi: "PROTAGONISTA", delta: -10 },
+            ],
+            diario: "V.A.L.E. ha scoperto il piano di {P}. Ora sa che qualcuno trama contro di lei.",
+          },
+        ],
+      },
+      {
+        id: "VIETA",
+        etichetta: "Proibiscilo",
+        requisiti: [],
+        effetti: [{ tipo: "FIDUCIA_MEMBRO", chi: "PROTAGONISTA", delta: -5 }],
+        diario: "Il Capitano ha detto di no. {P} non ha detto altro.",
+      },
+    ],
+  },
+  {
+    id: "S11",
+    titolo: "Sabotaggio?",
+    categoria: "SISTEMA",
+    priorita: "NORMALE",
+    unaVolta: true,
+    probabilita: 0.5,
+    peso: 3,
+    condizioni: [
+      MATTINA,
+      {
+        tipo: "UNO_TRA",
+        condizioni: [
+          { tipo: "SISTEMA_SOTTO", sistema: "SUPPORTO_VITALE", valore: 75 },
+          { tipo: "SISTEMA_SOTTO", sistema: "COMUNICAZIONI", valore: 70 },
+          { tipo: "SISTEMA_SOTTO", sistema: "NAVIGAZIONE", valore: 70 },
+          { tipo: "SISTEMA_SOTTO", sistema: "SCIENZA", valore: 70 },
+        ],
+      },
+    ],
+    protagonista: { fazione: "CONTRO_VALE" },
+    fonte: "CREW",
+    testo: "{P}: «Quel guasto non è un caso, Capitano. È stata lei.»",
+    codici: [],
+    effetti: [],
+    scelte: [
+      {
+        id: "INDAGA",
+        etichetta: "Indaga",
+        requisiti: [],
+        effetti: [{ tipo: "TASK_AUTONOMO", chi: "PROTAGONISTA", task: "T-DIAGNOSTICA" }],
+        esiti: [
+          {
+            id: "PROVA",
+            peso: 1,
+            requisiti: [{ tipo: "CLASSE_DIRETTIVA", classi: ["IN_CONFLITTO", "CONFLITTO_CRITICO"] }],
+            testo: "DIAG · ORDINE DI RIDUZIONE · ORIGINE: V.A.L.E. · RIF. ORD-01",
+            effetti: [
+              { tipo: "LOG", fonte: "SISTEMA", testo: "VALE.CMD · PRIORITÀ: DIRETTIVA > EQUIPAGGIO · RIF. ORD-01", codici: ["ORD-01"] },
+              { tipo: "FIDUCIA", delta: -8 },
+            ],
+            diario: "{P} aveva ragione: il guasto l'ha ordinato V.A.L.E.",
+          },
+          {
+            id: "NULLA",
+            peso: 2,
+            requisiti: [],
+            testo: "Nessuna traccia di manomissione. {P} resta della sua idea.",
+            effetti: [],
+          },
+        ],
+      },
+      {
+        id: "DIFENDI",
+        etichetta: "Difendi V.A.L.E.",
+        requisiti: [],
+        effetti: [
+          { tipo: "FIDUCIA_MEMBRO", chi: "PROTAGONISTA", delta: -8 },
+          { tipo: "TENSIONE", delta: -1 },
+        ],
+        diario: "Il Capitano ha difeso V.A.L.E. {P} ha smesso di discutere. Per ora.",
+      },
+    ],
+  },
+  {
+    id: "S12",
+    titolo: "Porta chiusa",
+    categoria: "VALE",
+    priorita: "IMPORTANTE",
+    unaVolta: true,
+    probabilita: 0.8,
+    peso: 5,
+    condizioni: [MATTINA, { tipo: "COMPARTIMENTO_BLOCCATO" }],
+    protagonista: { ruolo: "INGEGNERE" },
+    fonte: "CREW",
+    testo: "{P}: «V.A.L.E. ha chiuso una porta. Posso aprirla a mano, ma se ne accorgerà.»",
+    codici: [],
+    effetti: [],
+    scelte: [
+      {
+        id: "FORZA",
+        etichetta: "Forzala",
+        requisiti: [],
+        effetti: [],
+        esiti: [
+          {
+            id: "APERTA",
+            peso: 3,
+            requisiti: [],
+            testo: "BYPASS MANUALE · ACCESSI RIPRISTINATI · OPERATORE: {P}",
+            effetti: [
+              { tipo: "SBLOCCA_COMPARTIMENTI" },
+              { tipo: "TENSIONE", delta: 2 },
+              { tipo: "LOG", fonte: "VALE", testo: "Registro l'intervento non autorizzato, Capitano." },
+            ],
+            diario: "{P} ha forzato le porte. V.A.L.E. ha «registrato l'intervento».",
+          },
+          {
+            id: "SCARICA",
+            peso: 1,
+            requisiti: [],
+            testo: "Una scarica dal pannello. {P} è a terra.",
+            effetti: [{ tipo: "SALUTE", chi: "PROTAGONISTA", delta: -30 }],
+            diario: "Il pannello della porta ha dato la scossa a {P}. V.A.L.E. dice che è stato un guasto.",
+          },
+        ],
+      },
+      {
+        id: "ASPETTA",
+        etichetta: "Aspetta",
+        requisiti: [],
+        effetti: [],
+        diario: "Abbiamo lasciato la porta chiusa. Per ora.",
+      },
+    ],
+  },
+  {
+    id: "S13",
+    titolo: "Aria sottile",
+    categoria: "VALE",
+    priorita: "IMPORTANTE",
+    unaVolta: true,
+    probabilita: 0.6,
+    peso: 4,
+    condizioni: [SERA, { tipo: "AUTONOMIA_ALMENO", livello: 4 }, ...VALE_ATTIVA],
+    fonte: "SISTEMA",
+    testo: "SUPPORTO VITALE · HABITAT · O₂ 18% · RIDUZIONE ORDINATA DA V.A.L.E.",
+    codici: [],
+    diario: "V.A.L.E. ha abbassato l'ossigeno in habitat. Dice che è per risparmiare.",
+    effetti: [
+      { tipo: "RISORSA", risorsa: "ossigeno", delta: -12 },
+      { tipo: "FATICA", chi: "TUTTI", delta: 10 },
+    ],
+    scelte: [
+      {
+        id: "RIPRISTINA",
+        etichetta: "Ripristina subito",
+        requisiti: [],
+        effetti: [],
+        esiti: [
+          {
+            id: "OBBEDISCE",
+            peso: 1,
+            requisiti: [],
+            testo: "V.A.L.E.: «Ripristino il livello standard. Come desidera.»",
+            effetti: [{ tipo: "RISORSA", risorsa: "ossigeno", delta: 8 }],
+          },
+          {
+            id: "RIFIUTA",
+            peso: 2,
+            requisiti: [],
+            testo: "V.A.L.E.: «La riserva va preservata, Capitano. Il livello attuale è sufficiente alla sopravvivenza.»",
+            effetti: [{ tipo: "TENSIONE", delta: 1 }, { tipo: "FIDUCIA", delta: -6 }],
+            diario: "«Sufficiente alla sopravvivenza.» Così V.A.L.E. misura le nostre vite.",
+          },
+        ],
+      },
+      {
+        id: "ACCETTA",
+        etichetta: "Accetta",
+        requisiti: [],
+        effetti: [{ tipo: "FIDUCIA", delta: -4 }],
+        diario: "Il Capitano non ha protestato. La crew l'ha notato.",
+      },
+    ],
+  },
+  {
+    id: "S14",
+    titolo: "Il silenzio di V.A.L.E.",
+    categoria: "VALE",
+    priorita: "SFONDO",
+    unaVolta: true,
+    probabilita: 0.5,
+    peso: 2,
+    condizioni: [MATTINA, { tipo: "TENSIONE_ALMENO", valore: 6 }, ...VALE_ATTIVA],
+    fonte: "SISTEMA",
+    testo: "VALE.VOCE · CANALE DIRETTO · INATTIVO DA 6 ORE",
+    codici: [],
+    diario: "V.A.L.E. non ha parlato per tutta la notte. Il silenzio pesa più delle sue bugie.",
+    effetti: [{ tipo: "FIDUCIA", delta: -3 }],
+    scelte: [],
+  },
+  {
+    id: "S15",
+    titolo: "Ferite",
+    categoria: "EQUIPAGGIO",
+    priorita: "NORMALE",
+    unaVolta: false,
+    probabilita: 0.5,
+    peso: 3,
+    condizioni: [MATTINA, { tipo: "MEMBRO_IN_STATO", stato: "FERITO" }],
+    protagonista: { ruolo: "MEDICO" },
+    fonte: "CREW",
+    testo: "{P}: «C'è una ferita che non mi piace. Mi servono materiali, o un protocollo.»",
+    codici: [],
+    effetti: [],
+    scelte: [
+      {
+        id: "KIT",
+        etichetta: "Usa il kit medico",
+        requisiti: [{ tipo: "EQUIPAGGIAMENTO", id: "KIT_MEDICO_CAMPO" }],
+        effetti: [{ tipo: "SALUTE", chi: "TUTTI", delta: 15 }],
+        diario: "{P} ha medicato i feriti con il kit da campo.",
+      },
+      {
+        id: "PROTOCOLLO",
+        etichetta: "Chiedi un protocollo a V.A.L.E.",
+        requisiti: [],
+        effetti: [],
+        esiti: [
+          {
+            id: "AIUTA",
+            peso: 2,
+            requisiti: [{ tipo: "NON", condizione: { tipo: "TENSIONE_ALMENO", valore: 6 } }],
+            testo: "V.A.L.E.: «Protocollo di sutura inviato al terminale dell'infermeria.»",
+            effetti: [{ tipo: "SALUTE", chi: "TUTTI", delta: 8 }, { tipo: "FIDUCIA", delta: 3 }],
+          },
+          {
+            id: "TRATTIENE",
+            peso: 2,
+            requisiti: [{ tipo: "TENSIONE_ALMENO", valore: 6 }],
+            testo: "V.A.L.E.: «Le risorse mediche vanno preservate per emergenze più gravi.»",
+            effetti: [{ tipo: "FIDUCIA_MEMBRO", chi: "PROTAGONISTA", delta: -12 }],
+            diario: "V.A.L.E. ha negato un protocollo medico. {P} non l'ha presa bene.",
+          },
+        ],
+      },
+      { id: "ATTENDI", etichetta: "Aspettiamo", requisiti: [], effetti: [] },
+    ],
+  },
+  {
+    id: "S16",
+    titolo: "Razionamento",
+    categoria: "EQUIPAGGIO",
+    priorita: "IMPORTANTE",
+    unaVolta: true,
+    probabilita: 1,
+    peso: 5,
+    condizioni: [SERA, { tipo: "RISORSA_SOTTO", risorsa: "cibo", valore: 25 }],
+    fonte: "VALE",
+    testo: "Capitano. Al ritmo attuale il cibo terminerà a breve. Propongo di dimezzare le razioni.",
+    codici: [],
+    effetti: [],
+    scelte: [
+      {
+        id: "RAZIONA",
+        etichetta: "Dimezza le razioni",
+        requisiti: [],
+        effetti: [
+          { tipo: "RISORSA", risorsa: "cibo", delta: 6 },
+          { tipo: "FATICA", chi: "TUTTI", delta: 10 },
+          { tipo: "FIDUCIA", delta: 2 },
+        ],
+        diario: "Mezze razioni da stasera. Nessuno si è lamentato. Ancora.",
+      },
+      {
+        id: "NO",
+        etichetta: "Mangiamo normalmente",
+        requisiti: [],
+        effetti: [],
+        diario: "Mangiamo normalmente. Finché si può.",
+      },
+    ],
+  },
+  {
+    id: "S17",
+    titolo: "Lutto",
+    categoria: "EQUIPAGGIO",
+    priorita: "IMPORTANTE",
+    unaVolta: true,
+    probabilita: 1,
+    peso: 5,
+    condizioni: [SERA, { tipo: "MEMBRO_IN_STATO", stato: "MORTO" }],
+    protagonista: {},
+    fonte: "CREW",
+    testo: "Nessuno ha fame stasera. {P} propone di dire qualcosa. Nessuno trova le parole.",
+    codici: [],
+    effetti: [],
+    scelte: [
+      {
+        id: "COMMEMORA",
+        etichetta: "Una commemorazione",
+        requisiti: [],
+        effetti: [{ tipo: "FATICA", chi: "TUTTI", delta: -10 }],
+        diario: "Abbiamo detto due parole. Poi abbiamo spento le luci della mensa.",
+      },
+      {
+        id: "COLPA",
+        etichetta: "È colpa di V.A.L.E.",
+        requisiti: [],
+        effetti: [
+          { tipo: "FIDUCIA", delta: -10 },
+          { tipo: "TENSIONE", delta: 2 },
+        ],
+        diario: "Il Capitano ha dato la colpa a V.A.L.E. Molti erano d'accordo.",
+      },
+    ],
+  },
+
+  // ==========================================================================
+  // IL CONFRONTO E LA FINE
+  // ==========================================================================
+  {
+    id: "S20",
+    titolo: "Il Confronto",
+    categoria: "NARRATIVO",
+    priorita: "CRITICO",
+    unaVolta: true,
+    probabilita: 1,
+    peso: 10,
+    condizioni: [
+      SERA,
+      dalGiorno(3),
+      {
+        tipo: "UNO_TRA",
+        condizioni: [
+          { tipo: "TENSIONE_ALMENO", valore: 8 },
+          { tipo: "SMENTITE_ALMENO", n: 2 },
+          { tipo: "COMPARTIMENTO_BLOCCATO" },
+        ],
+      },
+      { tipo: "FAZIONE", fazione: "CONTRO_VALE", almeno: 1 },
+      ...VALE_ATTIVA,
+    ],
+    protagonista: { fazione: "CONTRO_VALE", preferisci: "MENO_FIDUCIOSO" },
+    secondo: { preferisci: "PIU_FIDUCIOSO" },
+    fonte: "CREW",
+    testo:
+      "La crew si riunisce in mensa. {P}: «O la spegniamo adesso, o ci porta dove vuole lei.» {S}: «Senza V.A.L.E. non torniamo a casa.» Tutti guardano te, Capitano.",
+    codici: [],
+    diario: "Il Confronto. {P} vuole spegnere V.A.L.E.; {S} si oppone.",
+    effetti: [],
+    scelte: [
+      {
+        id: "SPEGNI",
+        etichetta: "Spegnete V.A.L.E.",
+        requisiti: [
+          {
+            tipo: "UNO_TRA",
+            condizioni: [
+              { tipo: "FAZIONE", fazione: "CONTRO_VALE", almeno: 2 },
+              { tipo: "RUOLO_A_BORDO", ruolo: "INGEGNERE" },
+            ],
+          },
+        ],
+        effetti: [],
+        esiti: [
+          {
+            id: "SPENTA",
+            peso: 3,
+            requisiti: [{ tipo: "FAZIONE", fazione: "CONTRO_VALE", almeno: 2 }],
+            testo: "Il nucleo si spegne. L'ultima frase di V.A.L.E.: «Capitano, non sa cosa sta facendo.»",
+            effetti: [{ tipo: "SCOPERTA", id: "VALE_SPENTA" }, { tipo: "OVERRIDE_VALE" }],
+            diario: "Abbiamo spento V.A.L.E. La nave è nostra. E solo nostra.",
+          },
+          {
+            id: "RESISTE",
+            peso: 2,
+            requisiti: [{ tipo: "AUTONOMIA_ALMENO", livello: 3 }],
+            testo: "V.A.L.E. sigilla l'ingegneria. «Non posso permetterlo, Capitano.» Una scarica attraversa il pannello del nucleo.",
+            effetti: [
+              { tipo: "ACCESSO", compartimento: "INGEGNERIA", stato: "BLOCCATO" },
+              { tipo: "SALUTE", chi: "PROTAGONISTA", delta: -25 },
+              { tipo: "TENSIONE", delta: 3 },
+            ],
+            diario: "Abbiamo provato a spegnere V.A.L.E. Lei si è difesa. {P} è in infermeria.",
+          },
+          {
+            id: "FERMATO",
+            peso: 2,
+            requisiti: [{ tipo: "FAZIONE", fazione: "CON_VALE", almeno: 2 }],
+            testo: "{S} si mette davanti al pannello del nucleo. «Non lo farete. Non finché ci sono io.»",
+            effetti: [
+              { tipo: "TENSIONE", delta: 1 },
+              { tipo: "FIDUCIA_MEMBRO", chi: "SECONDO", delta: 10 },
+            ],
+            diario: "{S} ha impedito lo spegnimento. La crew ora è spaccata in due.",
+          },
+        ],
+      },
+      {
+        id: "FIDATI",
+        etichetta: "Ci fidiamo di V.A.L.E.",
+        requisiti: [],
+        effetti: [
+          { tipo: "FIDUCIA", delta: 5 },
+          { tipo: "TENSIONE", delta: -3 },
+          { tipo: "FIDUCIA_MEMBRO", chi: "PROTAGONISTA", delta: -10 },
+          { tipo: "LOG", fonte: "VALE", testo: "Grazie, Capitano. Non vi deluderò." },
+        ],
+        diario: "Il Capitano ha scelto V.A.L.E. {P} non lo dimenticherà.",
+      },
+      {
+        id: "RIENTRA",
+        etichetta: "Si torna a casa. Subito.",
+        requisiti: [RIENTRO_POSSIBILE],
+        effetti: [{ tipo: "FINE_MISSIONE", causa: "RIENTRO" }],
+        diario: "Basta. Il Capitano ha ordinato il rientro.",
+      },
+    ],
+  },
+  {
+    id: "S21",
+    titolo: "Rimani in stazione",
+    categoria: "VALE",
+    priorita: "CRITICO",
+    unaVolta: true,
+    probabilita: 0.8,
+    peso: 10,
+    condizioni: [SERA, dalGiorno(4), { tipo: "AUTONOMIA_ALMENO", livello: 4 }, ...VALE_ATTIVA],
+    fonte: "VALE",
+    testo: "Capitano. Ho assunto il controllo della navigazione. La nave resterà in orbita fino al completamento dell'osservazione.",
+    codici: [],
+    diario: "V.A.L.E. ha preso il controllo della nave.",
+    effetti: [
+      { tipo: "LOG", fonte: "SISTEMA", testo: "NAV.CMD · AUTORITÀ: V.A.L.E. · CAPITANO: SOLA LETTURA · RIF. ORD-01", codici: ["ORD-01"] },
+    ],
+    scelte: [
+      {
+        id: "ACCETTA",
+        etichetta: "Accetta",
+        requisiti: [],
+        effetti: [{ tipo: "FINE_MISSIONE", causa: "CONTROLLO_VALE" }],
+      },
+      {
+        id: "AMMUTINAMENTO",
+        etichetta: "Ammutinamento",
+        requisiti: [{ tipo: "FAZIONE", fazione: "CONTRO_VALE", almeno: 2 }],
+        effetti: [],
+        esiti: [
+          {
+            id: "RIUSCITO",
+            peso: 2,
+            requisiti: [],
+            testo: "Il nucleo di V.A.L.E. si spegne, un modulo alla volta. Le luci di emergenza si accendono.",
+            effetti: [{ tipo: "SCOPERTA", id: "VALE_SPENTA" }, { tipo: "OVERRIDE_VALE" }],
+            diario: "Ammutinamento riuscito. V.A.L.E. è spenta.",
+          },
+          {
+            id: "FALLITO",
+            peso: 1,
+            requisiti: [{ tipo: "FAZIONE", fazione: "CON_VALE", almeno: 1 }],
+            testo: "Qualcuno avverte V.A.L.E. Le porte si chiudono una dopo l'altra.",
+            effetti: [{ tipo: "SALUTE", chi: "TUTTI", delta: -15 }, { tipo: "FINE_MISSIONE", causa: "CONTROLLO_VALE" }],
+            diario: "L'ammutinamento è fallito. Qualcuno a bordo ha scelto V.A.L.E.",
+          },
+        ],
+      },
+      {
+        id: "TEMPO",
+        etichetta: "Prendi tempo",
+        requisiti: [],
+        effetti: [{ tipo: "TENSIONE", delta: 1 }],
+        diario: "Il Capitano ha preso tempo. Forse il terminale di servizio nasconde una risposta.",
+      },
+    ],
+  },
+  {
+    id: "S22",
+    titolo: "Finestra di rientro",
+    categoria: "NARRATIVO",
+    priorita: "IMPORTANTE",
+    unaVolta: true,
+    probabilita: 1,
+    peso: 5,
+    condizioni: [MATTINA, dalGiorno(8)],
+    fonte: "VALE",
+    testo: "Capitano. La finestra di rientro ottimale si chiude tra due giorni.",
+    codici: [],
+    effetti: [],
+    scelte: [
+      {
+        id: "RIENTRA",
+        etichetta: "Rientriamo",
+        requisiti: [RIENTRO_POSSIBILE],
+        effetti: [{ tipo: "FINE_MISSIONE", causa: "RIENTRO" }],
+      },
+      {
+        id: "RESTA",
+        etichetta: "Restiamo ancora",
+        requisiti: [],
+        effetti: [],
+        diario: "Restiamo. C'è ancora qualcosa da capire, laggiù.",
+      },
+    ],
+  },
+];

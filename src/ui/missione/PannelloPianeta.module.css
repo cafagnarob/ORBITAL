@@ -49,3 +49,10 @@
   letter-spacing: 0.1em;
   color: var(--c-fosforo);
 }
+
+.seed {
+  margin: var(--sp-1) 0 0;
+  font-size: var(--fs-piccolo);
+  letter-spacing: 0.12em;
+  color: var(--c-fosforo-tenue);
+}

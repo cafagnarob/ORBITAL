@@ -19,7 +19,9 @@
 
 import type { DefinizioneTask, IdDefinizioneTask, IdIstanzaTask, IdMembro, IdScoperta, StatoMissione } from "../types";
 import type { ContestoMissione } from "./contesto";
+import { contestazioneAperta, TAG_VERIFICA } from "../vale/contestazioni";
 import { puoLavorare } from "./disponibilita";
+import { luogoBloccato } from "../storia/iniziative";
 
 // ----------------------------------------------------------------------------
 // ASSEGNAZIONE
@@ -46,6 +48,8 @@ export function verificaAssegnazione(
   if (!def) return `Task sconosciuto: ${idDefinizione}`;
 
   if (scoperteMancanti(stato, def).length > 0) return `${def.nome}: informazioni insufficienti`;
+  // Una verifica ha senso solo se c'è un'affermazione di V.A.L.E. contestata.
+  if (def.tag.includes(TAG_VERIFICA) && !contestazioneAperta(stato)) return "Nessuna affermazione contestata da verificare";
 
   const responsabile = stato.crew[idResponsabile];
   if (!responsabile) return `Membro sconosciuto: ${idResponsabile}`;
@@ -62,6 +66,13 @@ export function verificaAssegnazione(
   // Tutto l'equipaggiamento richiesto deve essere a bordo.
   const mancante = def.equipaggiamentoRichiesto.find((e) => !stato.nave.equipaggiamento.includes(e));
   if (mancante !== undefined) return `Equipaggiamento mancante: ${mancante}`;
+
+  // …e tutti i moduli richiesti installati (scelti nella Preparazione).
+  const moduloMancante = def.moduliRichiesti.find((m) => !stato.nave.moduli.includes(m));
+  if (moduloMancante !== undefined) return `Modulo mancante: ${moduloMancante}`;
+
+  // V.A.L.E. può aver chiuso il compartimento (v3.0).
+  if (luogoBloccato(stato, def.luogo)) return `Accesso a ${def.luogo.replaceAll("_", " ")} bloccato da V.A.L.E.`;
 
   return null;
 }

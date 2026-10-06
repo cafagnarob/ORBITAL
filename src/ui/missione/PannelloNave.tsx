@@ -9,6 +9,7 @@
  * ============================================================================
  */
 
+import { CATALOGO_EQUIPAGGIAMENTO, CATALOGO_MODULI } from "../../content/loadout";
 import { fasciaScafo, fasciaSistema } from "../../engine/nave/integrita";
 import { SISTEMI_CORE, type StatoMissione } from "../../engine/types";
 import { BarraSegmentata } from "../components/BarraSegmentata";
@@ -41,7 +42,13 @@ export function PannelloNave({ stato }: { stato: StatoMissione }) {
               <span className={`${stili.valore} ${stili[tono]}`}>
                 {valore} · {etichetta(fascia)}
               </span>
-              <BarraSegmentata valore={valore} massimo={100} etichetta={`Integrità ${etichetta(s)}`} tono={tono} segmenti={12} />
+              <BarraSegmentata
+                valore={valore}
+                massimo={100}
+                etichetta={`Integrità ${etichetta(s)}`}
+                tono={tono}
+                segmenti={12}
+              />
             </li>
           );
         })}
@@ -51,13 +58,13 @@ export function PannelloNave({ stato }: { stato: StatoMissione }) {
       <ul className={stili.chip} aria-label="Moduli installati">
         {nave.moduli.map((m) => (
           <li key={m} className={stili.modulo}>
-            {etichetta(m)}
+            {CATALOGO_MODULI[m]?.nome ?? etichetta(m)}
           </li>
         ))}
       </ul>
       <ul className={stili.chip} aria-label="Equipaggiamento a bordo">
         {nave.equipaggiamento.map((e) => (
-          <li key={e}>{etichetta(e)}</li>
+          <li key={e}>{CATALOGO_EQUIPAGGIAMENTO[e]?.nome ?? etichetta(e)}</li>
         ))}
       </ul>
     </Finestra>

@@ -1,0 +1,56 @@
+/* SelezioneLoadout.module.css — linguette e griglia delle schede oggetto. */
+
+.linguette {
+  position: sticky; /* restano in vista mentre la lista scorre */
+  top: calc(-1 * var(--sp-3));
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sp-1);
+  margin: calc(-1 * var(--sp-3)) 0 var(--sp-3);
+  padding-top: var(--sp-3);
+  background: var(--c-pannello);
+}
+.linguetta {
+  min-height: 40px;
+  padding: 0 var(--sp-1);
+  border: 1.5px solid var(--c-fosforo-tenue);
+  background: transparent;
+  color: var(--c-fosforo);
+  font-family: var(--font-terminale);
+  font-size: 19px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.linguetta[aria-selected="true"] {
+  border-color: var(--c-fosforo);
+  background: var(--c-fosforo);
+  color: var(--c-vuoto);
+}
+.conteggio {
+  opacity: 0.75;
+}
+
+.nota {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--fs-piccolo);
+  color: var(--c-fosforo-tenue);
+  letter-spacing: 0.04em;
+}
+
+.griglia {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--sp-2);
+}
+
+/* Due colonne quando c'è spazio (tablet, e la colonna centrale su desktop). */
+@media (min-width: 640px) {
+  .griglia {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

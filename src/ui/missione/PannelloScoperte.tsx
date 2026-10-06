@@ -10,6 +10,7 @@
  * ============================================================================
  */
 
+import { CATALOGO_DIRETTIVE } from "../../content/direttive";
 import { CATALOGO_SCOPERTE } from "../../content/scoperte";
 import type { StatoMissione } from "../../engine/types";
 import { Finestra } from "../components/Finestra";
@@ -30,6 +31,12 @@ export function PannelloScoperte({ stato }: { stato: StatoMissione }) {
               <li key={id}>
                 <span className={stili.titolo}>{def?.titolo ?? id}</span>
                 {def && <span className={stili.descrizione}>{def.descrizione}</span>}
+                {/* Solo DOPO la rivelazione la UI può leggere la direttiva vera. */}
+                {id === "DIRETTIVA_RIVELATA" && (
+                  <span className={stili.direttiva}>
+                    {stato.vale.direttiva} · {CATALOGO_DIRETTIVE[stato.vale.direttiva]?.nome ?? "?"}
+                  </span>
+                )}
               </li>
             );
           })}

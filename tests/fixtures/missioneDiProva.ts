@@ -122,7 +122,7 @@ export function creaMissioneDiProva(seed = "E17-73A9"): StatoMissione {
         "RILEVATORE_RADIAZIONI",
       ],
     },
-    risorse: { scorte: 540, energia: 150, carburante: 26 },
+    risorse: { cibo: 120, acqua: 120, ossigeno: 60, energia: 150, carburante: 26 },
 
     // Un task già in coda, per avere dati realistici da testare.
     tasks: {
@@ -142,9 +142,14 @@ export function creaMissioneDiProva(seed = "E17-73A9"): StatoMissione {
 
     conoscenza: { scoperte: [] },
     eventi: { accaduti: [], inAttesa: null },
+    terminale: { livello: 0, frammenti: [], segnalate: [], tentativi: [] },
+    vale: { direttiva: "D-NEUTRA", tensione: 0, override: false, affermazioni: [], contestazioni: [] },
     log: [
       { tempo: 360, fonte: "VALE", testo: "Capitano. Sistemi nominali. In attesa di istruzioni.", codici: [] },
     ],
     contatoreId: 1,
+    diario: [],
+    imprevisto: null,
+    esito: null,
   };
 }

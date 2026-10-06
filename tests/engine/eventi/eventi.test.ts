@@ -70,7 +70,13 @@ describe("attivazione", () => {
   it("un evento con scelte ferma il gioco in DECISIONE", () => {
     const s = finoAllaDecisione();
     expect(s.statoGioco).toBe("DECISIONE");
-    expect(s.eventi.inAttesa).toEqual({ id: "T-DEC", ritorno: "IN_ESECUZIONE", idTaskOrigine: "task-1" });
+    expect(s.eventi.inAttesa).toEqual({
+      id: "T-DEC",
+      ritorno: "IN_ESECUZIONE",
+      idTaskOrigine: "task-1",
+      protagonista: null,
+      secondo: null,
+    });
     expect(s.log.some((v) => v.testo === "Evento T-DEC")).toBe(true);
   });
 
@@ -102,7 +108,7 @@ describe("risoluzione (RISOLVI_EVENTO)", () => {
     expect(s.statoGioco).toBe("IN_ESECUZIONE");
     expect(s.conoscenza.scoperte).toEqual(["INDIZIO"]);
     expect(s.risorse.energia).toBe(prima.risorse.energia - 10);
-    expect(s.eventi.accaduti).toEqual([{ id: "T-DEC", tempo: prima.tempo, scelta: "PRENDI" }]);
+    expect(s.eventi.accaduti).toEqual([{ id: "T-DEC", tempo: prima.tempo, scelta: "PRENDI", protagonista: null, esito: null }]);
     expect(s.eventi.inAttesa).toBeNull();
   });
 

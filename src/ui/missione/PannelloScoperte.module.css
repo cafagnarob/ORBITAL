@@ -33,3 +33,11 @@
   font-size: 13px;
   color: var(--c-fosforo-tenue);
 }
+
+.direttiva {
+  font-family: var(--font-terminale);
+  font-size: 20px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--c-attenzione);
+}

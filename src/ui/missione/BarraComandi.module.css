@@ -23,11 +23,15 @@
   flex: none;
   min-width: 220px;
 }
+.rientro {
+  flex: none;
+}
 
 @media (max-width: 1099px) {
   .barra {
     position: sticky;
-    bottom: 0;
+    /* Resta sopra la fascia frontale del monitor (vedi Monitor.module.css). */
+    bottom: var(--altezza-frontale, 0px);
     z-index: 10;
     flex-wrap: wrap;
     gap: var(--sp-2);
@@ -37,7 +41,8 @@
     flex-basis: 100%;
     font-size: 18px;
   }
-  .pulsante {
+  .pulsante,
+  .rientro {
     flex: 1;
     min-width: 0;
   }

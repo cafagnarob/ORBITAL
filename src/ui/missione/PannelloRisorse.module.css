@@ -30,3 +30,10 @@
   color: var(--c-fosforo-tenue);
   font-size: 18px;
 }
+
+/* La variazione negativa al prossimo rapporto: ambra tenue, non allarme. */
+.calo {
+  color: var(--c-attenzione);
+  font-size: 18px;
+  opacity: 0.85;
+}

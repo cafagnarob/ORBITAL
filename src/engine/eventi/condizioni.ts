@@ -15,7 +15,10 @@
  * ============================================================================
  */
 
+import { scomponiTempo } from "../clock";
 import type { ContestoMissione } from "../mission/contesto";
+import { contaFazione, membriAttivi } from "../storia/fazioni";
+import { livelloAutonomia } from "../vale/comportamento";
 import { ESITI_TASK, type Condizione, type EsitoTask, type IdIstanzaTask, type StatoMissione } from "../types";
 
 export interface MomentoEventi {
@@ -73,6 +76,38 @@ export function verificaCondizione(
       return stato.nave.equipaggiamento.includes(c.id);
     case "UNO_TRA":
       return c.condizioni.some((interna) => verificaCondizione(stato, contesto, interna, momento));
+    case "NON":
+      return !verificaCondizione(stato, contesto, c.condizione, momento);
+
+    // --- Storia emergente (v3.0) -------------------------------------------
+    case "GIORNO_ALMENO":
+      return scomponiTempo(stato.tempo).giorno >= c.giorno;
+    case "TENSIONE_ALMENO":
+      return stato.vale.tensione >= c.valore;
+    case "AUTONOMIA_ALMENO":
+      return livelloAutonomia(stato, contesto) >= c.livello;
+    case "FAZIONE":
+      return contaFazione(stato, c.fazione) >= c.almeno;
+    case "RISORSA_SOTTO":
+      return stato.risorse[c.risorsa] < c.valore;
+    case "SISTEMA_SOTTO":
+      return stato.nave.sistemi[c.sistema] < c.valore;
+    case "CLASSE_DIRETTIVA": {
+      const classe = contesto.catalogoDirettive[stato.vale.direttiva]?.classe;
+      return classe !== undefined && c.classi.includes(classe);
+    }
+    case "RUOLO_A_BORDO":
+      return membriAttivi(stato).some((m) => m.ruolo === c.ruolo);
+    case "MEMBRO_IN_STATO":
+      return Object.values(stato.crew).some((m) => m.stato === c.stato);
+    case "SMENTITE_ALMENO":
+      return stato.vale.contestazioni.filter((x) => x.stato === "SMENTITA").length >= c.n;
+    case "OVERRIDE":
+      return stato.vale.override;
+    case "IMPREVISTO":
+      return stato.imprevisto === c.id;
+    case "COMPARTIMENTO_BLOCCATO":
+      return Object.values(stato.nave.accessi).includes("BLOCCATO");
   }
 }
 

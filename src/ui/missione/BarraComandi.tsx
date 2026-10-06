@@ -7,12 +7,19 @@
  *   PIANIFICAZIONE → AVVIA OPERAZIONI
  *   IN_ESECUZIONE  → AVANZA (e dice COSA succederà e QUANDO)
  *   RAPPORTO       → CHIUDI RAPPORTO
+ *   CONCLUSA       → niente: c'è l'epilogo
+ *
+ * ORDINA IL RIENTRO (v3.0): in pianificazione e al rapporto c'è anche il
+ * pulsante per tornare a casa, che chiude la missione. È irreversibile,
+ * quindi chiede conferma: il primo clic "arma" il pulsante (useState),
+ * il secondo ordina davvero il rientro.
  *
  * L'anteprima "prossimo momento" usa prossimoMomento() del motore: la UI
  * non indovina, chiede all'orologio la stessa cosa che chiederà il reducer.
  * ============================================================================
  */
 
+import { useState } from "react";
 import { CATALOGO_TASK } from "../../content/tasks";
 import { prossimoMomento, type MotivoSosta } from "../../engine/clock";
 import type { StatoMissione } from "../../engine/types";
@@ -42,6 +49,8 @@ function descriviMotivo(stato: StatoMissione, motivo: MotivoSosta): string {
 }
 
 export function BarraComandi({ stato, dispatch }: Props) {
+  const [rientroArmato, setRientroArmato] = useState(false);
+  const rientroPossibile = stato.statoGioco === "PIANIFICAZIONE" || stato.statoGioco === "RAPPORTO";
   let testo: string;
   let comando: { etichetta: string; azione: () => void } | null;
 
@@ -65,6 +74,10 @@ export function BarraComandi({ stato, dispatch }: Props) {
       testo = "V.A.L.E. attende una decisione del Capitano.";
       comando = null;
       break;
+    case "CONCLUSA":
+      testo = "Missione conclusa.";
+      comando = null;
+      break;
   }
 
   return (
@@ -72,8 +85,32 @@ export function BarraComandi({ stato, dispatch }: Props) {
       <p className={stili.testo} aria-live="polite">
         {testo}
       </p>
+      {rientroPossibile && (
+        <Pulsante
+          variante={rientroArmato ? "pericolo" : "secondario"}
+          className={stili.rientro}
+          onClick={() => {
+            if (!rientroArmato) {
+              setRientroArmato(true);
+              return;
+            }
+            setRientroArmato(false);
+            dispatch({ tipo: "RIENTRA" });
+          }}
+          onBlur={() => setRientroArmato(false)}
+        >
+          {rientroArmato ? "Confermi il rientro?" : "Ordina il rientro"}
+        </Pulsante>
+      )}
       {comando && (
-        <Pulsante variante="primario" onClick={comando.azione} className={stili.pulsante}>
+        <Pulsante
+          variante="primario"
+          onClick={() => {
+            setRientroArmato(false);
+            comando.azione();
+          }}
+          className={stili.pulsante}
+        >
           {comando.etichetta}
         </Pulsante>
       )}

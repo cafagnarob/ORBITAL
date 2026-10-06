@@ -27,7 +27,7 @@ const gioca = (s: StatoMissione, a: Azione) => applicaAzione(s, a, CONTESTO_GIOC
 
 /** Preferenze del bot: per ogni membro, i task che prova ad assegnare in ordine. */
 const PREFERENZE: Record<string, string[]> = {
-  nadia: ["T-ANALISI-SEGNALE", "T-SCANSIONE-CRATERE"],
+  nadia: ["T-VERIFICA-DATI", "T-ANALISI-SEGNALE", "T-SCANSIONE-CRATERE"],
   adrian: ["T-RICOGNIZIONE-DRONE", "T-CORREZIONE-ORBITA"],
   mara: ["T-DIAGNOSTICA", "T-MANUTENZIONE-SV"],
   sarah: ["T-SCANSIONE-CRATERE", "T-MANUTENZIONE-SV"],
@@ -49,13 +49,26 @@ function pianifica(stato: StatoMissione): StatoMissione {
   return s;
 }
 
+/**
+ * Il bot "bara": contesta proprio le affermazioni che V.A.L.E. ha filtrato
+ * (lette dallo stato nascosto). Un giocatore vero dovrebbe accorgersene dalle
+ * contraddizioni nel log; qui verifichiamo solo che la storia sia RAGGIUNGIBILE.
+ */
+function contestaFiltrate(stato: StatoMissione): StatoMissione {
+  let s = stato;
+  for (const a of s.vale.affermazioni) {
+    if (!s.vale.contestazioni.some((c) => c.indice === a.indice)) s = gioca(s, { tipo: "CONTESTA", indice: a.indice });
+  }
+  return s;
+}
+
 /** Gioca una partita fino al giorno indicato. `n` varia le scelte del bot. */
 function partita(seed: string, giorni: number, n: number): StatoMissione {
   let s = creaMissioneIniziale(seed);
-  for (let passi = 0; passi < 500 && scomponiTempo(s.tempo).giorno <= giorni; passi++) {
+  for (let passi = 0; passi < 500 && scomponiTempo(s.tempo).giorno <= giorni && s.statoGioco !== "CONCLUSA"; passi++) {
     switch (s.statoGioco) {
       case "PIANIFICAZIONE":
-        s = gioca(pianifica(s), { tipo: "AVVIA_OPERAZIONI" });
+        s = gioca(pianifica(contestaFiltrate(s)), { tipo: "AVVIA_OPERAZIONI" });
         break;
       case "IN_ESECUZIONE":
         s = gioca(s, { tipo: "AVANZA" });
@@ -79,9 +92,12 @@ function partita(seed: string, giorni: number, n: number): StatoMissione {
 describe("simulazione con il contenuto vero", () => {
   const finali = Array.from({ length: 30 }, (_, i) => partita(`BOT-${i}`, 6, i));
 
-  it("30 partite da 6 giorni si giocano senza errori", () => {
+  it("30 partite da 6 giorni si giocano senza errori (o finiscono prima con un finale)", () => {
     expect(finali).toHaveLength(30);
-    for (const s of finali) expect(scomponiTempo(s.tempo).giorno).toBeGreaterThanOrEqual(6);
+    for (const s of finali) {
+      if (s.statoGioco === "CONCLUSA") expect(s.esito).not.toBeNull();
+      else expect(scomponiTempo(s.tempo).giorno).toBeGreaterThanOrEqual(6);
+    }
   });
 
   it("il segnale viene rilevato nella maggior parte delle partite", () => {

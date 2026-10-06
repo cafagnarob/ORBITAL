@@ -76,3 +76,6 @@ export type IdEvento = string;
  * Le scoperte formano la CONOSCENZA (DESIGN §4.1): ciò che il giocatore sa.
  */
 export type IdScoperta = string;
+
+/** Direttiva nascosta di V.A.L.E., es. "D12" (content/direttive.ts). */
+export type IdDirettiva = string;

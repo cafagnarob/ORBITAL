@@ -1,0 +1,144 @@
+/*
+ * SchermataPreparazione.module.css — tre colonne (desktop) o schede (mobile).
+ * Stesso schema di SchermataMissione: si parte dal mobile e si aggiunge il
+ * desktop con min-width.
+ */
+
+/* ===== MOBILE / TABLET (base) ============================================ */
+.schermo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  min-height: 100%;
+  padding: var(--sp-3) var(--sp-3) 0;
+}
+
+/* Intestazione a "pillola", come quella della Missione. */
+.intestazione {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-1) var(--sp-3);
+  padding: var(--sp-2) var(--sp-4);
+  border: 2px solid var(--c-fosforo);
+  border-radius: 16px;
+  font-family: var(--font-terminale);
+  font-size: 18px;
+  letter-spacing: 0.08em;
+  color: var(--c-fosforo);
+}
+.logo {
+  font-family: var(--font-display);
+  font-size: 15px;
+  letter-spacing: 0.24em;
+  text-shadow: var(--glow-testo);
+}
+.sistema {
+  display: none; /* su mobile resta l'essenziale: logo, fase, seed */
+  color: var(--c-fosforo-tenue);
+}
+.fase {
+  padding: 0 var(--sp-3);
+  background: var(--c-fosforo);
+  color: var(--c-vuoto);
+  border-radius: 999px;
+}
+.destinazione {
+  display: none;
+}
+.seed {
+  margin-left: auto;
+  color: var(--c-fosforo-tenue);
+}
+
+.schede {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sp-1);
+}
+.scheda {
+  min-height: 40px;
+  border: 1.5px solid var(--c-fosforo);
+  background: transparent;
+  color: var(--c-fosforo);
+  font-family: var(--font-terminale);
+  font-size: 20px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.scheda[aria-pressed="true"] {
+  background: var(--c-fosforo);
+  color: var(--c-vuoto);
+}
+
+.griglia {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.blocco {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.blocco > section {
+  flex: 1;
+}
+
+/* Colonna centrale: lo schema della nave ha la sua altezza, il catalogo
+   prende il resto e scorre. */
+.colonnaNave {
+  gap: var(--sp-3);
+}
+.colonnaNave > section:first-child {
+  flex: none;
+}
+
+.nascostoMobile {
+  display: none;
+}
+
+/* ===== TABLET: intestazione completa ===================================== */
+@media (min-width: 700px) {
+  .intestazione {
+    border-radius: 999px;
+    padding: var(--sp-1) var(--sp-5);
+    gap: var(--sp-2) var(--sp-5);
+    font-size: var(--fs-terminale);
+  }
+  .sistema,
+  .destinazione {
+    display: inline;
+  }
+}
+
+/* ===== DESKTOP ============================================================ */
+@media (min-width: 1100px) {
+  .schermo {
+    height: 100%;
+    padding: var(--sp-4) var(--sp-5);
+  }
+
+  .schede {
+    display: none;
+  }
+
+  .griglia {
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(320px, 1fr) minmax(440px, 1.45fr) minmax(320px, 0.95fr);
+    gap: var(--sp-4);
+  }
+
+  .colonnaNave {
+    gap: var(--sp-4);
+  }
+
+  /* Ogni colonna occupa tutta l'altezza e scorre al suo interno. */
+  .nascostoMobile {
+    display: flex;
+  }
+}

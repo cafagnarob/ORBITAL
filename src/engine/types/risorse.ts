@@ -5,21 +5,27 @@
  *
  * Riferimento design: DESIGN.md §6.
  *
- * PERCHÉ SOLO TRE NUMERI
- * Il design parla di molte grandezze, ma quasi tutte si CALCOLANO:
- *   - generazione e consumo di energia → dai moduli installati e
- *     dall'integrità del sistema Potenza (con i valori di balance.ts);
- *   - ossigeno → è una condizione del Supporto Vitale, non una scorta;
- *   - riserva di rientro → la stima V.A.L.E. dalla posizione della nave;
- *   - scafo → sta già in Nave.
- * Nello stato restano solo le quantità che "si consumano" davvero.
+ * CINQUE NUMERI (v3.0: cibo, acqua e ossigeno tornano separati)
+ * Nello stato restano solo le quantità che "si consumano" davvero:
+ *   cibo, acqua    → dalle casse caricate nella Preparazione;
+ *   ossigeno       → la riserva nei serbatoi: ogni sera il Supporto Vitale
+ *                    ne rigenera una parte, IN PROPORZIONE alla sua
+ *                    integrità. Se il Supporto Vitale si guasta, l'ossigeno
+ *                    diventa il problema più urgente della nave;
+ *   energia, carburante.
+ * Il resto si CALCOLA: generazione e consumo (dai moduli, balance.ts),
+ * riserva di rientro, scafo (sta già in Nave).
  * ============================================================================
  */
 
 /** Le quantità consumabili della missione. */
 export interface Risorse {
-  /** Cibo + acqua unificati (DESIGN §6.1). */
-  scorte: number;
+  /** Razioni di cibo. */
+  cibo: number;
+  /** Litri d'acqua (unità di gioco). */
+  acqua: number;
+  /** Riserva d'ossigeno nei serbatoi. */
+  ossigeno: number;
   /** Carica attuale della batteria (la capacità massima si calcola). */
   energia: number;
   /** Carburante a bordo (la riserva di rientro si calcola). */
@@ -29,6 +35,6 @@ export interface Risorse {
 /**
  * Il costo in risorse di un'azione, es. { energia: 3 }.
  * `Partial<Risorse>` rende tutti i campi facoltativi: un task che consuma
- * solo energia non deve scrivere `scorte: 0, carburante: 0`.
+ * solo energia non deve scrivere `cibo: 0, acqua: 0…`.
  */
 export type CostoRisorse = Partial<Risorse>;

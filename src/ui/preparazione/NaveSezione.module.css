@@ -1,0 +1,207 @@
+/*
+ * NaveSezione.module.css — lo schema della nave a fosfori.
+ * In SVG i colori si danno con `fill` (riempimento) e `stroke` (contorno);
+ * usiamo gli stessi token del design system dell'interfaccia.
+ */
+
+.nave {
+  display: block;
+  width: 100%;
+  height: auto;
+  font-family: var(--font-terminale);
+}
+
+.griglia line {
+  stroke: var(--c-griglia);
+  stroke-width: 0.6;
+  opacity: 0.45;
+}
+
+.linea,
+.scafo,
+.paratia,
+.pilone {
+  fill: none;
+  stroke: var(--c-fosforo);
+  stroke-width: 1.2;
+}
+.scafo {
+  stroke-width: 2;
+  filter: drop-shadow(0 0 3px rgba(125, 245, 165, 0.45));
+}
+.paratia {
+  stroke: var(--c-fosforo-tenue);
+  stroke-dasharray: 3 3;
+}
+.pilone {
+  stroke: var(--c-fosforo-tenue);
+}
+
+.sigla {
+  fill: var(--c-fosforo-tenue);
+  font-size: 13px;
+  letter-spacing: 0.1em;
+}
+.piccolo {
+  fill: var(--c-fosforo-tenue);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+
+/* --- Compartimento potenziato da un modulo ------------------------------- */
+.potenziato {
+  fill: rgba(125, 245, 165, 0.12);
+  animation: accensione 0.9s steps(1, end);
+}
+
+/* --- Capsule dei moduli -------------------------------------------------- */
+.podVuoto {
+  fill: none;
+  stroke: var(--c-fosforo-tenue);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+}
+.podPieno {
+  fill: rgba(125, 245, 165, 0.14);
+  stroke: var(--c-fosforo);
+  stroke-width: 1.6;
+  filter: drop-shadow(0 0 4px rgba(125, 245, 165, 0.5));
+}
+.podSigla {
+  fill: var(--c-fosforo-alto);
+  font-size: 24px;
+  letter-spacing: 0.06em;
+}
+.podNome {
+  fill: var(--c-fosforo-tenue);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+/* La capsula arriva da fuori e si "aggancia" allo scafo. */
+.pod {
+  animation: accensione 0.9s steps(1, end);
+}
+.daSopra {
+  animation:
+    innestoDaSopra 0.45s ease-out,
+    accensione 0.9s steps(1, end);
+}
+.daSotto {
+  animation:
+    innestoDaSotto 0.45s ease-out,
+    accensione 0.9s steps(1, end);
+}
+
+/* --- Rastrelliera ---------------------------------------------------------- */
+.equipVuoto {
+  fill: none;
+  stroke: var(--c-griglia);
+  stroke-width: 1;
+}
+.equipPieno {
+  fill: rgba(92, 239, 216, 0.14);
+  stroke: var(--c-vale);
+  stroke-width: 1;
+}
+.equipSigla {
+  fill: var(--c-vale);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+.innesto {
+  animation: accensione 0.7s steps(1, end);
+}
+
+/* --- Stiva ----------------------------------------------------------------- */
+.cella {
+  stroke-width: 0.8;
+  animation: accensione 0.5s steps(1, end);
+}
+.vuota {
+  fill: none;
+  stroke: var(--c-griglia);
+  animation: none;
+}
+.cibo {
+  fill: rgba(125, 245, 165, 0.55);
+  stroke: var(--c-fosforo);
+}
+.acqua {
+  fill: rgba(92, 239, 216, 0.5);
+  stroke: var(--c-vale);
+}
+.ossigeno {
+  fill: rgba(201, 255, 218, 0.35);
+  stroke: var(--c-fosforo-alto);
+}
+.carburante {
+  fill: rgba(242, 193, 78, 0.6);
+  stroke: var(--c-attenzione);
+}
+.altro {
+  fill: rgba(62, 143, 92, 0.5);
+  stroke: var(--c-fosforo-tenue);
+}
+.eccesso {
+  fill: rgba(255, 106, 92, 0.6);
+  stroke: var(--c-critico);
+}
+
+/* --- Serbatoio ------------------------------------------------------------- */
+.carburanteBasso {
+  fill: rgba(255, 106, 92, 0.6);
+}
+.riserva {
+  stroke: var(--c-critico);
+  stroke-width: 1;
+  stroke-dasharray: 2 2;
+}
+
+/* --- Crew ------------------------------------------------------------------ */
+.figura circle,
+.figura path {
+  fill: var(--c-fosforo);
+}
+.figura {
+  animation: accensione 0.6s steps(1, end);
+}
+
+/* --- Animazioni ------------------------------------------------------------ */
+/* Sfarfallio di un fosforo che si accende: visibile/spento/visibile. */
+@keyframes accensione {
+  0% {
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  35% {
+    opacity: 0.2;
+  }
+  55% {
+    opacity: 1;
+  }
+}
+@keyframes innestoDaSopra {
+  from {
+    transform: translateY(-18px);
+  }
+}
+@keyframes innestoDaSotto {
+  from {
+    transform: translateY(18px);
+  }
+}
+
+/* Chi preferisce meno movimento (impostazione del sistema operativo). */
+@media (prefers-reduced-motion: reduce) {
+  .pod,
+  .daSopra,
+  .daSotto,
+  .innesto,
+  .cella,
+  .figura,
+  .potenziato {
+    animation: none;
+  }
+}

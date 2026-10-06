@@ -20,7 +20,8 @@ import type { IstanzaTask, MembroCrew, StatoMissione } from "../../engine/types"
 import { BarraSegmentata } from "../components/BarraSegmentata";
 import { Finestra } from "../components/Finestra";
 import { Pulsante } from "../components/Pulsante";
-import { etichetta, formattaOra, tonoFatica, tonoStatoMembro } from "../format";
+import { fazioneDi } from "../../engine/storia/fazioni";
+import { etichetta, formattaOra, NOMI_FAZIONE, tonoFatica, tonoFazione, tonoStatoMembro } from "../format";
 import type { Dispatch } from "../useMissione";
 import stili from "./PannelloCrew.module.css";
 
@@ -69,8 +70,22 @@ export function PannelloCrew({ stato, dispatch }: Props) {
                 <span>
                   FATICA {m.fatica} · {fascia}
                 </span>
-                <BarraSegmentata valore={m.fatica} massimo={100} etichetta={`Fatica di ${m.nome}`} tono={tonoFatica(fascia)} />
+                <BarraSegmentata
+                  valore={m.fatica}
+                  massimo={100}
+                  etichetta={`Fatica di ${m.nome}`}
+                  tono={tonoFatica(fascia)}
+                />
               </div>
+
+              {/* La fiducia della crew è della crew: si può mostrare (lo stato di V.A.L.E. no). */}
+              <p className={stili.fiducia}>
+                FIDUCIA IN V.A.L.E. {m.fiduciaVale}
+                {/* La fazione si ricava dalla fiducia (engine/storia/fazioni.ts). */}
+                <span className={`${stili.fazione} ${stili[tonoFazione(fazioneDi(m))]}`}>
+                  {NOMI_FAZIONE[fazioneDi(m)]}
+                </span>
+              </p>
 
               <p className={stili.attivita}>
                 <span className={stili.posizione}>{etichetta(m.posizione)}</span> ▸ {attivitaAttuale(stato, m)}

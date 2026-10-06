@@ -27,13 +27,16 @@
 import type { ContestoMissione } from "../mission/contesto";
 import type { Rng } from "../rng";
 import { PRIORITA_EVENTO, type DefinizioneEvento, type StatoMissione } from "../types";
+import { attoriDisponibili } from "../storia/attori";
 import { verificaTutte, type MomentoEventi } from "./condizioni";
 
 export function eventiIdonei(stato: StatoMissione, contesto: ContestoMissione, momento: MomentoEventi): DefinizioneEvento[] {
   return Object.values(contesto.catalogoEventi)
     .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
     .filter((def) => !(def.unaVolta && stato.eventi.accaduti.some((r) => r.id === def.id)))
-    .filter((def) => verificaTutte(stato, contesto, def.condizioni, momento));
+    .filter((def) => verificaTutte(stato, contesto, def.condizioni, momento))
+    // Gli eventi con protagonista accadono solo se c'è qualcuno adatto a viverli.
+    .filter((def) => attoriDisponibili(stato, def.protagonista, def.secondo));
 }
 
 export function scegliEvento(idonei: readonly DefinizioneEvento[], rng: Rng): DefinizioneEvento | null {

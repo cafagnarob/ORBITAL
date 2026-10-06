@@ -1,0 +1,138 @@
+/* SelezioneCrew.module.css — schede dei candidati, cliccabili. */
+
+.intro {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--fs-piccolo);
+  color: var(--c-fosforo-tenue);
+  letter-spacing: 0.04em;
+}
+
+.lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--sp-2);
+}
+
+/* Il candidato è un pulsante: azzeriamo lo stile di default del browser. */
+.candidato {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border: 1.5px solid var(--c-griglia);
+  background: transparent;
+  color: var(--c-testo);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.candidato:hover:not(:disabled) {
+  border-color: var(--c-fosforo-tenue);
+}
+.candidato:focus-visible {
+  outline: 2px solid var(--c-fosforo-alto);
+  outline-offset: 2px;
+}
+.candidato[aria-pressed="true"] {
+  border-color: var(--c-fosforo);
+  background: rgba(125, 245, 165, 0.06);
+  box-shadow: var(--glow-bordo);
+}
+.candidato:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.testa {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+}
+.nome {
+  font-family: var(--font-terminale);
+  font-size: var(--fs-terminale-grande);
+  line-height: 1;
+  color: var(--c-fosforo);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.ruolo {
+  font-size: var(--fs-piccolo);
+  color: var(--c-fosforo-tenue);
+  letter-spacing: 0.1em;
+}
+.peso {
+  margin-left: auto;
+  font-size: var(--fs-piccolo);
+  color: var(--c-fosforo-tenue);
+}
+
+/* --- Abilità: 7 colonnine affiancate ------------------------------------- */
+.abilita {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--sp-1);
+}
+.cella {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+.sigla {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--c-fosforo-tenue);
+}
+.valore {
+  font-family: var(--font-terminale);
+  font-size: 20px;
+  line-height: 1;
+  color: var(--c-testo);
+}
+.traccia {
+  width: 100%;
+  height: 3px;
+  background: var(--c-griglia);
+}
+.traccia span {
+  display: block;
+  height: 100%;
+  background: var(--c-fosforo-tenue);
+}
+.forte .valore,
+.forte .sigla {
+  color: var(--c-fosforo-alto);
+}
+.forte .traccia span {
+  background: var(--c-fosforo);
+}
+
+/* --- Tratto, personalità, fiducia ---------------------------------------- */
+.dettagli {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: var(--fs-piccolo);
+  letter-spacing: 0.06em;
+}
+.personalita {
+  color: var(--c-fosforo-tenue);
+}
+.fiducia {
+  color: var(--c-vale);
+  opacity: 0.85;
+}
+
+.stato {
+  font-family: var(--font-terminale);
+  font-size: 18px;
+  letter-spacing: 0.08em;
+  color: var(--c-fosforo-tenue);
+}
+.candidato[aria-pressed="true"] .stato {
+  color: var(--c-fosforo);
+}

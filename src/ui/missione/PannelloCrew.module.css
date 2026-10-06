@@ -89,3 +89,20 @@
 .coda li::marker {
   color: var(--c-fosforo-tenue);
 }
+
+.fiducia {
+  margin: var(--sp-1) 0 0;
+  font-size: var(--fs-piccolo);
+  letter-spacing: 0.08em;
+  color: var(--c-vale);
+  opacity: 0.8;
+}
+
+/* Fazione (v3.0): da che parte sta il membro rispetto a V.A.L.E. */
+.fazione {
+  margin-left: var(--sp-2);
+  padding: 0 var(--sp-1);
+  border: 1px solid currentColor;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+}

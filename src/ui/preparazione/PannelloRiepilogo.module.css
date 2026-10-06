@@ -1,0 +1,131 @@
+/* PannelloRiepilogo.module.css — carico, valori di missione, V.A.L.E., problemi. */
+
+.normale {
+  color: var(--c-fosforo);
+}
+.attenzione {
+  color: var(--c-attenzione);
+}
+.critico {
+  color: var(--c-critico);
+}
+
+.fattibilita {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 0 0 var(--sp-3);
+  padding-bottom: var(--sp-2);
+  border-bottom: 1px solid var(--c-griglia);
+  font-size: var(--fs-piccolo);
+  letter-spacing: 0.14em;
+  color: var(--c-fosforo-tenue);
+}
+.fattibilita strong {
+  font-family: var(--font-terminale);
+  font-size: var(--fs-terminale-grande);
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-shadow: var(--glow-testo);
+}
+
+.carico {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--sp-1);
+  font-family: var(--font-terminale);
+  font-size: var(--fs-terminale);
+  letter-spacing: 0.08em;
+  color: var(--c-fosforo);
+}
+.carico > :last-child {
+  grid-column: 1 / -1;
+}
+
+.dettaglio {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2px var(--sp-4);
+  margin: var(--sp-2) 0 0;
+  font-size: var(--fs-piccolo);
+}
+.dettaglio div {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px dotted var(--c-griglia);
+}
+.dettaglio dt {
+  color: var(--c-fosforo-tenue);
+}
+.dettaglio dd {
+  margin: 0;
+}
+
+.sottotitolo {
+  margin: var(--sp-4) 0 var(--sp-2);
+  font-family: var(--font-terminale);
+  font-size: 18px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  color: var(--c-fosforo-tenue);
+}
+
+.valori {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+.valori div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+.valori dt {
+  font-size: var(--fs-piccolo);
+  letter-spacing: 0.1em;
+  color: var(--c-fosforo-tenue);
+}
+.valori dd {
+  margin: 0;
+  font-family: var(--font-terminale);
+  font-size: var(--fs-terminale);
+  color: var(--c-fosforo);
+  text-align: right;
+}
+.valori small {
+  font-family: var(--font-testo);
+  font-size: var(--fs-piccolo);
+  color: var(--c-fosforo-tenue);
+}
+
+.vale {
+  margin: var(--sp-4) 0 var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid rgba(92, 239, 216, 0.4);
+  border-radius: 10px;
+  color: var(--c-vale);
+  text-shadow: var(--glow-vale);
+  font-size: 13px;
+}
+.voce {
+  display: block;
+  font-family: var(--font-terminale);
+  font-size: 18px;
+  letter-spacing: 0.14em;
+}
+
+.problemi {
+  list-style: none;
+  margin: 0 0 var(--sp-3);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  font-size: 13px;
+}
+
+.ripristina {
+  width: 100%;
+}

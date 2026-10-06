@@ -30,6 +30,7 @@ import { CONTESTO_GIOCO } from "../../content/contesto";
 import { CATALOGO_EVENTI } from "../../content/eventi";
 import { formattaTempo } from "../../engine/clock";
 import { verificaScelta } from "../../engine/mission";
+import { conNomi } from "../../engine/storia/attori";
 import type { DefinizioneEvento, StatoMissione } from "../../engine/types";
 import { Pulsante } from "../components/Pulsante";
 import { descriviCosto, descriviRequisiti, etichetta } from "../format";
@@ -56,6 +57,10 @@ function SchedaEvento({ evento, stato, dispatch }: Props & { evento: Definizione
   }));
   const [selezionata, setSelezionata] = useState(scelte.find((s) => s.disponibile)?.scelta.id ?? null);
 
+  // {P} e {S} diventano i nomi di chi vive l'evento (storia emergente, v3.0).
+  const attori = { protagonista: stato.eventi.inAttesa?.protagonista ?? null, secondo: stato.eventi.inAttesa?.secondo ?? null };
+  const nomi = (testo: string) => conNomi(stato, testo, attori);
+
   // Numero progressivo dell'evento nella missione, es. "EVENTO 03".
   const numero = String(stato.eventi.accaduti.length + 1).padStart(2, "0");
 
@@ -69,14 +74,14 @@ function SchedaEvento({ evento, stato, dispatch }: Props & { evento: Definizione
         <div className={stili.corpo}>
           <div className={stili.intestazione}>
             <h2 id={idTitolo} className={stili.titolo}>
-              {evento.titolo}
+              {nomi(evento.titolo)}
             </h2>
             <span className={stili.quando}>{formattaTempo(stato.tempo)}</span>
           </div>
 
           <blockquote className={evento.fonte === "VALE" ? stili.vale : stili.sistema}>
             {evento.fonte === "VALE" && <span className={stili.occhio} aria-hidden="true" />}
-            <p>{evento.fonte === "VALE" ? `“${evento.testo}”` : evento.testo}</p>
+            <p>{evento.fonte === "VALE" ? `“${nomi(evento.testo)}”` : nomi(evento.testo)}</p>
           </blockquote>
 
           <ul className={stili.scelte} aria-label="Scelte disponibili">
@@ -96,7 +101,7 @@ function SchedaEvento({ evento, stato, dispatch }: Props & { evento: Definizione
                     <span className={stili.cursore} aria-hidden="true">
                       {attiva ? "▶" : ""}
                     </span>
-                    <span className={stili.etichetta}>{etichetta(scelta.etichetta)}</span>
+                    <span className={stili.etichetta}>{etichetta(nomi(scelta.etichetta))}</span>
                     <span className={stili.nota}>{nota}</span>
                   </button>
                 </li>

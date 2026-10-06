@@ -19,10 +19,14 @@
  *   AVANZA            → in IN_ESECUZIONE (salta al prossimo momento importante)
  *   CHIUDI_RAPPORTO   → in RAPPORTO (si passa alla notte)
  *   RISOLVI_EVENTO    → in DECISIONE (il Capitano sceglie un'opzione)
+ *   SEGNALA_VOCE      → sempre (segna una riga del log nel Terminale SVC-07)
+ *   INSERISCI_CODICE  → sempre (prova un codice nel Terminale SVC-07)
+ *   CONTESTA          → sempre (contesta un'affermazione di V.A.L.E.)
+ *   INTERROGA_VALE    → sempre (pulsanti-domanda: STATO · PERCHÉ? · DIRETTIVA?)
  * ============================================================================
  */
 
-import type { IdDefinizioneTask, IdIstanzaTask, IdMembro } from "../types";
+import type { DomandaVale, IdDefinizioneTask, IdIstanzaTask, IdMembro } from "../types";
 
 export type Azione =
   | {
@@ -35,4 +39,12 @@ export type Azione =
   | { tipo: "AVVIA_OPERAZIONI" }
   | { tipo: "AVANZA" }
   | { tipo: "CHIUDI_RAPPORTO" }
-  | { tipo: "RISOLVI_EVENTO"; idScelta: string };
+  | { tipo: "RISOLVI_EVENTO"; idScelta: string }
+  | { tipo: "SEGNALA_VOCE"; indice: number }
+  | { tipo: "INSERISCI_CODICE"; codice: string }
+  | { tipo: "CONTESTA"; indice: number }
+  | { tipo: "INTERROGA_VALE"; domanda: DomandaVale }
+  /** Testo libero verso V.A.L.E. (v3.0): riconosce parole chiave. */
+  | { tipo: "SCRIVI_VALE"; testo: string }
+  /** Il Capitano ordina il rientro sulla Terra (v3.0): può chiudere la missione. */
+  | { tipo: "RIENTRA" };

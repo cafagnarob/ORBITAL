@@ -76,17 +76,99 @@ export const BALANCE = {
 
   // --------------------------------------------------------------------------
   // GIORNATA (DESIGN §6, §8)
+  // Sono i valori della nave SENZA moduli: ogni modulo installato li
+  // modifica (content/loadout.ts → engine/nave/parametri.ts).
   // --------------------------------------------------------------------------
   giornata: {
-    /** Scorte consumate da ogni membro a bordo, al rapporto serale. */
-    scortePerMembro: 9,
+    /** Consumi di ogni membro a bordo, al rapporto serale. */
+    ciboPerMembro: 2,
+    acquaPerMembro: 2,
+    ossigenoPerMembro: 2,
+    /** Ossigeno rigenerato al giorno dal Supporto Vitale al 100% (scala con l'integrità). */
+    produzioneOssigeno: 8,
+    /** Capienza dei serbatoi: la rigenerazione non va oltre (le bombole sì). */
+    capacitaOssigeno: 60,
+    /** Salute persa ogni sera da chi resta senza… */
+    dannoSenzaCibo: 10,
+    dannoSenzaAcqua: 20,
+    dannoSenzaOssigeno: 35,
     /** Energia generata al giorno (DESIGN §6.2, senza moduli). */
     generazioneEnergia: 12,
-    /** Energia consumata al giorno dai sistemi (DESIGN §6.2). */
-    consumoEnergia: 8,
+    /**
+     * Energia consumata al giorno dai sistemi core. Il DESIGN (§6.2) dice 8
+     * con il loadout di riferimento: 5 della nave + 3 dei moduli installati.
+     */
+    consumoEnergia: 5,
     /** Carica massima della batteria (DESIGN §6.2). */
     capacitaBatteria: 150,
     /** Fatica recuperata con il sonno, al risveglio. */
     recuperoFaticaNotturno: 35,
+  },
+
+  // --------------------------------------------------------------------------
+  // PREPARAZIONE (DESIGN §7.1, §11.1, §6.3 — Fase 4)
+  // --------------------------------------------------------------------------
+  preparazione: {
+    /** Membri della crew che partono. */
+    crewRichiesta: 4,
+    /** Carico operativo massimo in kg (la crew conta nel peso). */
+    caricoMassimo: 1000,
+    slotModuli: 4,
+    slotEquipaggiamento: 6,
+    /** Spazio scorte della stiva senza Espansione Stoccaggio. */
+    spazioScorte: 200,
+    /** Carburante nel serbatoio principale: è la riserva di rientro. */
+    serbatoio: 18,
+    /** Carburante che serve per tornare a casa (DESIGN §6.3). */
+    riservaRientro: 18,
+    /** Sotto questi giorni di scorte la Preparazione avvisa. */
+    giorniScorteConsigliati: 8,
+  },
+
+  // --------------------------------------------------------------------------
+  // V.A.L.E. (DESIGN §3 — Fase 3)
+  // --------------------------------------------------------------------------
+  vale: {
+    /** Punti di tensione per salire di un livello di comportamento. */
+    tensionePerLivello: 3,
+    /** Tensione aggiunta quando parte un task contrario alla direttiva. */
+    tensioneTaskContrario: 2,
+    /** Tensione aggiunta da un tentativo fallito nel Terminale SVC-07. */
+    tensioneTentativoTerminale: 1,
+    /** Tensione aggiunta quando il Capitano contesta un'affermazione. */
+    tensioneContestazione: 1,
+    /** Tensione aggiunta dall'override del nucleo (ORD-01). */
+    tensioneOverride: 3,
+    /** Fiducia della crew quando una verifica SMENTISCE / CONFERMA V.A.L.E. */
+    fiduciaSmentita: -15,
+    fiduciaConfermata: 5,
+    /** Fiducia della crew quando V.A.L.E. rifiuta un task. */
+    fiduciaRifiuto: -10,
+    /** Soglie oltre le quali un membro della crew DICE cosa pensa. */
+    sogliaSfiducia: 30,
+    sogliaFiducia: 75,
+    /** Pesi dell'integrità dei dati (somma 1). */
+    pesoIntegrita: { SCIENZA: 0.4, NAVIGAZIONE: 0.3, COMUNICAZIONI: 0.3 },
+    /** Errore massimo della stima di rischio = (100 − integrità) × questo valore. */
+    erroreStimaPerPunto: 0.5,
+  },
+
+  // --------------------------------------------------------------------------
+  // STORIA EMERGENTE (DESIGN §10.2 — v3.0)
+  // --------------------------------------------------------------------------
+  storia: {
+    /** Fiducia da cui un membro sta CON V.A.L.E. (≥) o CONTRO (≤). In mezzo: indeciso. */
+    fazioneCon: 65,
+    fazioneContro: 35,
+    /** Probabilità, ogni mattina, che un membro CONTRO contesti V.A.L.E. da solo. */
+    probabilitaIniziativa: 0.35,
+    /** Da questo comportamento (3 = PERSISTENTE) chi sta con V.A.L.E. rifiuta i task che lei sconsiglia. */
+    comportamentoRifiutoCrew: 3,
+    /** Da questa autonomia (4 = AUTONOMA) V.A.L.E. blocca i compartimenti e il rientro. */
+    autonomiaBlocco: 4,
+    /** Tensione aggiunta da uno sblocco manuale riuscito. */
+    tensioneSblocco: 2,
+    /** Dopo questo giorno la finestra di rientro si chiude: la missione finisce. */
+    durataMissione: 10,
   },
 } as const;

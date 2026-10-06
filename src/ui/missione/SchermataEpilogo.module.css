@@ -1,0 +1,141 @@
+/* SchermataEpilogo.module.css — la pagina finale, dentro lo schermo del monitor. */
+
+.sfondo {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  overflow-y: auto;
+  padding: var(--sp-5) var(--sp-4);
+  background: var(--c-vuoto); /* opaco: la missione è finita, resta solo il racconto */
+}
+
+.epilogo {
+  width: min(760px, 100%);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.etichetta {
+  margin: 0;
+  font-family: var(--font-terminale);
+  font-size: var(--fs-terminale);
+  letter-spacing: 0.16em;
+  color: var(--c-fosforo-tenue);
+}
+
+.titolo {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(28px, 6vw, 52px);
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-shadow: var(--glow-testo);
+  animation: accensione 1.4s steps(1, end);
+}
+.normale {
+  color: var(--c-fosforo);
+}
+.attenzione {
+  color: var(--c-attenzione);
+}
+.critico {
+  color: var(--c-critico);
+}
+
+.testo {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--c-testo);
+}
+
+.sezione {
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--c-griglia);
+}
+.sezione h2 {
+  margin: 0 0 var(--sp-2);
+  font-family: var(--font-terminale);
+  font-size: var(--fs-terminale);
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  color: var(--c-fosforo-tenue);
+}
+
+.crew {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  font-size: 14px;
+}
+.crew strong {
+  font-family: var(--font-terminale);
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  color: var(--c-fosforo);
+  text-transform: uppercase;
+}
+
+.direttiva {
+  color: var(--c-vale);
+}
+.nomeDirettiva {
+  margin: 0 0 var(--sp-1);
+  font-family: var(--font-terminale);
+  font-size: var(--fs-terminale-grande);
+  letter-spacing: 0.1em;
+  text-shadow: var(--glow-vale);
+}
+.direttiva p {
+  margin: 0;
+}
+
+.giorno h3 {
+  margin: var(--sp-2) 0 var(--sp-1);
+  font-size: var(--fs-piccolo);
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  color: var(--c-fosforo-tenue);
+}
+.giorno ul {
+  margin: 0;
+  padding-left: var(--sp-5);
+  font-family: var(--font-terminale);
+  font-size: 19px;
+  color: var(--c-fosforo-alto);
+}
+
+.piede {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  padding: var(--sp-3) 0 var(--sp-5);
+  border-top: 1px solid var(--c-griglia);
+  font-size: var(--fs-piccolo);
+  letter-spacing: 0.12em;
+  color: var(--c-fosforo-tenue);
+}
+
+@keyframes accensione {
+  0% {
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  35% {
+    opacity: 0.2;
+  }
+  55% {
+    opacity: 1;
+  }
+}

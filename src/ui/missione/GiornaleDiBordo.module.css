@@ -1,0 +1,99 @@
+/* GiornaleDiBordo.module.css — una pagina di diario sopra la schermata. */
+
+.sfondo {
+  position: fixed;
+  inset: 0;
+  z-index: 45; /* sotto la FinestraEvento (50): una decisione ha la precedenza */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-4);
+  background: rgba(4, 7, 5, 0.78);
+}
+
+.pagina {
+  width: min(620px, 100%);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--c-pannello);
+  border: 2px solid var(--c-fosforo);
+  box-shadow: 0 0 40px rgba(125, 245, 165, 0.2);
+}
+
+.barra {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: 2px var(--sp-4);
+  background: var(--c-fosforo);
+  color: var(--c-vuoto);
+  font-family: var(--font-terminale);
+  font-size: var(--fs-terminale);
+  letter-spacing: 0.14em;
+}
+.barra h2 {
+  margin: 0;
+  font-size: inherit;
+  font-weight: 400;
+}
+
+.righe {
+  margin: 0;
+  padding: var(--sp-4) var(--sp-5) var(--sp-4) calc(var(--sp-5) + var(--sp-4));
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  font-family: var(--font-terminale);
+  font-size: 22px;
+  line-height: 1.25;
+  color: var(--c-fosforo-alto);
+}
+.righe li {
+  animation: comparsa 0.4s steps(4, end) both;
+}
+.righe li::marker {
+  color: var(--c-fosforo-tenue);
+  font-size: 16px;
+}
+
+.bilancio {
+  margin: 0;
+  padding: var(--sp-2) var(--sp-5);
+  border-top: 1px dashed var(--c-griglia);
+  font-size: var(--fs-piccolo);
+  letter-spacing: 0.08em;
+  color: var(--c-fosforo-tenue);
+}
+
+.piede {
+  display: flex;
+  justify-content: flex-end;
+  padding: var(--sp-3) var(--sp-4);
+}
+
+@keyframes comparsa {
+  from {
+    opacity: 0;
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .righe li {
+    animation: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .righe {
+    padding: var(--sp-3) var(--sp-3) var(--sp-3) calc(var(--sp-3) + var(--sp-4));
+    font-size: 19px;
+  }
+}

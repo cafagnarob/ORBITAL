@@ -18,7 +18,8 @@
  * stato di gioco, applicata a React).
  *
  * La stima usa le stesse funzioni del motore (verificaAssegnazione,
- * valutaTask): ciò che vedi è ciò che il motore farà, con i valori attuali.
+ * valutaTask), ma il rischio mostrato passa da stimaRischio: con bassa
+ * integrità dei dati può differire da quello vero (DESIGN §4.6).
  * Il rischio vero viene fissato all'avvio del task.
  * ============================================================================
  */
@@ -26,7 +27,14 @@
 import { useState, type FormEvent } from "react";
 import { CONTESTO_GIOCO } from "../../content/contesto";
 import { CATALOGO_TASK, TASK_DISPONIBILI } from "../../content/tasks";
-import { puoLavorare, scoperteMancanti, verificaAssegnazione } from "../../engine/mission";
+import {
+  contestazioneAperta,
+  puoLavorare,
+  scoperteMancanti,
+  stimaRischio,
+  verificaAssegnazione,
+} from "../../engine/mission";
+import { calcolaSoglie, probabilitaEsiti } from "../../engine/tasks/esito";
 import { valutaTask } from "../../engine/tasks/valutazione";
 import type { StatoMissione } from "../../engine/types";
 import { Finestra } from "../components/Finestra";
@@ -47,7 +55,10 @@ export function PannelloPianifica({ stato, dispatch }: Props) {
   const membri = Object.values(stato.crew);
   // Solo i task che la crew "sa" di poter fare: quelli bloccati da scoperte
   // non ancora fatte non compaiono (comparirebbero come spoiler).
-  const disponibili = TASK_DISPONIBILI.filter((t) => scoperteMancanti(stato, t).length === 0);
+  // Lo stesso vale per la Verifica dei dati, che ha senso solo dopo una contestazione.
+  const disponibili = TASK_DISPONIBILI.filter(
+    (t) => scoperteMancanti(stato, t).length === 0 && (!t.tag.includes("VERIFICA") || contestazioneAperta(stato)),
+  );
   const [idTask, setIdTask] = useState(TASK_DISPONIBILI[0]?.id ?? "");
   const [idResponsabile, setIdResponsabile] = useState(membri[0]?.id ?? "");
   const [idSupporto, setIdSupporto] = useState(NESSUNO);
@@ -72,12 +83,29 @@ export function PannelloPianifica({ stato, dispatch }: Props) {
   // potrebbe giustamente lanciare un errore).
   const responsabile = stato.crew[idResponsabile];
   const supporto = supportoEffettivo !== null ? (stato.crew[supportoEffettivo] ?? null) : null;
-  const stima = motivo === null && def && responsabile ? valutaTask(def, responsabile, supporto) : null;
+  const valutazione = motivo === null && def && responsabile ? valutaTask(def, responsabile, supporto) : null;
+  // Ciò che il Capitano VEDE è una STIMA: con bassa integrità dei dati può
+  // essere sbagliata (DESIGN §4.6). Anche le probabilità si ricavano dalla
+  // stima, altrimenti tradirebbero il rischio vero.
+  const rischioStimato = valutazione && def ? stimaRischio(stato, CONTESTO_GIOCO, def.id, valutazione.rischio) : null;
+  const stima =
+    valutazione && rischioStimato !== null && responsabile
+      ? {
+          durata: valutazione.durata,
+          rischio: rischioStimato,
+          probabilita: probabilitaEsiti(calcolaSoglie(rischioStimato, responsabile.abilita.PRECISIONE)),
+        }
+      : null;
 
   function conferma(evento: FormEvent) {
     evento.preventDefault(); // un <form> ricaricherebbe la pagina
     if (motivo !== null) return;
-    dispatch({ tipo: "ASSEGNA_TASK", idDefinizione: idTask, responsabile: idResponsabile, supporto: supportoEffettivo });
+    dispatch({
+      tipo: "ASSEGNA_TASK",
+      idDefinizione: idTask,
+      responsabile: idResponsabile,
+      supporto: supportoEffettivo,
+    });
   }
 
   return (
@@ -108,7 +136,11 @@ export function PannelloPianifica({ stato, dispatch }: Props) {
 
           <label className={stili.campo}>
             <span>AIUTANTE</span>
-            <select value={supportoEffettivo ?? NESSUNO} disabled={!ammetteSupporto} onChange={(e) => setIdSupporto(e.target.value)}>
+            <select
+              value={supportoEffettivo ?? NESSUNO}
+              disabled={!ammetteSupporto}
+              onChange={(e) => setIdSupporto(e.target.value)}
+            >
               <option value={NESSUNO}>{ammetteSupporto ? "— nessuno —" : "— da soli —"}</option>
               {membri
                 .filter((m) => m.id !== idResponsabile)
@@ -142,10 +174,10 @@ export function PannelloPianifica({ stato, dispatch }: Props) {
                   .join(" · ") || "—"}
               </dd>
             </div>
-            {def.equipaggiamentoRichiesto.length > 0 && (
+            {def.equipaggiamentoRichiesto.length + def.moduliRichiesti.length > 0 && (
               <div>
                 <dt>RICHIEDE</dt>
-                <dd>{def.equipaggiamentoRichiesto.map(etichetta).join(", ")}</dd>
+                <dd>{[...def.moduliRichiesti, ...def.equipaggiamentoRichiesto].map(etichetta).join(", ")}</dd>
               </div>
             )}
           </dl>
@@ -157,7 +189,7 @@ export function PannelloPianifica({ stato, dispatch }: Props) {
               DURATA <strong>{formattaDurata(stima.durata)}</strong>
             </span>
             <span className={stili[tonoRischio(stima.rischio)]}>
-              RISCHIO <strong>{stima.rischio}%</strong>
+              RISCHIO STIMATO <strong>{stima.rischio}%</strong>
             </span>
             <span className={stili.dettaglio}>
               successo {100 - stima.rischio}% · perfetto {stima.probabilita.SUCCESSO_PERFETTO}% · critico{" "}

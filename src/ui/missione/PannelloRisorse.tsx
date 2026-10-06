@@ -1,59 +1,130 @@
 /**
  * ============================================================================
- * PannelloRisorse.tsx — Scorte, energia, carburante
+ * PannelloRisorse.tsx — Cibo, acqua, ossigeno, energia, carburante
  * ============================================================================
  *
- * Riferimento design: DESIGN.md §6 — tre risorse consumabili.
- * Niente barre separate per cibo, acqua e ossigeno: le scorte sono unificate
- * e l'ossigeno è una condizione del Supporto Vitale (pannello Nave).
+ * Riferimento design: DESIGN.md §6 (v3.0: cibo, acqua e ossigeno separati,
+ * come nel mockup della Missione).
  *
- * Per le scorte mostriamo anche "quanti giorni bastano": è la domanda che
- * il giocatore si fa davvero, e la calcoliamo con gli stessi numeri del
- * rapporto serale (balance.ts).
+ * Ogni riga mostra la quantità e la VARIAZIONE prevista al prossimo
+ * rapporto serale (es. "−8/g"), calcolata con gli stessi numeri del motore:
+ * parametriNave() = balance.ts + moduli installati. Per cibo e acqua anche
+ * "quanti giorni bastano", la domanda che il giocatore si fa davvero.
+ *
+ * L'ossigeno è speciale: il Supporto Vitale ne rigenera una parte ogni
+ * sera, in proporzione alla sua integrità. Finché il sistema è sano il
+ * bilancio è ±0; se si guasta, la riga diventa rossa e il conto alla
+ * rovescia è il problema più urgente della nave.
  * ============================================================================
  */
 
 import { BALANCE } from "../../content/balance";
+import { CATALOGO_MODULI } from "../../content/loadout";
+import { membriABordo } from "../../engine/mission/disponibilita";
+import { parametriNave } from "../../engine/nave/parametri";
 import type { StatoMissione } from "../../engine/types";
 import { BarraSegmentata } from "../components/BarraSegmentata";
 import { Finestra } from "../components/Finestra";
-import type { Tono } from "../format";
+import { conSegno, type Tono } from "../format";
 import stili from "./PannelloRisorse.module.css";
 
-/** Giorni di autonomia sotto cui le scorte diventano un avviso. */
+/** Giorni di autonomia sotto cui una risorsa diventa un avviso. */
 const GIORNI_ATTENZIONE = 5;
 const GIORNI_CRITICI = 2;
 
+function tonoGiorni(giorni: number): Tono {
+  if (giorni <= GIORNI_CRITICI) return "critico";
+  if (giorni <= GIORNI_ATTENZIONE) return "attenzione";
+  return "normale";
+}
+
+interface Riga {
+  nome: string;
+  valore: number;
+  massimo: number;
+  delta: number;
+  /** Testo dopo il valore, es. "≈ 12 g". */
+  nota: string;
+  tono: Tono;
+}
+
 export function PannelloRisorse({ stato }: { stato: StatoMissione }) {
   const g = BALANCE.giornata;
-  const aBordo = Object.values(stato.crew).filter((m) => m.stato !== "MORTO" && m.stato !== "DISPERSO").length;
-  const consumoGiornaliero = aBordo * g.scortePerMembro;
-  const giorni = consumoGiornaliero > 0 ? Math.floor(stato.risorse.scorte / consumoGiornaliero) : Infinity;
-  const tonoScorte: Tono = giorni <= GIORNI_CRITICI ? "critico" : giorni <= GIORNI_ATTENZIONE ? "attenzione" : "normale";
+  const p = parametriNave(stato.nave.moduli, CATALOGO_MODULI);
+  const n = membriABordo(stato).length;
+  const r = stato.risorse;
+
+  const giorni = (quantita: number, consumo: number) => (consumo > 0 ? Math.floor(quantita / consumo) : 99);
+  const consumoCibo = n * p.ciboPerMembro;
+  const consumoAcqua = n * p.acquaPerMembro;
+  const rigenerato = Math.round((p.produzioneOssigeno * stato.nave.sistemi.SUPPORTO_VITALE) / 100);
+  const deltaOssigeno = rigenerato - n * g.ossigenoPerMembro;
+  const giorniOssigeno = deltaOssigeno >= 0 ? 99 : giorni(r.ossigeno, -deltaOssigeno);
+
+  const righe: Riga[] = [
+    {
+      nome: "CIBO",
+      valore: r.cibo,
+      massimo: 120,
+      delta: -consumoCibo,
+      nota: `≈ ${giorni(r.cibo, consumoCibo)} g`,
+      tono: tonoGiorni(giorni(r.cibo, consumoCibo)),
+    },
+    {
+      nome: "ACQUA",
+      valore: r.acqua,
+      massimo: 120,
+      delta: -consumoAcqua,
+      nota: `≈ ${giorni(r.acqua, consumoAcqua)} g`,
+      tono: tonoGiorni(giorni(r.acqua, consumoAcqua)),
+    },
+    {
+      nome: "OSSIGENO",
+      valore: r.ossigeno,
+      massimo: g.capacitaOssigeno,
+      delta: deltaOssigeno,
+      nota: giorniOssigeno >= 99 ? "stabile" : `≈ ${giorniOssigeno} g`,
+      tono: tonoGiorni(giorniOssigeno),
+    },
+    {
+      nome: "ENERGIA",
+      valore: r.energia,
+      massimo: p.capacitaBatteria,
+      delta: p.generazioneEnergia - p.consumoEnergia,
+      nota: `/ ${p.capacitaBatteria}`,
+      tono: r.energia < 20 ? "critico" : r.energia < 50 ? "attenzione" : "normale",
+    },
+    {
+      nome: "CARBURANTE",
+      valore: r.carburante,
+      massimo: BALANCE.preparazione.serbatoio + 24,
+      delta: 0,
+      nota: `riserva ${BALANCE.preparazione.riservaRientro}`,
+      tono: r.carburante <= BALANCE.preparazione.riservaRientro ? "attenzione" : "normale",
+    },
+  ];
 
   return (
-    <Finestra titolo="Risorse">
+    <Finestra titolo="Risorse" destra="/GIORNO">
       <dl className={stili.lista}>
-        <div className={stili.voce}>
-          <dt>SCORTE</dt>
-          <dd>
-            {stato.risorse.scorte} <span className={stili.nota}>≈ {giorni} giorni</span>
-          </dd>
-          <BarraSegmentata valore={Math.min(giorni, 15)} massimo={15} etichetta="Giorni di scorte" tono={tonoScorte} />
-        </div>
-
-        <div className={stili.voce}>
-          <dt>ENERGIA</dt>
-          <dd>
-            {stato.risorse.energia} <span className={stili.nota}>/ {g.capacitaBatteria}</span>
-          </dd>
-          <BarraSegmentata valore={stato.risorse.energia} massimo={g.capacitaBatteria} etichetta="Carica della batteria" />
-        </div>
-
-        <div className={stili.voce}>
-          <dt>CARBURANTE</dt>
-          <dd>{stato.risorse.carburante}</dd>
-        </div>
+        {righe.map((riga) => (
+          <div key={riga.nome} className={stili.voce}>
+            <dt>{riga.nome}</dt>
+            <dd>
+              {riga.valore}{" "}
+              <span className={riga.delta < 0 ? stili.calo : stili.nota}>
+                {riga.delta === 0 ? "±0" : conSegno(riga.delta)}
+              </span>{" "}
+              <span className={stili.nota}>{riga.nota}</span>
+            </dd>
+            <BarraSegmentata
+              valore={Math.min(riga.valore, riga.massimo)}
+              massimo={riga.massimo}
+              etichetta={riga.nome}
+              tono={riga.tono}
+            />
+          </div>
+        ))}
       </dl>
     </Finestra>
   );

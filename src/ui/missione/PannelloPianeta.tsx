@@ -13,7 +13,7 @@ import { E17_NOTO } from "../../content/pianeti/e17";
 import { Finestra } from "../components/Finestra";
 import stili from "./PannelloPianeta.module.css";
 
-export function PannelloPianeta() {
+export function PannelloPianeta({ seedPartita }: { seedPartita: string }) {
   const p = E17_NOTO;
   const righe: [string, string][] = [
     ["TIPO", p.tipo],
@@ -47,6 +47,8 @@ export function PannelloPianeta() {
         </dl>
       </div>
       <p className={stili.posizione}>▸ {p.posizione}</p>
+      {/* Il seed della PARTITA (diverso da quello del pianeta): serve per rigiocarla. */}
+      <p className={stili.seed}>PARTITA {seedPartita}</p>
     </Finestra>
   );
 }

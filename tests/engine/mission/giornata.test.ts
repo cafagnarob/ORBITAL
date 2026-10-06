@@ -22,16 +22,38 @@ describe("rapporto serale", () => {
     expect(stato.statoGioco).toBe("RAPPORTO");
   });
 
-  it("consuma le scorte per ogni membro a bordo", () => {
+  it("consuma cibo e acqua per ogni membro a bordo", () => {
     const g = BALANCE.giornata;
-    expect(finoAlRapporto().risorse.scorte).toBe(540 - 4 * g.scortePerMembro);
+    const { risorse } = finoAlRapporto();
+    expect(risorse.cibo).toBe(120 - 4 * g.ciboPerMembro);
+    expect(risorse.acqua).toBe(120 - 4 * g.acquaPerMembro);
   });
 
-  it("un membro morto non consuma scorte", () => {
+  it("un membro morto non consuma", () => {
     const iniziale = creaMissioneDiProva();
     iniziale.crew.sarah!.stato = "MORTO";
     const stato = avanzaFinoAPausa(esegui(iniziale, [{ tipo: "AVVIA_OPERAZIONI" }]));
-    expect(stato.risorse.scorte).toBe(540 - 3 * BALANCE.giornata.scortePerMembro);
+    expect(stato.risorse.cibo).toBe(120 - 3 * BALANCE.giornata.ciboPerMembro);
+  });
+
+  it("con il Supporto Vitale integro l'ossigeno resta stabile", () => {
+    // 4 membri × 2 consumati, 8 rigenerati: i serbatoi restano pieni.
+    expect(finoAlRapporto().risorse.ossigeno).toBe(BALANCE.giornata.capacitaOssigeno);
+  });
+
+  it("con il Supporto Vitale danneggiato l'ossigeno cala", () => {
+    const iniziale = creaMissioneDiProva();
+    iniziale.nave.sistemi.SUPPORTO_VITALE = 25; // rigenera solo 2
+    const stato = avanzaFinoAPausa(esegui(iniziale, [{ tipo: "AVVIA_OPERAZIONI" }]));
+    expect(stato.risorse.ossigeno).toBe(60 - 8 + 2);
+  });
+
+  it("senz'acqua la crew perde salute ogni sera", () => {
+    const iniziale = creaMissioneDiProva();
+    iniziale.risorse.acqua = 0;
+    const stato = avanzaFinoAPausa(esegui(iniziale, [{ tipo: "AVVIA_OPERAZIONI" }]));
+    expect(stato.crew.mara!.salute).toBe(100 - BALANCE.giornata.dannoSenzaAcqua);
+    expect(stato.log.some((r) => r.testo.includes("L'acqua è esaurita"))).toBe(true);
   });
 
   it("la batteria si ricarica ma non supera la capacità massima", () => {

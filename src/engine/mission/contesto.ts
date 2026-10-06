@@ -16,13 +16,35 @@
  * passano un piccolo catalogo di prova, così non si rompono ogni volta che
  * aggiungi o modifichi un task nel gioco.
  *
- * In futuro qui arriveranno anche direttive e pianeta.
+ * In futuro qui arriverà anche il pianeta.
  * ============================================================================
  */
 
-import type { DefinizioneEvento, DefinizioneTask, IdDefinizioneTask, IdEvento } from "../types";
+import type {
+  ContenutiStoria,
+  DefinizioneCodice,
+  DefinizioneDirettiva,
+  DefinizioneEvento,
+  DefinizioneModulo,
+  DefinizioneTask,
+  IdDefinizioneTask,
+  IdDirettiva,
+  IdEvento,
+  IdModulo,
+  TestiVale,
+} from "../types";
 
 export interface ContestoMissione {
   catalogoTask: Readonly<Record<IdDefinizioneTask, DefinizioneTask>>;
   catalogoEventi: Readonly<Record<IdEvento, DefinizioneEvento>>;
+  /** Codici validi del Terminale SVC-07, indicizzati per codice. */
+  catalogoCodici: Readonly<Record<string, DefinizioneCodice>>;
+  /** Direttive possibili di V.A.L.E. */
+  catalogoDirettive: Readonly<Record<IdDirettiva, DefinizioneDirettiva>>;
+  /** Le frasi di V.A.L.E. usate dal motore (domande, rifiuti, contestazioni). */
+  testiVale: TestiVale;
+  /** Moduli della nave: i loro effetti cambiano energia, scorte, fatica… */
+  catalogoModuli: Readonly<Record<IdModulo, DefinizioneModulo>>;
+  /** La storia emergente (v3.0): finali, battute della crew, frasi del diario. */
+  storia: ContenutiStoria;
 }

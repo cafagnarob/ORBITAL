@@ -1,0 +1,64 @@
+/* BarraAvvio.module.css — come BarraComandi: in fondo, fissa su mobile. */
+
+.barra {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-4);
+  border: 2px solid var(--c-fosforo);
+  background: var(--c-pannello);
+  box-shadow: var(--glow-bordo);
+}
+
+.testo {
+  flex: 1;
+  margin: 0;
+  font-family: var(--font-terminale);
+  font-size: var(--fs-terminale);
+  letter-spacing: 0.06em;
+  color: var(--c-fosforo);
+}
+.normale {
+  color: var(--c-fosforo);
+}
+.attenzione {
+  color: var(--c-attenzione);
+}
+.critico {
+  color: var(--c-critico);
+}
+
+.pulsante {
+  flex: none;
+  min-width: 260px;
+}
+.perche {
+  flex: none;
+}
+
+/* Su desktop "Perché?" non serve: il Riepilogo è sempre visibile. */
+@media (min-width: 1100px) {
+  .perche {
+    display: none;
+  }
+}
+
+@media (max-width: 1099px) {
+  .barra {
+    position: sticky;
+    /* Resta sopra la fascia frontale del monitor (vedi Monitor.module.css). */
+    bottom: var(--altezza-frontale, 0px);
+    z-index: 10;
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+    padding: var(--sp-2);
+  }
+  .testo {
+    flex-basis: 100%;
+    font-size: 18px;
+  }
+  .pulsante {
+    flex: 1;
+    min-width: 0;
+  }
+}

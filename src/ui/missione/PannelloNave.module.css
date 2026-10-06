@@ -68,6 +68,7 @@
   border: 1px solid var(--c-griglia);
   font-size: var(--fs-piccolo);
   letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 .chip .modulo {
   border-color: var(--c-fosforo-tenue);

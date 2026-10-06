@@ -85,7 +85,7 @@ describe("StatoMissione", () => {
   it("ogni chiamata restituisce un oggetto nuovo e indipendente", () => {
     const a = creaMissioneDiProva();
     const b = creaMissioneDiProva();
-    a.risorse.scorte = 0;
-    expect(b.risorse.scorte).toBe(540);
+    a.risorse.cibo = 0;
+    expect(b.risorse.cibo).toBe(120);
   });
 });

@@ -31,6 +31,7 @@ import type {
   IdEquipaggiamento,
   IdIstanzaTask,
   IdMembro,
+  IdModulo,
   IdScoperta,
   Minuti,
   Percentuale,
@@ -105,6 +106,8 @@ export interface DefinizioneTask {
   luogo: Luogo;
 
   equipaggiamentoRichiesto: IdEquipaggiamento[];
+  /** Moduli che devono essere installati, es. il Laboratorio per le analisi. */
+  moduliRichiesti: IdModulo[];
   /**
    * Scoperte necessarie perché il task esista per il giocatore, es. non si
    * può analizzare un segnale prima di averlo rilevato. [] = sempre disponibile.

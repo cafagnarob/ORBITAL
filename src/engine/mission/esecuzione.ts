@@ -18,7 +18,10 @@
  * - Il costo in risorse si paga ALL'AVVIO: se non basta, il task è annullato.
  * - Se l'aiutante è occupato o non può lavorare, il responsabile procede da
  *   solo (e il log lo dice): la coda non si blocca.
- * - Il rischio si calcola all'avvio e si salva nell'istanza.
+ * - Il rischio si calcola all'avvio e si salva nell'istanza. Nel log compare
+ *   la STIMA (che con bassa integrità dei dati può essere sbagliata).
+ * - V.A.L.E. (Fase 3): un task contrario alla direttiva fa salire la tensione;
+ *   con autonomia RESTRITTIVA o superiore V.A.L.E. lo RIFIUTA.
  *
  * Tutte le funzioni lavorano sulla BOZZA (vedi reducer.ts).
  * ============================================================================
@@ -30,10 +33,20 @@ import type { Rng } from "../rng";
 import { calcolaSoglie, tiraEsito } from "../tasks/esito";
 import { valutaTask } from "../tasks/valutazione";
 import type { EsitoTask, IdIstanzaTask, Luogo, Minuti, Risorse, StatoMissione } from "../types";
+import { AUTONOMIA_RIFIUTO, livelloAutonomia } from "../vale/comportamento";
+import { risolviVerifica, TAG_VERIFICA } from "../vale/contestazioni";
+import { contrastaDirettiva } from "../vale/direttiva";
+import { modificaFiduciaCrew } from "../storia/fazioni";
+import { bloccoVale, luogoBloccato, rifiutoCrew, sbloccaTutto } from "../storia/iniziative";
+import { scriviDiario } from "../storia/diario";
+import { stimaRischio } from "../vale/integritaDati";
 import { rimuoviDallaCoda } from "./assegnazione";
 import type { ContestoMissione } from "./contesto";
 import { idCrewOrdinati, membroOccupato, puoLavorare } from "./disponibilita";
 import { scriviLog } from "./log";
+
+/** Il tag dei task di sblocco manuale (v3.0). */
+export const TAG_SBLOCCO = "SBLOCCO";
 
 /** Come il giocatore legge ogni esito nel log. */
 const ETICHETTE_ESITO: Record<EsitoTask, string> = {
@@ -114,6 +127,39 @@ export function avviaTask(bozza: StatoMissione, contesto: ContestoMissione, idTa
   // Non c'è tempo per finirlo oggi: resta in coda, senza cambiare nulla.
   if (fine > fineOperazioni(bozza.tempo)) return "IN_ATTESA";
 
+  // Il compartimento può essere stato chiuso da V.A.L.E. dopo l'assegnazione.
+  if (luogoBloccato(bozza, def.luogo)) {
+    rimuoviDallaCoda(bozza, idTask);
+    scriviLog(bozza, "SISTEMA", `${def.nome} annullato: accesso bloccato da V.A.L.E.`);
+    return "ANNULLATO";
+  }
+
+  // V.A.L.E. e la direttiva nascosta: blocco del compartimento (autonomia
+  // AUTONOMA), rifiuto (RESTRITTIVA) o, più in basso, solo tensione.
+  if (bloccoVale(bozza, contesto, def)) {
+    rimuoviDallaCoda(bozza, idTask);
+    bozza.vale.tensione += 1;
+    return "ANNULLATO";
+  }
+  if (contrastaDirettiva(bozza, contesto, def)) {
+    if (livelloAutonomia(bozza, contesto) >= AUTONOMIA_RIFIUTO) {
+      const { vale, sistema, codici } = contesto.testiVale.rifiuto;
+      rimuoviDallaCoda(bozza, idTask);
+      scriviLog(bozza, "VALE", vale);
+      scriviLog(bozza, "SISTEMA", `${sistema} · ${def.nome.toUpperCase()}`, codici);
+      bozza.vale.tensione += 1;
+      modificaFiduciaCrew(bozza, contesto, BALANCE.vale.fiduciaRifiuto);
+      return "ANNULLATO";
+    }
+  }
+
+  // La crew che si fida di V.A.L.E. può rifiutarsi anche quando lei non
+  // blocca nulla (v3.0, storia/iniziative.ts): è una scelta della persona.
+  if (rifiutoCrew(bozza, contesto, responsabile, def)) {
+    rimuoviDallaCoda(bozza, idTask);
+    return "ANNULLATO";
+  }
+
   const mancante = risorsaInsufficiente(bozza.risorse, def.costoRisorse);
   if (mancante !== null) {
     rimuoviDallaCoda(bozza, idTask);
@@ -132,6 +178,8 @@ export function avviaTask(bozza: StatoMissione, contesto: ContestoMissione, idTa
   task.fine = fine;
   task.rischio = valutazione.rischio;
 
+  if (contrastaDirettiva(bozza, contesto, def)) bozza.vale.tensione += BALANCE.vale.tensioneTaskContrario;
+
   responsabile.posizione = def.luogo;
   if (supporto !== null) supporto.posizione = def.luogo;
 
@@ -139,7 +187,7 @@ export function avviaTask(bozza: StatoMissione, contesto: ContestoMissione, idTa
   scriviLog(
     bozza,
     "SISTEMA",
-    `${responsabile.nome}${conChi} avvia: ${def.nome} · rischio stimato ${valutazione.rischio}% · fine prevista ${formattaTempo(fine)}`,
+    `${responsabile.nome}${conChi} avvia: ${def.nome} · rischio stimato ${stimaRischio(bozza, contesto, def.id, valutazione.rischio)}% · fine prevista ${formattaTempo(fine)}`,
   );
   return "AVVIATO";
 }
@@ -204,4 +252,15 @@ export function concludiTask(bozza: StatoMissione, contesto: ContestoMissione, r
   if (coda) bozza.code[task.responsabile] = coda.filter((id) => id !== idTask);
 
   scriviLog(bozza, "SISTEMA", `${responsabile.nome}: ${def.nome} — ${ETICHETTE_ESITO[esito]}`);
+
+  // Un task di verifica chiude (o lascia aperta) la contestazione più vecchia.
+  if (def.tag.includes(TAG_VERIFICA)) risolviVerifica(bozza, contesto, esito);
+
+  // Sblocco manuale (v3.0): riapre i compartimenti chiusi da V.A.L.E.
+  if (def.tag.includes(TAG_SBLOCCO) && task.stato === "COMPLETATO" && sbloccaTutto(bozza)) {
+    bozza.vale.tensione += BALANCE.storia.tensioneSblocco;
+    scriviLog(bozza, "SISTEMA", "BYPASS MANUALE · ACCESSI RIPRISTINATI");
+    scriviLog(bozza, "VALE", "Registro l'intervento non autorizzato, Capitano.");
+    scriviDiario(bozza, `${responsabile.nome} ha forzato le porte chiuse da V.A.L.E.`);
+  }
 }
