@@ -15,23 +15,17 @@
  * ============================================================================
  */
 
-import type {
-  DefinizioneTask,
-  EsitoTask,
-  MembroCrew,
-  Minuti,
-  Percentuale,
-} from "../types"
-import { calcolaDurata } from "./durata"
-import { calcolaSoglie, probabilitaEsiti, type SoglieEsito } from "./esito"
-import { calcolaRischio } from "./rischio"
+import type { DefinizioneTask, EsitoTask, MembroCrew, Minuti, Percentuale } from "../types";
+import { calcolaDurata } from "./durata";
+import { calcolaSoglie, probabilitaEsiti, type SoglieEsito } from "./esito";
+import { calcolaRischio } from "./rischio";
 
 export interface ValutazioneTask {
-  durata: Minuti
+  durata: Minuti;
   /** Probabilità di fallimento (inclusi i critici), 0–100. */
-  rischio: Percentuale
-  soglie: SoglieEsito
-  probabilita: Record<EsitoTask, number>
+  rischio: Percentuale;
+  soglie: SoglieEsito;
+  probabilita: Record<EsitoTask, number>;
 }
 
 export function valutaTask(
@@ -41,23 +35,21 @@ export function valutaTask(
 ): ValutazioneTask {
   if (supporto !== null) {
     if (!def.supportoAmmesso) {
-      throw new Error(`valutaTask: il task ${def.id} non ammette un aiutante`)
+      throw new Error(`valutaTask: il task ${def.id} non ammette un aiutante`);
     }
     if (supporto.id === responsabile.id) {
-      throw new Error(
-        `valutaTask: ${responsabile.id} non può aiutare sé stesso`,
-      )
+      throw new Error(`valutaTask: ${responsabile.id} non può aiutare sé stesso`);
     }
   }
 
-  const rischio = calcolaRischio(def, responsabile, supporto)
+  const rischio = calcolaRischio(def, responsabile, supporto);
   // La precisione che conta è quella di chi guida il lavoro.
-  const soglie = calcolaSoglie(rischio, responsabile.abilita.PRECISIONE)
+  const soglie = calcolaSoglie(rischio, responsabile.abilita.PRECISIONE);
 
   return {
     durata: calcolaDurata(def, responsabile, supporto),
     rischio,
     soglie,
     probabilita: probabilitaEsiti(soglie),
-  }
+  };
 }

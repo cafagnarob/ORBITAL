@@ -8,17 +8,12 @@
  * ============================================================================
  */
 
-import type { FonteLog, StatoMissione } from "../types"
+import type { FonteLog, StatoMissione } from "../types";
 
 /**
  * Aggiunge una voce al log della BOZZA (vedi reducer.ts: la bozza è una
  * copia dello stato che il reducer può modificare liberamente).
  */
-export function scriviLog(
-  bozza: StatoMissione,
-  fonte: FonteLog,
-  testo: string,
-  codici: string[] = [],
-): void {
-  bozza.log.push({ tempo: bozza.tempo, fonte, testo, codici })
+export function scriviLog(bozza: StatoMissione, fonte: FonteLog, testo: string, codici: string[] = []): void {
+  bozza.log.push({ tempo: bozza.tempo, fonte, testo, codici });
 }

@@ -13,8 +13,8 @@
  * ============================================================================
  */
 
-import type { IdMembro, IdTratto, Percentuale } from "./comuni"
-import type { Luogo } from "./nave"
+import type { IdMembro, IdTratto, Percentuale } from "./comuni";
+import type { Luogo } from "./nave";
 
 // ----------------------------------------------------------------------------
 // RUOLI E ABILITÀ
@@ -27,21 +27,15 @@ export const RUOLI = [
   "MEDICO",
   "SICUREZZA_EVA",
   "GENERALISTA",
-] as const
-export type Ruolo = (typeof RUOLI)[number]
+] as const;
+export type Ruolo = (typeof RUOLI)[number];
 
 /**
  * Abilità TECNICHE: quelle che un task può richiedere come abilità
  * principale o secondaria (DESIGN §9).
  */
-export const ABILITA_TECNICHE = [
-  "INGEGNERIA",
-  "SCIENZA",
-  "PILOTAGGIO",
-  "MEDICINA",
-  "EVA",
-] as const
-export type AbilitaTecnica = (typeof ABILITA_TECNICHE)[number]
+export const ABILITA_TECNICHE = ["INGEGNERIA", "SCIENZA", "PILOTAGGIO", "MEDICINA", "EVA"] as const;
+export type AbilitaTecnica = (typeof ABILITA_TECNICHE)[number];
 
 /**
  * Abilità GENERALI: non sono il "mestiere" richiesto da un task, ma
@@ -49,14 +43,14 @@ export type AbilitaTecnica = (typeof ABILITA_TECNICHE)[number]
  * Tenerle separate impedisce di scrivere per errore un task la cui
  * abilità principale sia "VELOCITA".
  */
-export const ABILITA_GENERALI = ["VELOCITA", "PRECISIONE"] as const
-export type AbilitaGenerale = (typeof ABILITA_GENERALI)[number]
+export const ABILITA_GENERALI = ["VELOCITA", "PRECISIONE"] as const;
+export type AbilitaGenerale = (typeof ABILITA_GENERALI)[number];
 
 /** Tutte le abilità di un membro. */
-export type Abilita = AbilitaTecnica | AbilitaGenerale
+export type Abilita = AbilitaTecnica | AbilitaGenerale;
 
 /** Valore di ogni abilità, da 0 a 10. */
-export type ValoriAbilita = Record<Abilita, number>
+export type ValoriAbilita = Record<Abilita, number>;
 
 // ----------------------------------------------------------------------------
 // PERSONALITÀ
@@ -67,9 +61,9 @@ export type ValoriAbilita = Record<Abilita, number>
  * influenzano dialoghi, raccomandazioni ed eventi.
  */
 export interface Personalita {
-  approccio: "CAUTO" | "AMANTE_DEL_RISCHIO" | "PRAGMATICO"
-  socialita: "LEALE" | "EMPATICO" | "INDIPENDENTE"
-  mentalita: "CURIOSO" | "DISCIPLINATO" | "CALMO"
+  approccio: "CAUTO" | "AMANTE_DEL_RISCHIO" | "PRAGMATICO";
+  socialita: "LEALE" | "EMPATICO" | "INDIPENDENTE";
+  mentalita: "CURIOSO" | "DISCIPLINATO" | "CALMO";
 }
 
 // ----------------------------------------------------------------------------
@@ -80,34 +74,27 @@ export interface Personalita {
  * Condizione del membro. Non coincide con la salute: DISPERSO non dipende
  * dalla salute, e MORTO è permanente anche se un bug alzasse la salute.
  */
-export const STATI_MEMBRO = [
-  "SANO",
-  "FERITO",
-  "CRITICO",
-  "INCOSCIENTE",
-  "DISPERSO",
-  "MORTO",
-] as const
-export type StatoMembro = (typeof STATI_MEMBRO)[number]
+export const STATI_MEMBRO = ["SANO", "FERITO", "CRITICO", "INCOSCIENTE", "DISPERSO", "MORTO"] as const;
+export type StatoMembro = (typeof STATI_MEMBRO)[number];
 
 /** Un membro della crew. */
 export interface MembroCrew {
-  id: IdMembro
+  id: IdMembro;
   /** Nome mostrato al giocatore, es. "Mara". */
-  nome: string
-  ruolo: Ruolo
+  nome: string;
+  ruolo: Ruolo;
   /** Peso in kg: conta nel carico operativo della nave (DESIGN §11.1). */
-  peso: number
-  abilita: ValoriAbilita
-  tratto: IdTratto
-  personalita: Personalita
+  peso: number;
+  abilita: ValoriAbilita;
+  tratto: IdTratto;
+  personalita: Personalita;
   /** 0–100. */
-  salute: Percentuale
+  salute: Percentuale;
   /** 0–100. La fascia (BASSA, MODERATA...) si calcola, non si salva. */
-  fatica: Percentuale
+  fatica: Percentuale;
   /** Fiducia personale in V.A.L.E., 0–100, iniziale 50 (DESIGN §7.5). */
-  fiduciaVale: Percentuale
+  fiduciaVale: Percentuale;
   /** Dove si trova ora. */
-  posizione: Luogo
-  stato: StatoMembro
+  posizione: Luogo;
+  stato: StatoMembro;
 }

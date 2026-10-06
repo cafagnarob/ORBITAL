@@ -25,12 +25,7 @@ export const BALANCE = {
     /** Valore minimo da cui inizia ogni fascia (BASSA parte da 0). */
     soglie: { MODERATA: 40, ALTA: 70, ESAURITO: 90 },
     /** Moltiplicatore della durata dei task (1.1 = +10%). */
-    moltiplicatoreDurata: {
-      BASSA: 1,
-      MODERATA: 1.1,
-      ALTA: 1.25,
-      ESAURITO: 1.5,
-    },
+    moltiplicatoreDurata: { BASSA: 1, MODERATA: 1.1, ALTA: 1.25, ESAURITO: 1.5 },
     /** Punti di rischio aggiunti a un task svolto in quella fascia. */
     penalitaRischio: { BASSA: 0, MODERATA: 5, ALTA: 12, ESAURITO: 25 },
   },
@@ -94,4 +89,4 @@ export const BALANCE = {
     /** Fatica recuperata con il sonno, al risveglio. */
     recuperoFaticaNotturno: 35,
   },
-} as const
+} as const;

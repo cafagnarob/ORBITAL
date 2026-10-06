@@ -15,24 +15,13 @@
  * ============================================================================
  */
 
-import { hashSeed } from "../engine/rng"
-import type { MembroCrew, StatoMissione } from "../engine/types"
+import { hashSeed } from "../engine/rng";
+import type { MembroCrew, StatoMissione } from "../engine/types";
 
 function membro(
-  dati: Pick<
-    MembroCrew,
-    | "id"
-    | "nome"
-    | "ruolo"
-    | "peso"
-    | "abilita"
-    | "tratto"
-    | "personalita"
-    | "fiduciaVale"
-    | "posizione"
-  >,
+  dati: Pick<MembroCrew, "id" | "nome" | "ruolo" | "peso" | "abilita" | "tratto" | "personalita" | "fiduciaVale" | "posizione">,
 ): MembroCrew {
-  return { salute: 100, fatica: 0, stato: "SANO", ...dati }
+  return { salute: 100, fatica: 0, stato: "SANO", ...dati };
 }
 
 export function creaMissioneIniziale(seed = "E17-73A9"): StatoMissione {
@@ -48,21 +37,9 @@ export function creaMissioneIniziale(seed = "E17-73A9"): StatoMissione {
         nome: "Mara",
         ruolo: "INGEGNERE",
         peso: 75,
-        abilita: {
-          INGEGNERIA: 8,
-          SCIENZA: 3,
-          PILOTAGGIO: 2,
-          MEDICINA: 1,
-          EVA: 5,
-          VELOCITA: 6,
-          PRECISIONE: 7,
-        },
+        abilita: { INGEGNERIA: 8, SCIENZA: 3, PILOTAGGIO: 2, MEDICINA: 1, EVA: 5, VELOCITA: 6, PRECISIONE: 7 },
         tratto: "ESPERTO_MECCANICA",
-        personalita: {
-          approccio: "PRAGMATICO",
-          socialita: "LEALE",
-          mentalita: "DISCIPLINATO",
-        },
+        personalita: { approccio: "PRAGMATICO", socialita: "LEALE", mentalita: "DISCIPLINATO" },
         fiduciaVale: 72,
         posizione: "HABITAT",
       }),
@@ -71,21 +48,9 @@ export function creaMissioneIniziale(seed = "E17-73A9"): StatoMissione {
         nome: "Adrian",
         ruolo: "PILOTA",
         peso: 82,
-        abilita: {
-          INGEGNERIA: 3,
-          SCIENZA: 2,
-          PILOTAGGIO: 9,
-          MEDICINA: 1,
-          EVA: 4,
-          VELOCITA: 7,
-          PRECISIONE: 6,
-        },
+        abilita: { INGEGNERIA: 3, SCIENZA: 2, PILOTAGGIO: 9, MEDICINA: 1, EVA: 4, VELOCITA: 7, PRECISIONE: 6 },
         tratto: "IMPAVIDO",
-        personalita: {
-          approccio: "AMANTE_DEL_RISCHIO",
-          socialita: "INDIPENDENTE",
-          mentalita: "CALMO",
-        },
+        personalita: { approccio: "AMANTE_DEL_RISCHIO", socialita: "INDIPENDENTE", mentalita: "CALMO" },
         fiduciaVale: 31,
         posizione: "COMANDO",
       }),
@@ -94,21 +59,9 @@ export function creaMissioneIniziale(seed = "E17-73A9"): StatoMissione {
         nome: "Nadia",
         ruolo: "SCIENZIATO",
         peso: 64,
-        abilita: {
-          INGEGNERIA: 2,
-          SCIENZA: 9,
-          PILOTAGGIO: 1,
-          MEDICINA: 3,
-          EVA: 4,
-          VELOCITA: 4,
-          PRECISIONE: 8,
-        },
+        abilita: { INGEGNERIA: 2, SCIENZA: 9, PILOTAGGIO: 1, MEDICINA: 3, EVA: 4, VELOCITA: 4, PRECISIONE: 8 },
         tratto: "CURIOSO",
-        personalita: {
-          approccio: "CAUTO",
-          socialita: "EMPATICO",
-          mentalita: "CURIOSO",
-        },
+        personalita: { approccio: "CAUTO", socialita: "EMPATICO", mentalita: "CURIOSO" },
         fiduciaVale: 55,
         posizione: "LABORATORIO",
       }),
@@ -117,21 +70,9 @@ export function creaMissioneIniziale(seed = "E17-73A9"): StatoMissione {
         nome: "Sarah",
         ruolo: "MEDICO",
         peso: 68,
-        abilita: {
-          INGEGNERIA: 1,
-          SCIENZA: 5,
-          PILOTAGGIO: 1,
-          MEDICINA: 9,
-          EVA: 3,
-          VELOCITA: 5,
-          PRECISIONE: 8,
-        },
+        abilita: { INGEGNERIA: 1, SCIENZA: 5, PILOTAGGIO: 1, MEDICINA: 9, EVA: 3, VELOCITA: 5, PRECISIONE: 8 },
         tratto: "MEDICO_DA_CAMPO",
-        personalita: {
-          approccio: "CAUTO",
-          socialita: "LEALE",
-          mentalita: "CALMO",
-        },
+        personalita: { approccio: "CAUTO", socialita: "LEALE", mentalita: "CALMO" },
         fiduciaVale: 80,
         posizione: "INFERMERIA",
       }),
@@ -160,12 +101,7 @@ export function creaMissioneIniziale(seed = "E17-73A9"): StatoMissione {
         AIRLOCK: "APERTO",
         PROPULSIONE: "APERTO",
       },
-      moduli: [
-        "LABORATORIO_AVANZATO",
-        "POTENZIAMENTO_SUPPORTO_VITALE",
-        "MODULO_OPERAZIONI_ESTERNE",
-        "ARRAY_NAVIGAZIONE",
-      ],
+      moduli: ["LABORATORIO_AVANZATO", "POTENZIAMENTO_SUPPORTO_VITALE", "MODULO_OPERAZIONI_ESTERNE", "ARRAY_NAVIGAZIONE"],
       equipaggiamento: [
         "SENSORE_PROFONDO",
         "DRONE_RICOGNIZIONE",
@@ -181,20 +117,12 @@ export function creaMissioneIniziale(seed = "E17-73A9"): StatoMissione {
 
     tasks: {},
     code: { mara: [], adrian: [], nadia: [], sarah: [] },
+    conoscenza: { scoperte: [] },
+    eventi: { accaduti: [], inAttesa: null },
     log: [
-      {
-        tempo: 360,
-        fonte: "VALE",
-        testo: "Inserimento orbitale completato. Pianeta E-17.",
-        codici: [],
-      },
-      {
-        tempo: 360,
-        fonte: "VALE",
-        testo: "Capitano. Sistemi nominali. In attesa di istruzioni.",
-        codici: [],
-      },
+      { tempo: 360, fonte: "VALE", testo: "Inserimento orbitale completato. Pianeta E-17.", codici: [] },
+      { tempo: 360, fonte: "VALE", testo: "Capitano. Sistemi nominali. In attesa di istruzioni.", codici: [] },
     ],
     contatoreId: 0,
-  }
+  };
 }

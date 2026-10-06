@@ -26,9 +26,9 @@
  * ============================================================================
  */
 
-import { BALANCE } from "../../content/balance"
-import type { Rng } from "../rng"
-import type { EsitoTask, Percentuale } from "../types"
+import { BALANCE } from "../../content/balance";
+import type { Rng } from "../rng";
+import type { EsitoTask, Percentuale } from "../types";
 
 /**
  * Le soglie che dividono la linea 1–100.
@@ -36,40 +36,36 @@ import type { EsitoTask, Percentuale } from "../types"
  */
 export interface SoglieEsito {
   /** Tiri da 1 a `critico` → FALLIMENTO_CRITICO. */
-  critico: number
+  critico: number;
   /** Tiri fino a `fallimento` (= rischio) → FALLIMENTO. */
-  fallimento: number
+  fallimento: number;
   /** Tiri fino a `parziale` → SUCCESSO_PARZIALE. */
-  parziale: number
+  parziale: number;
   /** Tiri fino a `successo` → SUCCESSO; oltre → SUCCESSO_PERFETTO. */
-  successo: number
+  successo: number;
 }
 
 /** Calcola le soglie a partire da rischio (0–100) e precisione (0–10). */
-export function calcolaSoglie(
-  rischio: Percentuale,
-  precisione: number,
-): SoglieEsito {
-  const b = BALANCE.task
-  const zonaSuccesso = 100 - rischio
-  const quotaPerfetto =
-    b.quotaPerfettoBase + precisione * b.quotaPerfettoPerPrecisione
+export function calcolaSoglie(rischio: Percentuale, precisione: number): SoglieEsito {
+  const b = BALANCE.task;
+  const zonaSuccesso = 100 - rischio;
+  const quotaPerfetto = b.quotaPerfettoBase + precisione * b.quotaPerfettoPerPrecisione;
 
   return {
     critico: Math.round(rischio * b.quotaCritico),
     fallimento: rischio,
     parziale: rischio + Math.round(zonaSuccesso * b.quotaParziale),
     successo: 100 - Math.round(zonaSuccesso * quotaPerfetto),
-  }
+  };
 }
 
 /** Legge l'esito corrispondente a un tiro (1–100). */
 export function esitoDaTiro(tiro: number, soglie: SoglieEsito): EsitoTask {
-  if (tiro <= soglie.critico) return "FALLIMENTO_CRITICO"
-  if (tiro <= soglie.fallimento) return "FALLIMENTO"
-  if (tiro <= soglie.parziale) return "SUCCESSO_PARZIALE"
-  if (tiro <= soglie.successo) return "SUCCESSO"
-  return "SUCCESSO_PERFETTO"
+  if (tiro <= soglie.critico) return "FALLIMENTO_CRITICO";
+  if (tiro <= soglie.fallimento) return "FALLIMENTO";
+  if (tiro <= soglie.parziale) return "SUCCESSO_PARZIALE";
+  if (tiro <= soglie.successo) return "SUCCESSO";
+  return "SUCCESSO_PERFETTO";
 }
 
 /**
@@ -77,22 +73,20 @@ export function esitoDaTiro(tiro: number, soglie: SoglieEsito): EsitoTask {
  * Ogni zona contiene (soglia attuale − soglia precedente) numeri su 100,
  * quindi quella differenza È la sua percentuale.
  */
-export function probabilitaEsiti(
-  soglie: SoglieEsito,
-): Record<EsitoTask, number> {
+export function probabilitaEsiti(soglie: SoglieEsito): Record<EsitoTask, number> {
   return {
     FALLIMENTO_CRITICO: soglie.critico,
     FALLIMENTO: soglie.fallimento - soglie.critico,
     SUCCESSO_PARZIALE: soglie.parziale - soglie.fallimento,
     SUCCESSO: soglie.successo - soglie.parziale,
     SUCCESSO_PERFETTO: 100 - soglie.successo,
-  }
+  };
 }
 
 /** Risultato di un tiro: il numero uscito e l'esito che produce. */
 export interface RisultatoTiro {
-  tiro: number
-  esito: EsitoTask
+  tiro: number;
+  esito: EsitoTask;
 }
 
 /**
@@ -101,6 +95,6 @@ export interface RisultatoTiro {
  * vedi rng.ts): fa avanzare la sequenza di esattamente un passo.
  */
 export function tiraEsito(soglie: SoglieEsito, rng: Rng): RisultatoTiro {
-  const tiro = rng.int(1, 100)
-  return { tiro, esito: esitoDaTiro(tiro, soglie) }
+  const tiro = rng.int(1, 100);
+  return { tiro, esito: esitoDaTiro(tiro, soglie) };
 }

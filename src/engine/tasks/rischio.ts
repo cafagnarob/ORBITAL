@@ -30,9 +30,9 @@
  * ============================================================================
  */
 
-import { BALANCE } from "../../content/balance"
-import { penalitaRischioFatica } from "../crew/fatica"
-import type { DefinizioneTask, MembroCrew, Percentuale } from "../types"
+import { BALANCE } from "../../content/balance";
+import { penalitaRischioFatica } from "../crew/fatica";
+import type { DefinizioneTask, MembroCrew, Percentuale } from "../types";
 
 /**
  * Competenza combinata, scala 0–10.
@@ -43,23 +43,23 @@ export function calcolaCompetenza(
   responsabile: MembroCrew,
   supporto: MembroCrew | null,
 ): number {
-  const principale = responsabile.abilita[def.abilitaPrincipale]
+  const principale = responsabile.abilita[def.abilitaPrincipale];
 
   // Task senza abilità secondaria: conta solo la principale.
-  if (def.abilitaSecondaria === null) return principale
+  if (def.abilitaSecondaria === null) return principale;
 
   // L'operatore ?? ("nullish coalescing") vuol dire: usa `supporto`,
   // ma se è null usa `responsabile`.
-  const esecutoreSecondaria = supporto ?? responsabile
-  const secondaria = esecutoreSecondaria.abilita[def.abilitaSecondaria]
+  const esecutoreSecondaria = supporto ?? responsabile;
+  const secondaria = esecutoreSecondaria.abilita[def.abilitaSecondaria];
 
-  const peso = BALANCE.task.pesoAbilitaPrincipale
-  return principale * peso + secondaria * (1 - peso)
+  const peso = BALANCE.task.pesoAbilitaPrincipale;
+  return principale * peso + secondaria * (1 - peso);
 }
 
 /** Limita un valore tra un minimo e un massimo. */
 export function limita(valore: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, valore))
+  return Math.min(max, Math.max(min, valore));
 }
 
 /** Rischio effettivo di fallimento, intero tra rischioMinimo e rischioMassimo. */
@@ -68,14 +68,14 @@ export function calcolaRischio(
   responsabile: MembroCrew,
   supporto: MembroCrew | null,
 ): Percentuale {
-  const b = BALANCE.task
-  const competenza = calcolaCompetenza(def, responsabile, supporto)
+  const b = BALANCE.task;
+  const competenza = calcolaCompetenza(def, responsabile, supporto);
 
   const rischio =
     def.rischioBase -
     (competenza - b.abilitaNeutra) * b.rischioPerPuntoCompetenza +
     penalitaRischioFatica(responsabile.fatica) -
-    (supporto !== null ? b.bonusRischioSupporto : 0)
+    (supporto !== null ? b.bonusRischioSupporto : 0);
 
-  return Math.round(limita(rischio, b.rischioMinimo, b.rischioMassimo))
+  return Math.round(limita(rischio, b.rischioMinimo, b.rischioMassimo));
 }

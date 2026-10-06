@@ -19,11 +19,11 @@
 /** Le quantità consumabili della missione. */
 export interface Risorse {
   /** Cibo + acqua unificati (DESIGN §6.1). */
-  scorte: number
+  scorte: number;
   /** Carica attuale della batteria (la capacità massima si calcola). */
-  energia: number
+  energia: number;
   /** Carburante a bordo (la riserva di rientro si calcola). */
-  carburante: number
+  carburante: number;
 }
 
 /**
@@ -31,4 +31,4 @@ export interface Risorse {
  * `Partial<Risorse>` rende tutti i campi facoltativi: un task che consuma
  * solo energia non deve scrivere `scorte: 0, carburante: 0`.
  */
-export type CostoRisorse = Partial<Risorse>
+export type CostoRisorse = Partial<Risorse>;

@@ -18,19 +18,21 @@
  *   AVVIA_OPERAZIONI  → in PIANIFICAZIONE (porta l'orologio alle 07:00)
  *   AVANZA            → in IN_ESECUZIONE (salta al prossimo momento importante)
  *   CHIUDI_RAPPORTO   → in RAPPORTO (si passa alla notte)
+ *   RISOLVI_EVENTO    → in DECISIONE (il Capitano sceglie un'opzione)
  * ============================================================================
  */
 
-import type { IdDefinizioneTask, IdIstanzaTask, IdMembro } from "../types"
+import type { IdDefinizioneTask, IdIstanzaTask, IdMembro } from "../types";
 
 export type Azione =
   | {
-      tipo: "ASSEGNA_TASK"
-      idDefinizione: IdDefinizioneTask
-      responsabile: IdMembro
-      supporto: IdMembro | null
+      tipo: "ASSEGNA_TASK";
+      idDefinizione: IdDefinizioneTask;
+      responsabile: IdMembro;
+      supporto: IdMembro | null;
     }
   | { tipo: "RIMUOVI_TASK"; idTask: IdIstanzaTask }
   | { tipo: "AVVIA_OPERAZIONI" }
   | { tipo: "AVANZA" }
   | { tipo: "CHIUDI_RAPPORTO" }
+  | { tipo: "RISOLVI_EVENTO"; idScelta: string };

@@ -10,8 +10,9 @@
  * ============================================================================
  */
 
-export { applicaAzione } from "./reducer"
-export type { Azione } from "./azioni"
-export type { ContestoMissione } from "./contesto"
-export { verificaAssegnazione, verificaRimozione } from "./assegnazione"
-export { membroOccupato, puoLavorare } from "./disponibilita"
+export { applicaAzione } from "./reducer";
+export type { Azione } from "./azioni";
+export type { ContestoMissione } from "./contesto";
+export { scoperteMancanti, verificaAssegnazione, verificaRimozione } from "./assegnazione";
+export { verificaScelta } from "../eventi/attivazione";
+export { membroOccupato, puoLavorare } from "./disponibilita";

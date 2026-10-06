@@ -27,7 +27,7 @@
  * ============================================================================
  */
 
-import type { IdIstanzaTask, Minuti, StatoMissione } from "./types"
+import type { IdIstanzaTask, Minuti, StatoMissione } from "./types";
 
 // ----------------------------------------------------------------------------
 // COSTANTI DEL CALENDARIO (DESIGN §8, [BLOCCATO])
@@ -35,15 +35,15 @@ import type { IdIstanzaTask, Minuti, StatoMissione } from "./types"
 // Sono struttura del gioco, non numeri da bilanciare: per questo stanno qui
 // e non in content/balance.ts.
 
-export const MINUTI_PER_ORA = 60
-export const MINUTI_PER_GIORNO = 24 * MINUTI_PER_ORA // 1440
+export const MINUTI_PER_ORA = 60;
+export const MINUTI_PER_GIORNO = 24 * MINUTI_PER_ORA; // 1440
 
 /** 06:00 — risveglio e briefing, inizio della pianificazione. */
-export const ORARIO_RISVEGLIO: Minuti = 6 * MINUTI_PER_ORA
+export const ORARIO_RISVEGLIO: Minuti = 6 * MINUTI_PER_ORA;
 /** 07:00 — iniziano le operazioni. */
-export const ORARIO_OPERAZIONI: Minuti = 7 * MINUTI_PER_ORA
+export const ORARIO_OPERAZIONI: Minuti = 7 * MINUTI_PER_ORA;
 /** 22:00 — rapporto serale, inizio della notte. */
-export const ORARIO_RAPPORTO: Minuti = 22 * MINUTI_PER_ORA
+export const ORARIO_RAPPORTO: Minuti = 22 * MINUTI_PER_ORA;
 
 // ----------------------------------------------------------------------------
 // CONVERSIONI: dal numero di minuti a ciò che vede il giocatore
@@ -52,11 +52,11 @@ export const ORARIO_RAPPORTO: Minuti = 22 * MINUTI_PER_ORA
 /** Il tempo scomposto in parti leggibili. */
 export interface TempoScomposto {
   /** Giorno di missione, a partire da 1. */
-  giorno: number
+  giorno: number;
   /** Ora 0–23. */
-  ore: number
+  ore: number;
   /** Minuti 0–59. */
-  minuti: number
+  minuti: number;
 }
 
 /**
@@ -71,17 +71,17 @@ export interface TempoScomposto {
  * giusto per tutto ciò che "ricomincia da capo", come le ore del giorno.
  */
 export function scomponiTempo(t: Minuti): TempoScomposto {
-  const nelGiorno = minutoDelGiorno(t)
+  const nelGiorno = minutoDelGiorno(t);
   return {
     giorno: Math.floor(t / MINUTI_PER_GIORNO) + 1,
     ore: Math.floor(nelGiorno / MINUTI_PER_ORA),
     minuti: nelGiorno % MINUTI_PER_ORA,
-  }
+  };
 }
 
 /** Minuti trascorsi dalla mezzanotte del giorno corrente (0–1439). */
 export function minutoDelGiorno(t: Minuti): Minuti {
-  return t % MINUTI_PER_GIORNO
+  return t % MINUTI_PER_GIORNO;
 }
 
 /**
@@ -89,18 +89,18 @@ export function minutoDelGiorno(t: Minuti): Minuti {
  * padStart(2, "0") aggiunge lo zero iniziale: 6 → "06".
  */
 export function formattaTempo(t: Minuti): string {
-  const { giorno, ore, minuti } = scomponiTempo(t)
-  const hh = String(ore).padStart(2, "0")
-  const mm = String(minuti).padStart(2, "0")
-  return `Giorno ${giorno} · ${hh}:${mm}`
+  const { giorno, ore, minuti } = scomponiTempo(t);
+  const hh = String(ore).padStart(2, "0");
+  const mm = String(minuti).padStart(2, "0");
+  return `Giorno ${giorno} · ${hh}:${mm}`;
 }
 
 // ----------------------------------------------------------------------------
 // FASI DELLA GIORNATA
 // ----------------------------------------------------------------------------
 
-export const FASI_GIORNATA = ["PIANIFICAZIONE", "OPERAZIONI", "NOTTE"] as const
-export type FaseGiornata = (typeof FASI_GIORNATA)[number]
+export const FASI_GIORNATA = ["PIANIFICAZIONE", "OPERAZIONI", "NOTTE"] as const;
+export type FaseGiornata = (typeof FASI_GIORNATA)[number];
 
 /**
  * In quale fase della giornata cade un istante.
@@ -109,10 +109,10 @@ export type FaseGiornata = (typeof FASI_GIORNATA)[number]
  * appartiene a una e una sola fase, senza buchi né sovrapposizioni.
  */
 export function faseGiornata(t: Minuti): FaseGiornata {
-  const m = minutoDelGiorno(t)
-  if (m >= ORARIO_RISVEGLIO && m < ORARIO_OPERAZIONI) return "PIANIFICAZIONE"
-  if (m >= ORARIO_OPERAZIONI && m < ORARIO_RAPPORTO) return "OPERAZIONI"
-  return "NOTTE"
+  const m = minutoDelGiorno(t);
+  if (m >= ORARIO_RISVEGLIO && m < ORARIO_OPERAZIONI) return "PIANIFICAZIONE";
+  if (m >= ORARIO_OPERAZIONI && m < ORARIO_RAPPORTO) return "OPERAZIONI";
+  return "NOTTE";
 }
 
 /**
@@ -127,9 +127,9 @@ export function faseGiornata(t: Minuti): FaseGiornata {
  *          t = 1320 (G1 22:00), orario 22:00 → 2760 (G2 22:00)
  */
 export function prossimaOccorrenza(t: Minuti, orario: Minuti): Minuti {
-  const inizioGiorno = t - minutoDelGiorno(t)
-  const oggi = inizioGiorno + orario
-  return oggi > t ? oggi : oggi + MINUTI_PER_GIORNO
+  const inizioGiorno = t - minutoDelGiorno(t);
+  const oggi = inizioGiorno + orario;
+  return oggi > t ? oggi : oggi + MINUTI_PER_GIORNO;
 }
 
 // ----------------------------------------------------------------------------
@@ -148,20 +148,19 @@ export function prossimaOccorrenza(t: Minuti, orario: Minuti): Minuti {
 export type MotivoSosta =
   | { tipo: "FINE_TASK"; idTask: IdIstanzaTask }
   | { tipo: "RISVEGLIO" }
-  | { tipo: "RAPPORTO_SERALE" }
+  | { tipo: "RAPPORTO_SERALE" };
 
 /** Il prossimo istante importante e TUTTI i motivi che vi accadono. */
 export interface ProssimoMomento {
-  tempo: Minuti
-  motivi: MotivoSosta[]
+  tempo: Minuti;
+  motivi: MotivoSosta[];
 }
 
 /** Gli appuntamenti fissi di ogni giorno. */
-const MOMENTI_PROGRAMMATI: readonly { orario: Minuti; motivo: MotivoSosta }[] =
-  [
-    { orario: ORARIO_RISVEGLIO, motivo: { tipo: "RISVEGLIO" } },
-    { orario: ORARIO_RAPPORTO, motivo: { tipo: "RAPPORTO_SERALE" } },
-  ]
+const MOMENTI_PROGRAMMATI: readonly { orario: Minuti; motivo: MotivoSosta }[] = [
+  { orario: ORARIO_RISVEGLIO, motivo: { tipo: "RISVEGLIO" } },
+  { orario: ORARIO_RAPPORTO, motivo: { tipo: "RAPPORTO_SERALE" } },
+];
 
 /**
  * Trova il prossimo momento importante a partire dallo stato attuale.
@@ -185,45 +184,38 @@ const MOMENTI_PROGRAMMATI: readonly { orario: Minuti; motivo: MotivoSosta }[] =
  * stessa sequenza, sempre.
  */
 export function prossimoMomento(stato: StatoMissione): ProssimoMomento {
-  const candidati: { tempo: Minuti; motivo: MotivoSosta }[] = []
+  const candidati: { tempo: Minuti; motivo: MotivoSosta }[] = [];
 
   // 1a. Task in corso, ordinati per ID per avere sempre lo stesso ordine.
   const inCorso = Object.values(stato.tasks)
     .filter((task) => task.stato === "IN_CORSO")
-    .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
+    .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
 
   for (const task of inCorso) {
     if (task.fine === null) {
-      throw new Error(
-        `clock: il task ${task.id} è IN_CORSO ma non ha un tempo di fine`,
-      )
+      throw new Error(`clock: il task ${task.id} è IN_CORSO ma non ha un tempo di fine`);
     }
     if (task.fine < stato.tempo) {
       // Un task doveva finire nel passato e nessuno l'ha gestito: è un bug
       // del reducer. Meglio fermarsi subito che proseguire con dati sbagliati.
-      throw new Error(
-        `clock: il task ${task.id} doveva finire al minuto ${task.fine}, ma ora è il minuto ${stato.tempo}`,
-      )
+      throw new Error(`clock: il task ${task.id} doveva finire al minuto ${task.fine}, ma ora è il minuto ${stato.tempo}`);
     }
-    candidati.push({
-      tempo: task.fine,
-      motivo: { tipo: "FINE_TASK", idTask: task.id },
-    })
+    candidati.push({ tempo: task.fine, motivo: { tipo: "FINE_TASK", idTask: task.id } });
   }
 
   // 1b. Appuntamenti fissi (sempre presenti: quindi c'è sempre un candidato).
   for (const { orario, motivo } of MOMENTI_PROGRAMMATI) {
-    candidati.push({ tempo: prossimaOccorrenza(stato.tempo, orario), motivo })
+    candidati.push({ tempo: prossimaOccorrenza(stato.tempo, orario), motivo });
   }
 
   // 2. Il minuto più vicino.
-  const tempo = Math.min(...candidati.map((c) => c.tempo))
+  const tempo = Math.min(...candidati.map((c) => c.tempo));
 
   // 3. Tutti i motivi di quel minuto. L'ordine di inserimento (task prima,
   //    appuntamenti dopo) è già quello voluto, e filter lo conserva.
-  const motivi = candidati.filter((c) => c.tempo === tempo).map((c) => c.motivo)
+  const motivi = candidati.filter((c) => c.tempo === tempo).map((c) => c.motivo);
 
-  return { tempo, motivi }
+  return { tempo, motivi };
 }
 
 // ----------------------------------------------------------------------------
@@ -240,19 +232,12 @@ export function prossimoMomento(stato: StatoMissione): ProssimoMomento {
  *
  * Il tempo non può tornare indietro: se succede, è un bug, e lo segnaliamo.
  */
-export function avanzaTempo(
-  stato: StatoMissione,
-  nuovoTempo: Minuti,
-): StatoMissione {
+export function avanzaTempo(stato: StatoMissione, nuovoTempo: Minuti): StatoMissione {
   if (!Number.isInteger(nuovoTempo)) {
-    throw new Error(
-      `clock: il tempo deve essere un intero di minuti (ricevuto ${nuovoTempo})`,
-    )
+    throw new Error(`clock: il tempo deve essere un intero di minuti (ricevuto ${nuovoTempo})`);
   }
   if (nuovoTempo < stato.tempo) {
-    throw new Error(
-      `clock: il tempo non può tornare indietro (${stato.tempo} → ${nuovoTempo})`,
-    )
+    throw new Error(`clock: il tempo non può tornare indietro (${stato.tempo} → ${nuovoTempo})`);
   }
-  return { ...stato, tempo: nuovoTempo }
+  return { ...stato, tempo: nuovoTempo };
 }

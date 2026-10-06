@@ -29,20 +29,20 @@
  * e 1440 = Giorno 2, ore 00:00. Giorno e ora si CALCOLANO da questo numero
  * (lo farà clock.ts), non si salvano separatamente.
  */
-export type Minuti = number
+export type Minuti = number;
 
 /**
  * Valore intero da 0 a 100: salute, fatica, fiducia, integrità, rischio.
  * TypeScript non può vietare un 150: il controllo dei limiti spetta alle
  * funzioni del motore che modificano questi valori.
  */
-export type Percentuale = number
+export type Percentuale = number;
 
 /**
  * Etichetta interna con cui i sistemi comunicano (DESIGN §12.5),
  * es. "ALTA_RADIAZIONE", "SEGNALE". Mai mostrata al giocatore.
  */
-export type Tag = string
+export type Tag = string;
 
 // ----------------------------------------------------------------------------
 // IDENTIFICATORI
@@ -51,19 +51,28 @@ export type Tag = string
 // cosa si aspetta una funzione: `assegna(idMembro: IdMembro, ...)`.
 
 /** Membro della crew, es. "mara". */
-export type IdMembro = string
+export type IdMembro = string;
 
 /** Tratto di un membro della crew, es. "ESPERTO_MECCANICA". */
-export type IdTratto = string
+export type IdTratto = string;
 
 /** Modulo della nave, es. "LABORATORIO_AVANZATO". */
-export type IdModulo = string
+export type IdModulo = string;
 
 /** Equipaggiamento, es. "SENSORE_PROFONDO". */
-export type IdEquipaggiamento = string
+export type IdEquipaggiamento = string;
 
 /** Definizione di un task nel catalogo (content/), es. "T-DIAGNOSTICA". */
-export type IdDefinizioneTask = string
+export type IdDefinizioneTask = string;
 
 /** Singolo task assegnato durante una missione, es. "task-7". */
-export type IdIstanzaTask = string
+export type IdIstanzaTask = string;
+
+/** Evento nel catalogo (content/eventi.ts), es. "E01". */
+export type IdEvento = string;
+
+/**
+ * Una cosa che la crew ha SCOPERTO, es. "SEGNALE_RILEVATO".
+ * Le scoperte formano la CONOSCENZA (DESIGN §4.1): ciò che il giocatore sa.
+ */
+export type IdScoperta = string;

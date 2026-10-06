@@ -1,0 +1,195 @@
+/* FinestraEvento.module.css — la carta evento sopra la schermata (prototipo "Segnale sconosciuto"). */
+
+.sfondo {
+  position: fixed;
+  inset: 0;
+  z-index: 50; /* sotto le linee di scansione (100), sopra tutto il resto */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-4);
+  background: rgba(4, 7, 5, 0.82);
+}
+
+.carta {
+  width: min(760px, 100%);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--c-pannello);
+  border: 2px solid var(--c-fosforo);
+  box-shadow: 0 0 40px rgba(125, 245, 165, 0.25), 0 20px 60px rgba(0, 0, 0, 0.8);
+}
+
+.barra {
+  padding: 2px var(--sp-4);
+  background: var(--c-fosforo);
+  color: var(--c-vuoto);
+  font-family: var(--font-terminale);
+  font-size: var(--fs-terminale);
+  letter-spacing: 0.14em;
+}
+
+.corpo {
+  padding: var(--sp-4) var(--sp-5);
+  overflow-y: auto;
+}
+
+.intestazione {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding-bottom: var(--sp-2);
+  border-bottom: 1px solid var(--c-fosforo-tenue);
+}
+.titolo {
+  margin: 0;
+  font-family: var(--font-terminale);
+  font-weight: 400;
+  font-size: 46px;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--c-fosforo);
+  text-shadow: var(--glow-testo);
+}
+.quando {
+  flex: none;
+  font-family: var(--font-terminale);
+  font-size: 20px;
+  letter-spacing: 0.08em;
+  color: var(--c-fosforo-tenue);
+}
+
+/* --- Il messaggio: ciano se parla V.A.L.E., testo tecnico se parla la nave */
+.vale,
+.sistema {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: flex-start;
+  margin: var(--sp-4) 0;
+}
+.vale p,
+.sistema p {
+  margin: 0;
+}
+.vale {
+  color: var(--c-vale);
+}
+.sistema {
+  color: var(--c-testo);
+  letter-spacing: 0.04em;
+}
+.occhio {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--c-vale);
+  box-shadow: inset 0 0 0 5px var(--c-pannello), inset 0 0 0 9px var(--c-vale), var(--glow-vale);
+}
+
+/* --- Le scelte, come il menu del design system ----------------------------- */
+.scelte {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.scelta {
+  width: 100%;
+  min-height: 44px;
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 0 var(--sp-3);
+  background: transparent;
+  border: none;
+  color: var(--c-fosforo);
+  text-align: left;
+  cursor: pointer;
+}
+.scelta:hover:not(:disabled) {
+  background: rgba(125, 245, 165, 0.08);
+}
+.attiva,
+.attiva:hover:not(:disabled) {
+  background: var(--c-fosforo);
+  color: var(--c-vuoto);
+}
+.scelta:disabled {
+  color: var(--c-fosforo-tenue);
+  cursor: not-allowed;
+}
+
+.cursore {
+  font-size: 20px;
+}
+.etichetta {
+  font-family: var(--font-terminale);
+  font-size: 30px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.nota {
+  font-size: var(--fs-piccolo);
+  letter-spacing: 0.08em;
+  text-align: right;
+}
+
+.piede {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-5) var(--sp-4);
+}
+.aiuto {
+  font-family: var(--font-terminale);
+  font-size: 18px;
+  letter-spacing: 0.12em;
+  color: var(--c-fosforo-tenue);
+}
+
+@media (max-width: 600px) {
+  .sfondo {
+    padding: var(--sp-2);
+  }
+  .barra {
+    font-size: 18px;
+  }
+  .corpo {
+    padding: var(--sp-3);
+  }
+  .titolo {
+    font-size: 34px;
+  }
+  .intestazione {
+    flex-direction: column;
+    gap: var(--sp-1);
+  }
+  .etichetta {
+    font-size: 24px;
+  }
+  .scelta {
+    grid-template-columns: 20px 1fr;
+    padding: var(--sp-1) var(--sp-2);
+  }
+  .nota {
+    grid-column: 2;
+    text-align: left;
+  }
+  .aiuto {
+    display: none;
+  }
+  .piede {
+    padding: var(--sp-2) var(--sp-3) var(--sp-3);
+  }
+  .piede > button {
+    flex: 1;
+  }
+}

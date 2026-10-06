@@ -23,24 +23,21 @@
  * ============================================================================
  */
 
-import { BALANCE } from "../../content/balance"
-import { moltiplicatoreDurataFatica } from "../crew/fatica"
-import type { DefinizioneTask, MembroCrew, Minuti } from "../types"
+import { BALANCE } from "../../content/balance";
+import { moltiplicatoreDurataFatica } from "../crew/fatica";
+import type { DefinizioneTask, MembroCrew, Minuti } from "../types";
 
 export function calcolaDurata(
   def: DefinizioneTask,
   responsabile: MembroCrew,
   supporto: MembroCrew | null,
 ): Minuti {
-  const b = BALANCE.task
+  const b = BALANCE.task;
 
-  const fattoreFatica = moltiplicatoreDurataFatica(responsabile.fatica)
-  const fattoreVelocita =
-    1 -
-    (responsabile.abilita.VELOCITA - b.abilitaNeutra) * b.durataPerPuntoVelocita
-  const fattoreSupporto = supporto !== null ? 1 - b.riduzioneDurataSupporto : 1
+  const fattoreFatica = moltiplicatoreDurataFatica(responsabile.fatica);
+  const fattoreVelocita = 1 - (responsabile.abilita.VELOCITA - b.abilitaNeutra) * b.durataPerPuntoVelocita;
+  const fattoreSupporto = supporto !== null ? 1 - b.riduzioneDurataSupporto : 1;
 
-  const durata =
-    def.durataBase * fattoreFatica * fattoreVelocita * fattoreSupporto
-  return Math.max(1, Math.round(durata))
+  const durata = def.durataBase * fattoreFatica * fattoreVelocita * fattoreSupporto;
+  return Math.max(1, Math.round(durata));
 }

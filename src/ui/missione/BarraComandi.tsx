@@ -62,7 +62,7 @@ export function BarraComandi({ stato, dispatch }: Props) {
       comando = { etichetta: "Chiudi rapporto ▶", azione: () => dispatch({ tipo: "CHIUDI_RAPPORTO" }) };
       break;
     case "DECISIONE":
-      testo = "In attesa di una decisione del Capitano.";
+      testo = "V.A.L.E. attende una decisione del Capitano.";
       comando = null;
       break;
   }

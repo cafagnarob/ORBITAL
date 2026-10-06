@@ -17,11 +17,11 @@
  * ============================================================================
  */
 
-import { BALANCE } from "../../content/balance"
-import type { Percentuale } from "../types"
+import { BALANCE } from "../../content/balance";
+import type { Percentuale } from "../types";
 
-export const FASCE_FATICA = ["BASSA", "MODERATA", "ALTA", "ESAURITO"] as const
-export type FasciaFatica = (typeof FASCE_FATICA)[number]
+export const FASCE_FATICA = ["BASSA", "MODERATA", "ALTA", "ESAURITO"] as const;
+export type FasciaFatica = (typeof FASCE_FATICA)[number];
 
 /**
  * Fascia corrispondente a un valore di fatica.
@@ -29,19 +29,19 @@ export type FasciaFatica = (typeof FASCE_FATICA)[number]
  * vero è la risposta. Con le soglie 40/70/90: 39 → BASSA, 40 → MODERATA.
  */
 export function fasciaFatica(fatica: Percentuale): FasciaFatica {
-  const { soglie } = BALANCE.fatica
-  if (fatica >= soglie.ESAURITO) return "ESAURITO"
-  if (fatica >= soglie.ALTA) return "ALTA"
-  if (fatica >= soglie.MODERATA) return "MODERATA"
-  return "BASSA"
+  const { soglie } = BALANCE.fatica;
+  if (fatica >= soglie.ESAURITO) return "ESAURITO";
+  if (fatica >= soglie.ALTA) return "ALTA";
+  if (fatica >= soglie.MODERATA) return "MODERATA";
+  return "BASSA";
 }
 
 /** Moltiplicatore della durata dei task dovuto alla fatica (1 = nessun effetto). */
 export function moltiplicatoreDurataFatica(fatica: Percentuale): number {
-  return BALANCE.fatica.moltiplicatoreDurata[fasciaFatica(fatica)]
+  return BALANCE.fatica.moltiplicatoreDurata[fasciaFatica(fatica)];
 }
 
 /** Punti di rischio aggiunti a un task dovuti alla fatica. */
 export function penalitaRischioFatica(fatica: Percentuale): number {
-  return BALANCE.fatica.penalitaRischio[fasciaFatica(fatica)]
+  return BALANCE.fatica.penalitaRischio[fasciaFatica(fatica)];
 }

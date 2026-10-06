@@ -29,28 +29,21 @@
  * ============================================================================
  */
 
-import { avanzaTempo, prossimoMomento } from "../clock"
-import { createRng } from "../rng"
-import type { StatoGioco, StatoMissione } from "../types"
-import {
-  assegnaTask,
-  rimuoviDallaCoda,
-  verificaAssegnazione,
-  verificaRimozione,
-} from "./assegnazione"
-import type { Azione } from "./azioni"
-import type { ContestoMissione } from "./contesto"
-import { avviaTaskPronti, concludiTask } from "./esecuzione"
-import { avviaOperazioni, rapportoSerale, risveglio } from "./giornata"
+import { avanzaTempo, prossimoMomento } from "../clock";
+import { controllaEventi, risolviEvento, verificaScelta } from "../eventi/attivazione";
+import type { MomentoEventi } from "../eventi/condizioni";
+import { createRng } from "../rng";
+import type { StatoGioco, StatoMissione } from "../types";
+import { assegnaTask, rimuoviDallaCoda, verificaAssegnazione, verificaRimozione } from "./assegnazione";
+import type { Azione } from "./azioni";
+import type { ContestoMissione } from "./contesto";
+import { avviaTaskPronti, concludiTask } from "./esecuzione";
+import { avviaOperazioni, rapportoSerale, risveglio } from "./giornata";
 
 /** Lancia un errore se l'azione arriva nello stato di gioco sbagliato. */
-function richiediStato(
-  stato: StatoMissione,
-  ammessi: readonly StatoGioco[],
-  azione: Azione,
-): void {
+function richiediStato(stato: StatoMissione, ammessi: readonly StatoGioco[], azione: Azione): void {
   if (!ammessi.includes(stato.statoGioco)) {
-    throw new Error(`Azione ${azione.tipo} non permessa in ${stato.statoGioco}`)
+    throw new Error(`Azione ${azione.tipo} non permessa in ${stato.statoGioco}`);
   }
 }
 
@@ -60,91 +53,95 @@ function richiediStato(
  * `never` e il COMPILATORE darà errore. Un bug trovato prima di eseguire.
  */
 function azioneNonGestita(azione: never): never {
-  throw new Error(`Azione non gestita: ${JSON.stringify(azione)}`)
+  throw new Error(`Azione non gestita: ${JSON.stringify(azione)}`);
 }
 
-export function applicaAzione(
-  stato: StatoMissione,
-  azione: Azione,
-  contesto: ContestoMissione,
-): StatoMissione {
-  const bozza = structuredClone(stato)
-  const rng = createRng(bozza.rngState)
+export function applicaAzione(stato: StatoMissione, azione: Azione, contesto: ContestoMissione): StatoMissione {
+  const bozza = structuredClone(stato);
+  const rng = createRng(bozza.rngState);
 
   switch (azione.tipo) {
     case "ASSEGNA_TASK": {
-      richiediStato(bozza, ["PIANIFICAZIONE", "IN_ESECUZIONE"], azione)
-      const errore = verificaAssegnazione(
-        bozza,
-        contesto,
-        azione.idDefinizione,
-        azione.responsabile,
-        azione.supporto,
-      )
-      if (errore !== null) throw new Error(errore)
-      assegnaTask(
-        bozza,
-        azione.idDefinizione,
-        azione.responsabile,
-        azione.supporto,
-      )
+      richiediStato(bozza, ["PIANIFICAZIONE", "IN_ESECUZIONE"], azione);
+      const errore = verificaAssegnazione(bozza, contesto, azione.idDefinizione, azione.responsabile, azione.supporto);
+      if (errore !== null) throw new Error(errore);
+      assegnaTask(bozza, azione.idDefinizione, azione.responsabile, azione.supporto);
       // Durante le operazioni, un membro libero inizia subito.
-      if (bozza.statoGioco === "IN_ESECUZIONE") avviaTaskPronti(bozza, contesto)
-      break
+      if (bozza.statoGioco === "IN_ESECUZIONE") avviaTaskPronti(bozza, contesto);
+      break;
     }
 
     case "RIMUOVI_TASK": {
-      richiediStato(bozza, ["PIANIFICAZIONE", "IN_ESECUZIONE"], azione)
-      const errore = verificaRimozione(bozza, azione.idTask)
-      if (errore !== null) throw new Error(errore)
-      rimuoviDallaCoda(bozza, azione.idTask)
-      break
+      richiediStato(bozza, ["PIANIFICAZIONE", "IN_ESECUZIONE"], azione);
+      const errore = verificaRimozione(bozza, azione.idTask);
+      if (errore !== null) throw new Error(errore);
+      rimuoviDallaCoda(bozza, azione.idTask);
+      break;
     }
 
     case "AVVIA_OPERAZIONI": {
-      richiediStato(bozza, ["PIANIFICAZIONE"], azione)
-      avviaOperazioni(bozza, contesto)
-      break
+      richiediStato(bozza, ["PIANIFICAZIONE"], azione);
+      avviaOperazioni(bozza, contesto);
+      break;
     }
 
     case "AVANZA": {
-      richiediStato(bozza, ["IN_ESECUZIONE"], azione)
-      const momento = prossimoMomento(bozza)
+      richiediStato(bozza, ["IN_ESECUZIONE"], azione);
+      const momento = prossimoMomento(bozza);
       // avanzaTempo controlla che il tempo non torni indietro; ne prendiamo
       // solo il nuovo valore, perché stiamo lavorando sulla bozza.
-      bozza.tempo = avanzaTempo(bozza, momento.tempo).tempo
+      bozza.tempo = avanzaTempo(bozza, momento.tempo).tempo;
+
+      // Raccogliamo cosa succede in questo passo: servirà agli eventi.
+      const perEventi: MomentoEventi = { rapportoSerale: false, risveglio: false, tasksConclusi: [] };
 
       // I motivi arrivano già in ordine: prima le fine dei task, poi gli
       // appuntamenti fissi (vedi clock.ts).
       for (const motivo of momento.motivi) {
         switch (motivo.tipo) {
           case "FINE_TASK":
-            concludiTask(bozza, contesto, rng, motivo.idTask)
-            break
+            concludiTask(bozza, contesto, rng, motivo.idTask);
+            perEventi.tasksConclusi.push(motivo.idTask);
+            break;
           case "RAPPORTO_SERALE":
-            rapportoSerale(bozza)
-            break
+            rapportoSerale(bozza);
+            perEventi.rapportoSerale = true;
+            break;
           case "RISVEGLIO":
-            risveglio(bozza)
-            break
+            risveglio(bozza);
+            perEventi.risveglio = true;
+            break;
         }
       }
 
+      // Può accadere un evento; se chiede una decisione, il gioco si ferma
+      // in DECISIONE e i task in coda partiranno dopo la scelta.
+      controllaEventi(bozza, contesto, rng, perEventi);
+
       // Chi si è liberato inizia il task successivo (se siamo ancora operativi).
-      if (bozza.statoGioco === "IN_ESECUZIONE") avviaTaskPronti(bozza, contesto)
-      break
+      if (bozza.statoGioco === "IN_ESECUZIONE") avviaTaskPronti(bozza, contesto);
+      break;
     }
 
     case "CHIUDI_RAPPORTO": {
-      richiediStato(bozza, ["RAPPORTO"], azione)
-      bozza.statoGioco = "IN_ESECUZIONE" // la notte scorre fino al risveglio
-      break
+      richiediStato(bozza, ["RAPPORTO"], azione);
+      bozza.statoGioco = "IN_ESECUZIONE"; // la notte scorre fino al risveglio
+      break;
+    }
+
+    case "RISOLVI_EVENTO": {
+      richiediStato(bozza, ["DECISIONE"], azione);
+      const errore = verificaScelta(bozza, contesto, azione.idScelta);
+      if (errore !== null) throw new Error(errore);
+      risolviEvento(bozza, contesto, azione.idScelta);
+      if (bozza.statoGioco === "IN_ESECUZIONE") avviaTaskPronti(bozza, contesto);
+      break;
     }
 
     default:
-      return azioneNonGestita(azione)
+      return azioneNonGestita(azione);
   }
 
-  bozza.rngState = rng.getState()
-  return bozza
+  bozza.rngState = rng.getState();
+  return bozza;
 }

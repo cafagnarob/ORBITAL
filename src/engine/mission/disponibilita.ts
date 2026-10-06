@@ -9,29 +9,24 @@
  * ============================================================================
  */
 
-import type { IdMembro, MembroCrew, StatoMembro, StatoMissione } from "../types"
+import type { IdMembro, MembroCrew, StatoMembro, StatoMissione } from "../types";
 
 /** Stati in cui un membro può svolgere un task. */
-const STATI_OPERATIVI: readonly StatoMembro[] = ["SANO", "FERITO"]
+const STATI_OPERATIVI: readonly StatoMembro[] = ["SANO", "FERITO"];
 
 /** Il membro è in condizione di lavorare? */
 export function puoLavorare(membro: MembroCrew): boolean {
-  return STATI_OPERATIVI.includes(membro.stato)
+  return STATI_OPERATIVI.includes(membro.stato);
 }
 
 /**
  * Il membro sta già lavorando, come responsabile o come aiutante?
  * Un membro occupato non può iniziare un altro task né aiutare qualcuno.
  */
-export function membroOccupato(
-  stato: StatoMissione,
-  idMembro: IdMembro,
-): boolean {
+export function membroOccupato(stato: StatoMissione, idMembro: IdMembro): boolean {
   return Object.values(stato.tasks).some(
-    (task) =>
-      task.stato === "IN_CORSO" &&
-      (task.responsabile === idMembro || task.supporto === idMembro),
-  )
+    (task) => task.stato === "IN_CORSO" && (task.responsabile === idMembro || task.supporto === idMembro),
+  );
 }
 
 /**
@@ -39,12 +34,10 @@ export function membroOccupato(
  * consumano scorte e che recuperano fatica dormendo.
  */
 export function membriABordo(stato: StatoMissione): MembroCrew[] {
-  return Object.values(stato.crew).filter(
-    (m) => m.stato !== "MORTO" && m.stato !== "DISPERSO",
-  )
+  return Object.values(stato.crew).filter((m) => m.stato !== "MORTO" && m.stato !== "DISPERSO");
 }
 
 /** Gli ID della crew in ordine alfabetico: per scorrerli sempre nello stesso ordine. */
 export function idCrewOrdinati(stato: StatoMissione): IdMembro[] {
-  return Object.keys(stato.crew).sort()
+  return Object.keys(stato.crew).sort();
 }

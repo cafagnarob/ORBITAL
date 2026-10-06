@@ -9,9 +9,11 @@
  * ============================================================================
  */
 
-import type { ContestoMissione } from "../engine/mission"
-import { CATALOGO_TASK } from "./tasks"
+import type { ContestoMissione } from "../engine/mission";
+import { CATALOGO_EVENTI } from "./eventi";
+import { CATALOGO_TASK } from "./tasks";
 
 export const CONTESTO_GIOCO: ContestoMissione = {
   catalogoTask: CATALOGO_TASK,
-}
+  catalogoEventi: CATALOGO_EVENTI,
+};

@@ -46,8 +46,8 @@
  * Esempio (DESIGN §10): { item: "TEMPESTA_DI_POLVERE", peso: 25 }
  */
 export interface VocePesata<T> {
-  item: T
-  peso: number
+  item: T;
+  peso: number;
 }
 
 /**
@@ -56,17 +56,17 @@ export interface VocePesata<T> {
  */
 export interface Rng {
   /** Numero decimale in [0, 1): può valere 0, non arriva mai a 1. */
-  next(): number
+  next(): number;
   /** Intero tra min e max, ENTRAMBI inclusi. */
-  int(min: number, max: number): number
+  int(min: number, max: number): number;
   /** true con la probabilità indicata (0 = mai, 1 = sempre, 0.3 = 30%). */
-  chance(probabilita: number): boolean
+  chance(probabilita: number): boolean;
   /** Un elemento a caso della lista (tutti con la stessa probabilità). */
-  pick<T>(lista: readonly T[]): T
+  pick<T>(lista: readonly T[]): T;
   /** Un elemento scelto in base ai pesi (pool di eventi, tipi di POI...). */
-  weightedPick<T>(voci: readonly VocePesata<T>[]): T
+  weightedPick<T>(voci: readonly VocePesata<T>[]): T;
   /** Lo stato attuale, da salvare nello stato di gioco. Non fa avanzare nulla. */
-  getState(): number
+  getState(): number;
 }
 
 // ----------------------------------------------------------------------------
@@ -82,19 +82,19 @@ export interface Rng {
  */
 export function hashSeed(testo: string): number {
   // Valore di partenza standard dell'algoritmo FNV-1a (offset basis).
-  let h = 0x811c9dc5
+  let h = 0x811c9dc5;
 
   for (let i = 0; i < testo.length; i++) {
     // XOR con il codice del carattere: "incorpora" il carattere nell'hash.
-    h ^= testo.charCodeAt(i)
+    h ^= testo.charCodeAt(i);
     // Moltiplicazione per il numero primo FNV.
     // Math.imul moltiplica come un processore a 32 bit (scarta l'eccedenza),
     // cosa che la normale moltiplicazione di JavaScript non fa.
-    h = Math.imul(h, 0x01000193)
+    h = Math.imul(h, 0x01000193);
   }
 
   // ">>> 0" converte il risultato in intero SENZA segno (sempre ≥ 0).
-  return h >>> 0
+  return h >>> 0;
 }
 
 /**
@@ -109,7 +109,7 @@ export function hashSeed(testo: string): number {
  * producono due numeri diversi, ma sempre gli stessi.
  */
 export function deriveSeed(seed: string, dominio: string): number {
-  return hashSeed(`${seed}:${dominio}`)
+  return hashSeed(`${seed}:${dominio}`);
 }
 
 // ----------------------------------------------------------------------------
@@ -128,7 +128,7 @@ export function deriveSeed(seed: string, dominio: string): number {
 export function createRng(statoIniziale: number): Rng {
   // "| 0" forza il valore a intero con segno a 32 bit, il formato su cui
   // lavora Mulberry32. Così qualsiasi numero in ingresso diventa valido.
-  let stato = statoIniziale | 0
+  let stato = statoIniziale | 0;
 
   /**
    * Mulberry32: fa avanzare lo stato e restituisce un decimale in [0, 1).
@@ -137,16 +137,16 @@ export function createRng(statoIniziale: number): Rng {
    */
   function next(): number {
     // 1. Avanza lo stato di una costante fissa (resta a 32 bit grazie a "| 0").
-    stato = (stato + 0x6d2b79f5) | 0
+    stato = (stato + 0x6d2b79f5) | 0;
 
     // 2. Mescola i bit dello stato con shift, XOR e moltiplicazioni a 32 bit.
     //    Non serve capire ogni passaggio: è la "ricetta" dell'algoritmo.
-    let t = Math.imul(stato ^ (stato >>> 15), 1 | stato)
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+    let t = Math.imul(stato ^ (stato >>> 15), 1 | stato);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
 
     // 3. Rende il risultato un intero senza segno (0 … 2³²−1) e lo divide
     //    per 2³² = 4294967296, ottenendo un decimale tra 0 (incluso) e 1 (escluso).
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   }
 
   /**
@@ -159,16 +159,12 @@ export function createRng(statoIniziale: number): Rng {
    */
   function int(min: number, max: number): number {
     if (!Number.isInteger(min) || !Number.isInteger(max)) {
-      throw new Error(
-        `rng.int: min e max devono essere interi (ricevuti ${min}, ${max})`,
-      )
+      throw new Error(`rng.int: min e max devono essere interi (ricevuti ${min}, ${max})`);
     }
     if (min > max) {
-      throw new Error(
-        `rng.int: min (${min}) non può essere maggiore di max (${max})`,
-      )
+      throw new Error(`rng.int: min (${min}) non può essere maggiore di max (${max})`);
     }
-    return min + Math.floor(next() * (max - min + 1))
+    return min + Math.floor(next() * (max - min + 1));
   }
 
   /**
@@ -180,11 +176,9 @@ export function createRng(statoIniziale: number): Rng {
    */
   function chance(probabilita: number): boolean {
     if (probabilita < 0 || probabilita > 1 || Number.isNaN(probabilita)) {
-      throw new Error(
-        `rng.chance: la probabilità deve essere tra 0 e 1 (ricevuta ${probabilita})`,
-      )
+      throw new Error(`rng.chance: la probabilità deve essere tra 0 e 1 (ricevuta ${probabilita})`);
     }
-    return next() < probabilita
+    return next() < probabilita;
   }
 
   /**
@@ -194,16 +188,16 @@ export function createRng(statoIniziale: number): Rng {
    */
   function pick<T>(lista: readonly T[]): T {
     if (lista.length === 0) {
-      throw new Error("rng.pick: impossibile scegliere da una lista vuota")
+      throw new Error("rng.pick: impossibile scegliere da una lista vuota");
     }
-    const indice = int(0, lista.length - 1)
+    const indice = int(0, lista.length - 1);
 
     // Con "noUncheckedIndexedAccess" attivo, lista[indice] ha tipo T | undefined.
     // Qui il cast "as T" è giustificato: abbiamo appena verificato che la lista
     // non è vuota e int() restituisce un indice sempre valido.
     // (Non controlliamo "=== undefined" perché T potrebbe contenere undefined
     // come valore legittimo.)
-    return lista[indice] as T
+    return lista[indice] as T;
   }
 
   /**
@@ -220,36 +214,34 @@ export function createRng(statoIniziale: number): Rng {
    * Una voce con peso 0 occupa un tratto lungo 0 e non può mai uscire.
    */
   function weightedPick<T>(voci: readonly VocePesata<T>[]): T {
-    let totale = 0
+    let totale = 0;
     for (const voce of voci) {
       if (voce.peso < 0 || !Number.isFinite(voce.peso)) {
-        throw new Error(`rng.weightedPick: peso non valido (${voce.peso})`)
+        throw new Error(`rng.weightedPick: peso non valido (${voce.peso})`);
       }
-      totale += voce.peso
+      totale += voce.peso;
     }
     if (totale <= 0) {
-      throw new Error(
-        "rng.weightedPick: serve almeno una voce con peso maggiore di 0",
-      )
+      throw new Error("rng.weightedPick: serve almeno una voce con peso maggiore di 0");
     }
 
-    let tiro = next() * totale
+    let tiro = next() * totale;
     // Teniamo traccia dell'ultima voce valida: serve solo come rete di sicurezza
     // per gli arrotondamenti dei numeri decimali (vedi sotto).
-    let ultimaValida: VocePesata<T> | undefined
+    let ultimaValida: VocePesata<T> | undefined;
 
     for (const voce of voci) {
-      if (voce.peso === 0) continue // peso 0 = mai scelta
-      ultimaValida = voce
-      tiro -= voce.peso
-      if (tiro < 0) return voce.item
+      if (voce.peso === 0) continue; // peso 0 = mai scelta
+      ultimaValida = voce;
+      tiro -= voce.peso;
+      if (tiro < 0) return voce.item;
     }
 
     // In teoria non ci si arriva mai (tiro < totale). In pratica i numeri
     // decimali possono avere minuscoli errori di arrotondamento: in quel caso
     // restituiamo l'ultima voce valida invece di far fallire il gioco.
     // ultimaValida esiste sicuramente, perché totale > 0.
-    return (ultimaValida as VocePesata<T>).item
+    return (ultimaValida as VocePesata<T>).item;
   }
 
   /**
@@ -258,8 +250,8 @@ export function createRng(statoIniziale: number): Rng {
    * createRng lo riconverte con "| 0" senza perdere informazioni.
    */
   function getState(): number {
-    return stato >>> 0
+    return stato >>> 0;
   }
 
-  return { next, int, chance, pick, weightedPick, getState }
+  return { next, int, chance, pick, weightedPick, getState };
 }

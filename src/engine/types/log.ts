@@ -13,18 +13,18 @@
  * ============================================================================
  */
 
-import type { Minuti } from "./comuni"
+import type { Minuti } from "./comuni";
 
 /** Chi ha prodotto la voce. */
-export const FONTI_LOG = ["SISTEMA", "VALE", "CREW"] as const
-export type FonteLog = (typeof FONTI_LOG)[number]
+export const FONTI_LOG = ["SISTEMA", "VALE", "CREW"] as const;
+export type FonteLog = (typeof FONTI_LOG)[number];
 
 export interface VoceLog {
   /** Quando è stata scritta. */
-  tempo: Minuti
-  fonte: FonteLog
+  tempo: Minuti;
+  fonte: FonteLog;
   /** Testo mostrato, es. "ROUTE PWR-07 → LS-01 · PRIORITÀ VITA". */
-  testo: string
+  testo: string;
   /** Codici nascosti contenuti nella voce (può essere vuoto). */
-  codici: string[]
+  codici: string[];
 }

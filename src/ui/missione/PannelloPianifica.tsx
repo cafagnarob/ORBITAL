@@ -26,7 +26,7 @@
 import { useState, type FormEvent } from "react";
 import { CONTESTO_GIOCO } from "../../content/contesto";
 import { CATALOGO_TASK, TASK_DISPONIBILI } from "../../content/tasks";
-import { puoLavorare, verificaAssegnazione } from "../../engine/mission";
+import { puoLavorare, scoperteMancanti, verificaAssegnazione } from "../../engine/mission";
 import { valutaTask } from "../../engine/tasks/valutazione";
 import type { StatoMissione } from "../../engine/types";
 import { Finestra } from "../components/Finestra";
@@ -45,6 +45,9 @@ const NESSUNO = "";
 
 export function PannelloPianifica({ stato, dispatch }: Props) {
   const membri = Object.values(stato.crew);
+  // Solo i task che la crew "sa" di poter fare: quelli bloccati da scoperte
+  // non ancora fatte non compaiono (comparirebbero come spoiler).
+  const disponibili = TASK_DISPONIBILI.filter((t) => scoperteMancanti(stato, t).length === 0);
   const [idTask, setIdTask] = useState(TASK_DISPONIBILI[0]?.id ?? "");
   const [idResponsabile, setIdResponsabile] = useState(membri[0]?.id ?? "");
   const [idSupporto, setIdSupporto] = useState(NESSUNO);
@@ -61,7 +64,9 @@ export function PannelloPianifica({ stato, dispatch }: Props) {
   const faseValida = stato.statoGioco === "PIANIFICAZIONE" || stato.statoGioco === "IN_ESECUZIONE";
   const motivo = faseValida
     ? verificaAssegnazione(stato, CONTESTO_GIOCO, idTask, idResponsabile, supportoEffettivo)
-    : "Assegnazioni non disponibili durante il rapporto";
+    : stato.statoGioco === "DECISIONE"
+      ? "Prima serve una decisione del Capitano"
+      : "Assegnazioni non disponibili durante il rapporto";
 
   // La stima si calcola solo se l'assegnazione è valida (altrimenti valutaTask
   // potrebbe giustamente lanciare un errore).
@@ -81,7 +86,7 @@ export function PannelloPianifica({ stato, dispatch }: Props) {
         <label className={stili.campo}>
           <span>TASK</span>
           <select value={idTask} onChange={(e) => setIdTask(e.target.value)}>
-            {TASK_DISPONIBILI.map((t) => (
+            {disponibili.map((t) => (
               <option key={t.id} value={t.id}>
                 {t.nome}
               </option>

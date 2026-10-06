@@ -17,18 +17,22 @@
  * ============================================================================
  */
 
-import type {
-  IdDefinizioneTask,
-  IdIstanzaTask,
-  IdMembro,
-  StatoMissione,
-} from "../types"
-import type { ContestoMissione } from "./contesto"
-import { puoLavorare } from "./disponibilita"
+import type { DefinizioneTask, IdDefinizioneTask, IdIstanzaTask, IdMembro, IdScoperta, StatoMissione } from "../types";
+import type { ContestoMissione } from "./contesto";
+import { puoLavorare } from "./disponibilita";
 
 // ----------------------------------------------------------------------------
 // ASSEGNAZIONE
 // ----------------------------------------------------------------------------
+
+/**
+ * Le scoperte che mancano perché un task sia disponibile.
+ * Lista vuota = il task è disponibile. La UI la usa per mostrare solo i
+ * task che la crew "sa" di poter fare.
+ */
+export function scoperteMancanti(stato: StatoMissione, def: DefinizioneTask): IdScoperta[] {
+  return def.scoperteRichieste.filter((id) => !stato.conoscenza.scoperte.includes(id));
+}
 
 /** Restituisce il motivo per cui l'assegnazione NON è possibile, o null se lo è. */
 export function verificaAssegnazione(
@@ -38,31 +42,28 @@ export function verificaAssegnazione(
   idResponsabile: IdMembro,
   idSupporto: IdMembro | null,
 ): string | null {
-  const def = contesto.catalogoTask[idDefinizione]
-  if (!def) return `Task sconosciuto: ${idDefinizione}`
+  const def = contesto.catalogoTask[idDefinizione];
+  if (!def) return `Task sconosciuto: ${idDefinizione}`;
 
-  const responsabile = stato.crew[idResponsabile]
-  if (!responsabile) return `Membro sconosciuto: ${idResponsabile}`
-  if (!puoLavorare(responsabile))
-    return `${responsabile.nome} non è in grado di lavorare`
+  if (scoperteMancanti(stato, def).length > 0) return `${def.nome}: informazioni insufficienti`;
+
+  const responsabile = stato.crew[idResponsabile];
+  if (!responsabile) return `Membro sconosciuto: ${idResponsabile}`;
+  if (!puoLavorare(responsabile)) return `${responsabile.nome} non è in grado di lavorare`;
 
   if (idSupporto !== null) {
-    if (!def.supportoAmmesso) return `${def.nome} si svolge da soli`
-    if (idSupporto === idResponsabile)
-      return `${responsabile.nome} non può aiutare sé stesso`
-    const supporto = stato.crew[idSupporto]
-    if (!supporto) return `Membro sconosciuto: ${idSupporto}`
-    if (!puoLavorare(supporto))
-      return `${supporto.nome} non è in grado di aiutare`
+    if (!def.supportoAmmesso) return `${def.nome} si svolge da soli`;
+    if (idSupporto === idResponsabile) return `${responsabile.nome} non può aiutare sé stesso`;
+    const supporto = stato.crew[idSupporto];
+    if (!supporto) return `Membro sconosciuto: ${idSupporto}`;
+    if (!puoLavorare(supporto)) return `${supporto.nome} non è in grado di aiutare`;
   }
 
   // Tutto l'equipaggiamento richiesto deve essere a bordo.
-  const mancante = def.equipaggiamentoRichiesto.find(
-    (e) => !stato.nave.equipaggiamento.includes(e),
-  )
-  if (mancante !== undefined) return `Equipaggiamento mancante: ${mancante}`
+  const mancante = def.equipaggiamentoRichiesto.find((e) => !stato.nave.equipaggiamento.includes(e));
+  if (mancante !== undefined) return `Equipaggiamento mancante: ${mancante}`;
 
-  return null
+  return null;
 }
 
 /**
@@ -76,8 +77,8 @@ export function assegnaTask(
   idSupporto: IdMembro | null,
 ): IdIstanzaTask {
   // ID deterministico: "task-" + contatore (vedi missione.ts).
-  bozza.contatoreId += 1
-  const id = `task-${bozza.contatoreId}`
+  bozza.contatoreId += 1;
+  const id = `task-${bozza.contatoreId}`;
 
   bozza.tasks[id] = {
     id,
@@ -89,13 +90,13 @@ export function assegnaTask(
     fine: null,
     rischio: null,
     esito: null,
-  }
+  };
 
   // `??=` assegna solo se il valore è null o undefined: crea la coda
   // se per qualche motivo non esiste ancora.
-  bozza.code[idResponsabile] ??= []
-  bozza.code[idResponsabile].push(id)
-  return id
+  bozza.code[idResponsabile] ??= [];
+  bozza.code[idResponsabile].push(id);
+  return id;
 }
 
 // ----------------------------------------------------------------------------
@@ -103,28 +104,21 @@ export function assegnaTask(
 // ----------------------------------------------------------------------------
 
 /** Si può togliere dalla coda solo un task che non è ancora iniziato. */
-export function verificaRimozione(
-  stato: StatoMissione,
-  idTask: IdIstanzaTask,
-): string | null {
-  const task = stato.tasks[idTask]
-  if (!task) return `Task sconosciuto: ${idTask}`
-  if (task.stato !== "IN_CODA")
-    return "Si possono rimuovere solo i task ancora in coda"
-  return null
+export function verificaRimozione(stato: StatoMissione, idTask: IdIstanzaTask): string | null {
+  const task = stato.tasks[idTask];
+  if (!task) return `Task sconosciuto: ${idTask}`;
+  if (task.stato !== "IN_CODA") return "Si possono rimuovere solo i task ancora in coda";
+  return null;
 }
 
 /**
  * Toglie un task dalla coda e lo segna ANNULLATO.
  * Non lo cancelliamo da `tasks`: la storia della missione resta completa.
  */
-export function rimuoviDallaCoda(
-  bozza: StatoMissione,
-  idTask: IdIstanzaTask,
-): void {
-  const task = bozza.tasks[idTask]
-  if (!task) return
-  task.stato = "ANNULLATO"
-  const coda = bozza.code[task.responsabile]
-  if (coda) bozza.code[task.responsabile] = coda.filter((id) => id !== idTask)
+export function rimuoviDallaCoda(bozza: StatoMissione, idTask: IdIstanzaTask): void {
+  const task = bozza.tasks[idTask];
+  if (!task) return;
+  task.stato = "ANNULLATO";
+  const coda = bozza.code[task.responsabile];
+  if (coda) bozza.code[task.responsabile] = coda.filter((id) => id !== idTask);
 }

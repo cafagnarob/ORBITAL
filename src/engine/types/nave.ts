@@ -24,7 +24,7 @@
  * ============================================================================
  */
 
-import type { IdEquipaggiamento, IdModulo, Percentuale } from "./comuni"
+import type { IdEquipaggiamento, IdModulo, Percentuale } from "./comuni";
 
 // ----------------------------------------------------------------------------
 // COMPARTIMENTI E LUOGHI
@@ -41,24 +41,19 @@ export const COMPARTIMENTI = [
   "STOCCAGGIO",
   "AIRLOCK",
   "PROPULSIONE",
-] as const
-export type Compartimento = (typeof COMPARTIMENTI)[number]
+] as const;
+export type Compartimento = (typeof COMPARTIMENTI)[number];
 
 /**
  * Dove può trovarsi un membro della crew o svolgersi un task:
  * un compartimento, l'esterno della nave (EVA in orbita) o la superficie.
  * `|` significa "oppure": un Luogo è uno qualsiasi di questi valori.
  */
-export type Luogo = Compartimento | "ESTERNO_NAVE" | "SUPERFICIE"
+export type Luogo = Compartimento | "ESTERNO_NAVE" | "SUPERFICIE";
 
 /** Stato di accesso di un compartimento (V.A.L.E. può modificarlo). */
-export const STATI_ACCESSO = [
-  "APERTO",
-  "LIMITATO",
-  "IN_SICUREZZA",
-  "BLOCCATO",
-] as const
-export type StatoAccesso = (typeof STATI_ACCESSO)[number]
+export const STATI_ACCESSO = ["APERTO", "LIMITATO", "IN_SICUREZZA", "BLOCCATO"] as const;
+export type StatoAccesso = (typeof STATI_ACCESSO)[number];
 
 // ----------------------------------------------------------------------------
 // SISTEMI CORE
@@ -74,8 +69,8 @@ export const SISTEMI_CORE = [
   "SCIENZA",
   "MEDICINA",
   "OPERAZIONI_ESTERNE",
-] as const
-export type SistemaCore = (typeof SISTEMI_CORE)[number]
+] as const;
+export type SistemaCore = (typeof SISTEMI_CORE)[number];
 
 // ----------------------------------------------------------------------------
 // NAVE
@@ -93,21 +88,21 @@ export type SistemaCore = (typeof SISTEMI_CORE)[number]
  */
 export interface Nave {
   /** Integrità dello scafo, 0–100 (0 = nave distrutta). */
-  scafo: Percentuale
+  scafo: Percentuale;
 
   /**
    * Integrità di ogni sistema, 0–100.
    * `Record<SistemaCore, Percentuale>` è un oggetto che deve avere
    * ESATTAMENTE una chiave per ogni sistema: se ne manca una, errore.
    */
-  sistemi: Record<SistemaCore, Percentuale>
+  sistemi: Record<SistemaCore, Percentuale>;
 
   /** Stato di accesso di ogni compartimento. */
-  accessi: Record<Compartimento, StatoAccesso>
+  accessi: Record<Compartimento, StatoAccesso>;
 
   /** Moduli installati (massimo 4 slot, DESIGN §11.1). */
-  moduli: IdModulo[]
+  moduli: IdModulo[];
 
   /** Equipaggiamento a bordo per questa missione (massimo 6 slot). */
-  equipaggiamento: IdEquipaggiamento[]
+  equipaggiamento: IdEquipaggiamento[];
 }

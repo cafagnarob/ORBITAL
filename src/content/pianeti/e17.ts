@@ -14,17 +14,17 @@
  */
 
 export interface SchedaPianetaNota {
-  id: string
-  seed: string
-  tipo: string
-  gravita: string
-  atmosfera: string
-  temperatura: string
-  radiazioni: string
-  vento: string
-  biologia: string
+  id: string;
+  seed: string;
+  tipo: string;
+  gravita: string;
+  atmosfera: string;
+  temperatura: string;
+  radiazioni: string;
+  vento: string;
+  biologia: string;
   /** Dove si trova la nave in questa fase della missione. */
-  posizione: string
+  posizione: string;
 }
 
 export const E17_NOTO: SchedaPianetaNota = {
@@ -38,4 +38,4 @@ export const E17_NOTO: SchedaPianetaNota = {
   vento: "MODERATO",
   biologia: "SCONOSCIUTA",
   posizione: "ORBITA · CRATERE SETTENTRIONALE",
-}
+};

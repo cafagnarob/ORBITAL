@@ -16,12 +16,13 @@
  * passano un piccolo catalogo di prova, così non si rompono ogni volta che
  * aggiungi o modifichi un task nel gioco.
  *
- * In futuro qui arriveranno anche eventi, direttive e pianeta.
+ * In futuro qui arriveranno anche direttive e pianeta.
  * ============================================================================
  */
 
-import type { DefinizioneTask, IdDefinizioneTask } from "../types"
+import type { DefinizioneEvento, DefinizioneTask, IdDefinizioneTask, IdEvento } from "../types";
 
 export interface ContestoMissione {
-  catalogoTask: Readonly<Record<IdDefinizioneTask, DefinizioneTask>>
+  catalogoTask: Readonly<Record<IdDefinizioneTask, DefinizioneTask>>;
+  catalogoEventi: Readonly<Record<IdEvento, DefinizioneEvento>>;
 }

@@ -17,7 +17,7 @@
  *   3. Nessuna copia dei dati di catalogo: solo i loro ID.
  *
  * COSA ARRIVERÀ PIÙ AVANTI
- *   - Fase 2: pianeta, eventi, `verita` e `conoscenza` (DESIGN §16.2)
+ *   - Fase 2–4: pianeta e `verita` nascosta (DESIGN §16.2)
  *   - Fase 3: stato di V.A.L.E. (direttiva, comportamento, autonomia)
  *   - Fase 5: crew e nave si sposteranno in StatoCampagna, perché
  *     sopravvivono alla singola missione.
@@ -25,33 +25,53 @@
  * ============================================================================
  */
 
-import type { IdIstanzaTask, IdMembro, Minuti } from "./comuni"
-import type { MembroCrew } from "./crew"
-import type { VoceLog } from "./log"
-import type { Nave } from "./nave"
-import type { Risorse } from "./risorse"
-import type { IstanzaTask } from "./task"
+import type { IdEvento, IdIstanzaTask, IdMembro, IdScoperta, Minuti } from "./comuni";
+import type { MembroCrew } from "./crew";
+import type { RegistroEvento } from "./eventi";
+import type { VoceLog } from "./log";
+import type { Nave } from "./nave";
+import type { Risorse } from "./risorse";
+import type { IstanzaTask } from "./task";
 
 /** In quale momento del ciclo di gioco ci troviamo (DESIGN §8). */
-export const STATI_GIOCO = [
-  "PIANIFICAZIONE",
-  "IN_ESECUZIONE",
-  "DECISIONE",
-  "RAPPORTO",
-] as const
-export type StatoGioco = (typeof STATI_GIOCO)[number]
+export const STATI_GIOCO = ["PIANIFICAZIONE", "IN_ESECUZIONE", "DECISIONE", "RAPPORTO"] as const;
+export type StatoGioco = (typeof STATI_GIOCO)[number];
+
+/** Un evento che aspetta la decisione del Capitano (statoGioco = DECISIONE). */
+export interface EventoInAttesa {
+  id: IdEvento;
+  /** Lo stato di gioco a cui tornare dopo la decisione. */
+  ritorno: StatoGioco;
+  /** Il task che ha fatto scattare l'evento, se c'è (serve agli effetti "RESPONSABILE"). */
+  idTaskOrigine: IdIstanzaTask | null;
+}
+
+export interface StatoEventi {
+  /** Tutti gli eventi accaduti, in ordine. */
+  accaduti: RegistroEvento[];
+  inAttesa: EventoInAttesa | null;
+}
+
+/**
+ * La CONOSCENZA della crew (DESIGN §4.1, §16.2): ciò che il giocatore sa.
+ * La UI legge solo questo. La VERITÀ del pianeta starà in un campo separato.
+ */
+export interface Conoscenza {
+  /** Scoperte in ordine di acquisizione, senza ripetizioni. */
+  scoperte: IdScoperta[];
+}
 
 export interface StatoMissione {
   // --- Casualità -------------------------------------------------------------
   /** Seed testuale della partita, es. "E17-73A9". Non cambia mai. */
-  seed: string
+  seed: string;
   /** Stato attuale del generatore (rng.getState()), aggiornato a ogni azione. */
-  rngState: number
+  rngState: number;
 
   // --- Tempo -----------------------------------------------------------------
   /** Minuti dall'inizio della missione (vedi comuni.ts). */
-  tempo: Minuti
-  statoGioco: StatoGioco
+  tempo: Minuti;
+  statoGioco: StatoGioco;
 
   // --- Entità ----------------------------------------------------------------
   /**
@@ -59,26 +79,30 @@ export interface StatoMissione {
    * array dovremmo cercare ogni volta. I membri morti NON vengono rimossi:
    * restano con stato "MORTO", perché la loro storia conta ancora.
    */
-  crew: Record<IdMembro, MembroCrew>
-  nave: Nave
-  risorse: Risorse
+  crew: Record<IdMembro, MembroCrew>;
+  nave: Nave;
+  risorse: Risorse;
 
   // --- Task ------------------------------------------------------------------
   /** Tutte le istanze della missione (attive e concluse), per ID. */
-  tasks: Record<IdIstanzaTask, IstanzaTask>
+  tasks: Record<IdIstanzaTask, IstanzaTask>;
   /**
    * La coda di ogni membro: gli ID dei task che eseguirà, in ordine.
    * Il primo è quello attuale. Un membro senza lavoro ha coda vuota [].
    */
-  code: Record<IdMembro, IdIstanzaTask[]>
+  code: Record<IdMembro, IdIstanzaTask[]>;
+
+  // --- Conoscenza ed eventi ------------------------------------------------
+  conoscenza: Conoscenza;
+  eventi: StatoEventi;
 
   // --- Registro --------------------------------------------------------------
-  log: VoceLog[]
+  log: VoceLog[];
 
   /**
    * Contatore per creare nuovi ID ("task-1", "task-2"...).
    * Non usiamo crypto.randomUUID(): è casuale e romperebbe il determinismo.
    * Un contatore nello stato dà sempre gli stessi ID nella stessa partita.
    */
-  contatoreId: number
+  contatoreId: number;
 }

@@ -12,7 +12,7 @@
 
 import type { FasciaFatica } from "../engine/crew/fatica";
 import type { FasciaScafo, FasciaSistema } from "../engine/nave/integrita";
-import type { Minuti, Percentuale, StatoMembro } from "../engine/types";
+import type { Condizione, Effetto, Minuti, Percentuale, StatoMembro } from "../engine/types";
 
 /** I tre toni del design system: verde, ambra, rosso. */
 export type Tono = "normale" | "attenzione" | "critico";
@@ -64,4 +64,22 @@ export function tonoStatoMembro(stato: StatoMembro): Tono {
   if (stato === "SANO") return "normale";
   if (stato === "FERITO") return "attenzione";
   return "critico";
+}
+
+/**
+ * Il costo di una scelta, ricavato dai suoi effetti: "ENERGIA −5".
+ * Si mostrano solo le risorse spese: scoperte e altri effetti restano
+ * una sorpresa (dirli in anticipo sarebbe uno spoiler).
+ */
+export function descriviCosto(effetti: readonly Effetto[]): string {
+  const costi = effetti.flatMap((e) =>
+    e.tipo === "RISORSA" && e.delta < 0 ? [`${etichetta(e.risorsa).toUpperCase()} −${-e.delta}`] : [],
+  );
+  return costi.length > 0 ? costi.join(" · ") : "NESSUN COSTO";
+}
+
+/** Perché una scelta non è disponibile, es. "[RICHIEDE: DRONE RICOGNIZIONE]". */
+export function descriviRequisiti(requisiti: readonly Condizione[]): string {
+  const equipaggiamento = requisiti.flatMap((c) => (c.tipo === "EQUIPAGGIAMENTO" ? [etichetta(c.id)] : []));
+  return equipaggiamento.length > 0 ? `[RICHIEDE: ${equipaggiamento.join(", ")}]` : "[NON DISPONIBILE]";
 }

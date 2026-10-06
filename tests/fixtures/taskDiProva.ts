@@ -12,8 +12,8 @@
  * ============================================================================
  */
 
-import type { ContestoMissione } from "../../src/engine/mission/contesto"
-import type { DefinizioneTask } from "../../src/engine/types"
+import type { ContestoMissione } from "../../src/engine/mission/contesto";
+import type { DefinizioneTask } from "../../src/engine/types";
 
 export const DIAGNOSTICA: DefinizioneTask = {
   id: "T-DIAGNOSTICA",
@@ -26,10 +26,11 @@ export const DIAGNOSTICA: DefinizioneTask = {
   rischioBase: 30,
   luogo: "INGEGNERIA",
   equipaggiamentoRichiesto: [],
+    scoperteRichieste: [],
   costoRisorse: { energia: 2 },
   costoFatica: 10,
   tag: ["DIAGNOSTICA"],
-}
+};
 
 export const MANOVRA_ORBITALE: DefinizioneTask = {
   id: "T-MANOVRA",
@@ -42,10 +43,11 @@ export const MANOVRA_ORBITALE: DefinizioneTask = {
   rischioBase: 35,
   luogo: "COMANDO",
   equipaggiamentoRichiesto: [],
+    scoperteRichieste: [],
   costoRisorse: { carburante: 2 },
   costoFatica: 8,
   tag: ["MANOVRA"],
-}
+};
 
 export const ISPEZIONE_ESTERNA: DefinizioneTask = {
   id: "T-ISPEZIONE-ESTERNA",
@@ -58,10 +60,11 @@ export const ISPEZIONE_ESTERNA: DefinizioneTask = {
   rischioBase: 40,
   luogo: "ESTERNO_NAVE",
   equipaggiamentoRichiesto: ["TUTA_EVA_MK2"],
+    scoperteRichieste: [],
   costoRisorse: { energia: 3 },
   costoFatica: 20,
   tag: ["EVA", "SCAFO"],
-}
+};
 
 /** Un task che richiede equipaggiamento NON presente a bordo. */
 export const SCAVO_MINERARIO: DefinizioneTask = {
@@ -70,7 +73,7 @@ export const SCAVO_MINERARIO: DefinizioneTask = {
   nome: "Scavo minerario",
   luogo: "SUPERFICIE",
   equipaggiamentoRichiesto: ["TRIVELLA"],
-}
+};
 
 /** Il contesto da passare al reducer nei test: un catalogo con questi task. */
 export const CONTESTO_DI_PROVA: ContestoMissione = {
@@ -80,4 +83,7 @@ export const CONTESTO_DI_PROVA: ContestoMissione = {
     [ISPEZIONE_ESTERNA.id]: ISPEZIONE_ESTERNA,
     [SCAVO_MINERARIO.id]: SCAVO_MINERARIO,
   },
-}
+  // Nessun evento: i test della missione restano indipendenti dalla storia.
+  // I test degli eventi usano un catalogo dedicato (eventiDiProva.ts).
+  catalogoEventi: {},
+};

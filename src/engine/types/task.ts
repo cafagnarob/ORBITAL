@@ -18,10 +18,11 @@
  * così i salvataggi restano leggeri e, se correggi un numero nel catalogo,
  * la correzione vale anche per le partite salvate.
  *
- * DA AGGIUNGERE PIÙ AVANTI
- * "Condizioni richieste" e "output" (DESIGN §9) dipendono dal sistema di
- * eventi e scoperte: li aggiungeremo nella Fase 2, quando sapremo
- * esattamente che forma devono avere.
+ * CONDIZIONI E OUTPUT (DESIGN §9)
+ *   - condizioni: `equipaggiamentoRichiesto` e `scoperteRichieste`;
+ *   - output: NON stanno nel task. Sono EVENTI che reagiscono alla fine di
+ *     un task con un certo tag ed esito (vedi types/eventi.ts). Così c'è un
+ *     solo meccanismo per tutte le conseguenze del gioco.
  * ============================================================================
  */
 
@@ -30,13 +31,14 @@ import type {
   IdEquipaggiamento,
   IdIstanzaTask,
   IdMembro,
+  IdScoperta,
   Minuti,
   Percentuale,
   Tag,
-} from "./comuni"
-import type { AbilitaTecnica } from "./crew"
-import type { Luogo } from "./nave"
-import type { CostoRisorse } from "./risorse"
+} from "./comuni";
+import type { AbilitaTecnica } from "./crew";
+import type { Luogo } from "./nave";
+import type { CostoRisorse } from "./risorse";
 
 // ----------------------------------------------------------------------------
 // VALORI POSSIBILI
@@ -49,8 +51,8 @@ export const CATEGORIE_TASK = [
   "MEDICINA",
   "EVA",
   "GENERALE",
-] as const
-export type CategoriaTask = (typeof CATEGORIE_TASK)[number]
+] as const;
+export type CategoriaTask = (typeof CATEGORIE_TASK)[number];
 
 /** Ciclo di vita di un'istanza (DESIGN §9). */
 export const STATI_TASK = [
@@ -62,8 +64,8 @@ export const STATI_TASK = [
   "COMPLETATO",
   "FALLITO",
   "ANNULLATO",
-] as const
-export type StatoTask = (typeof STATI_TASK)[number]
+] as const;
+export type StatoTask = (typeof STATI_TASK)[number];
 
 /** Esiti possibili, dal migliore al peggiore. */
 export const ESITI_TASK = [
@@ -72,41 +74,46 @@ export const ESITI_TASK = [
   "SUCCESSO_PARZIALE",
   "FALLIMENTO",
   "FALLIMENTO_CRITICO",
-] as const
-export type EsitoTask = (typeof ESITI_TASK)[number]
+] as const;
+export type EsitoTask = (typeof ESITI_TASK)[number];
 
 // ----------------------------------------------------------------------------
 // DEFINIZIONE (catalogo, in content/)
 // ----------------------------------------------------------------------------
 
 export interface DefinizioneTask {
-  id: IdDefinizioneTask
+  id: IdDefinizioneTask;
   /** Nome mostrato al giocatore. */
-  nome: string
-  categoria: CategoriaTask
+  nome: string;
+  categoria: CategoriaTask;
 
   /** Abilità del RESPONSABILE che conta di più. */
-  abilitaPrincipale: AbilitaTecnica
+  abilitaPrincipale: AbilitaTecnica;
   /**
    * Abilità che conta in secondo piano. Se c'è un AIUTANTE, si usa la sua;
    * altrimenti quella del responsabile. `null` = il task non ne ha.
    */
-  abilitaSecondaria: AbilitaTecnica | null
+  abilitaSecondaria: AbilitaTecnica | null;
   /** Se false, il task si svolge sempre da soli (es. pilotaggio). */
-  supportoAmmesso: boolean
+  supportoAmmesso: boolean;
 
   /** Durata prima dei modificatori (fatica, velocità...). */
-  durataBase: Minuti
+  durataBase: Minuti;
   /** Rischio prima dei modificatori, 0–100. La formula è ancora [APERTO]. */
-  rischioBase: Percentuale
+  rischioBase: Percentuale;
   /** Dove si svolge: determina gli spostamenti automatici (DESIGN §7.6). */
-  luogo: Luogo
+  luogo: Luogo;
 
-  equipaggiamentoRichiesto: IdEquipaggiamento[]
-  costoRisorse: CostoRisorse
+  equipaggiamentoRichiesto: IdEquipaggiamento[];
+  /**
+   * Scoperte necessarie perché il task esista per il giocatore, es. non si
+   * può analizzare un segnale prima di averlo rilevato. [] = sempre disponibile.
+   */
+  scoperteRichieste: IdScoperta[];
+  costoRisorse: CostoRisorse;
   /** Fatica aggiunta al responsabile (e in parte all'aiutante). */
-  costoFatica: number
-  tag: Tag[]
+  costoFatica: number;
+  tag: Tag[];
 }
 
 // ----------------------------------------------------------------------------
@@ -123,27 +130,27 @@ export interface DefinizioneTask {
  * un oggetto salvato e ricaricato resta identico all'originale.
  */
 export interface IstanzaTask {
-  id: IdIstanzaTask
+  id: IdIstanzaTask;
   /** Riferimento alla "ricetta" nel catalogo. */
-  idDefinizione: IdDefinizioneTask
+  idDefinizione: IdDefinizioneTask;
 
   /** Chi esegue il task: usa l'abilità principale. */
-  responsabile: IdMembro
+  responsabile: IdMembro;
   /** Aiutante facoltativo: usa l'abilità secondaria. */
-  supporto: IdMembro | null
+  supporto: IdMembro | null;
 
-  stato: StatoTask
+  stato: StatoTask;
   /** Minuto in cui è iniziato (null finché è in coda). */
-  inizio: Minuti | null
+  inizio: Minuti | null;
   /** Minuto in cui finirà o è finito (calcolato all'avvio). */
-  fine: Minuti | null
+  fine: Minuti | null;
   /**
    * Rischio calcolato AL MOMENTO DELL'AVVIO (null finché è in coda).
    * Lo salviamo invece di ricalcolarlo alla fine perché è il rischio che
    * il giocatore ha visto e accettato: se nel frattempo cambiasse qualcosa,
    * l'esito non deve "tradire" la stima su cui ha deciso.
    */
-  rischio: Percentuale | null
+  rischio: Percentuale | null;
   /** Esito, noto solo quando il task si conclude. */
-  esito: EsitoTask | null
+  esito: EsitoTask | null;
 }

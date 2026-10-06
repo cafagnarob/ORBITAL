@@ -6,7 +6,8 @@
  * LAYOUT RESPONSIVE
  *   Desktop (≥ 1100px): tre colonne a tutta altezza, ogni pannello scorre
  *     al suo interno, come la console del prototipo.
- *       sinistra: Equipaggio · centro: V.A.L.E. · destra: Pianifica, Nave, Pianeta
+ *       sinistra: Equipaggio, Risorse · centro: V.A.L.E., Scoperte
+ *       destra: Pianifica, Nave, Pianeta
  *   Tablet e mobile (< 1100px): una colonna sola con SCHEDE in alto
  *     (Crew · V.A.L.E. · Task · Nave). Si vede una scheda alla volta e la
  *     barra dei comandi resta sempre in fondo allo schermo.
@@ -16,6 +17,9 @@
  * ricevono la classe `nascostoMobile`, che li nasconde SOLO sotto i 1100px
  * (media query nel CSS). Su desktop la classe non ha effetto e si vede tutto.
  * Così c'è un solo albero di componenti per entrambi i layout.
+ *
+ * La FinestraEvento sta sopra a tutto e compare da sola quando il motore
+ * è in DECISIONE: la schermata non deve "aprirla", la deriva dallo stato.
  * ============================================================================
  */
 
@@ -23,12 +27,14 @@ import { useState } from "react";
 import { useMissione } from "../useMissione";
 import { BarraComandi } from "./BarraComandi";
 import { CanaleVale } from "./CanaleVale";
+import { FinestraEvento } from "./FinestraEvento";
 import { Intestazione } from "./Intestazione";
 import { PannelloCrew } from "./PannelloCrew";
 import { PannelloNave } from "./PannelloNave";
 import { PannelloPianeta } from "./PannelloPianeta";
 import { PannelloPianifica } from "./PannelloPianifica";
 import { PannelloRisorse } from "./PannelloRisorse";
+import { PannelloScoperte } from "./PannelloScoperte";
 import stili from "./SchermataMissione.module.css";
 
 const SCHEDE = [
@@ -79,6 +85,9 @@ export function SchermataMissione() {
           <div className={blocco("vale", stili.cresce)}>
             <CanaleVale stato={stato} />
           </div>
+          <div className={blocco("vale")}>
+            <PannelloScoperte stato={stato} />
+          </div>
         </div>
 
         <div className={stili.colonna}>
@@ -95,6 +104,9 @@ export function SchermataMissione() {
       </main>
 
       <BarraComandi stato={stato} dispatch={dispatch} />
+
+      {/* Compare solo quando c'è una decisione in attesa (stato DECISIONE). */}
+      <FinestraEvento stato={stato} dispatch={dispatch} />
     </div>
   );
 }

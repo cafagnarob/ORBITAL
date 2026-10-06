@@ -13,10 +13,11 @@
  * ============================================================================
  */
 
-export * from "./comuni"
-export * from "./nave"
-export * from "./risorse"
-export * from "./crew"
-export * from "./task"
-export * from "./log"
-export * from "./missione"
+export * from "./comuni";
+export * from "./nave";
+export * from "./risorse";
+export * from "./crew";
+export * from "./task";
+export * from "./log";
+export * from "./eventi";
+export * from "./missione";

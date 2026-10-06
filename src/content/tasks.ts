@@ -20,7 +20,7 @@
  * ============================================================================
  */
 
-import type { DefinizioneTask, IdDefinizioneTask } from "../engine/types"
+import type { DefinizioneTask, IdDefinizioneTask } from "../engine/types";
 
 const LISTA_TASK: DefinizioneTask[] = [
   {
@@ -34,6 +34,7 @@ const LISTA_TASK: DefinizioneTask[] = [
     rischioBase: 30,
     luogo: "INGEGNERIA",
     equipaggiamentoRichiesto: [],
+    scoperteRichieste: [],
     costoRisorse: { energia: 2 },
     costoFatica: 10,
     tag: ["DIAGNOSTICA"],
@@ -49,6 +50,7 @@ const LISTA_TASK: DefinizioneTask[] = [
     rischioBase: 20,
     luogo: "SUPPORTO_VITALE",
     equipaggiamentoRichiesto: ["KIT_RIPARAZIONE"],
+    scoperteRichieste: [],
     costoRisorse: { energia: 1 },
     costoFatica: 10,
     tag: ["MANUTENZIONE", "SUPPORTO_VITALE"],
@@ -64,6 +66,7 @@ const LISTA_TASK: DefinizioneTask[] = [
     rischioBase: 35,
     luogo: "COMANDO",
     equipaggiamentoRichiesto: [],
+    scoperteRichieste: [],
     costoRisorse: { carburante: 2 },
     costoFatica: 8,
     tag: ["MANOVRA"],
@@ -79,6 +82,7 @@ const LISTA_TASK: DefinizioneTask[] = [
     rischioBase: 25,
     luogo: "LABORATORIO",
     equipaggiamentoRichiesto: ["SENSORE_PROFONDO"],
+    scoperteRichieste: [],
     costoRisorse: { energia: 4 },
     costoFatica: 12,
     tag: ["SCANSIONE", "CRATERE"],
@@ -94,6 +98,7 @@ const LISTA_TASK: DefinizioneTask[] = [
     rischioBase: 20,
     luogo: "LABORATORIO",
     equipaggiamentoRichiesto: [],
+    scoperteRichieste: ["SEGNALE_RILEVATO"], // si analizza solo ciò che si è rilevato
     costoRisorse: { energia: 3 },
     costoFatica: 15,
     tag: ["SEGNALE"],
@@ -109,6 +114,7 @@ const LISTA_TASK: DefinizioneTask[] = [
     rischioBase: 30,
     luogo: "COMANDO",
     equipaggiamentoRichiesto: ["DRONE_RICOGNIZIONE"],
+    scoperteRichieste: [],
     costoRisorse: { energia: 5 },
     costoFatica: 8,
     tag: ["DRONE", "CRATERE"],
@@ -124,16 +130,17 @@ const LISTA_TASK: DefinizioneTask[] = [
     rischioBase: 40,
     luogo: "ESTERNO_NAVE",
     equipaggiamentoRichiesto: ["TUTA_EVA_MK2"],
+    scoperteRichieste: [],
     costoRisorse: { energia: 3 },
     costoFatica: 20,
     tag: ["EVA", "SCAFO"],
   },
-]
+];
 
 /** Il catalogo indicizzato per ID, come lo vuole il reducer. */
-export const CATALOGO_TASK: Readonly<
-  Record<IdDefinizioneTask, DefinizioneTask>
-> = Object.fromEntries(LISTA_TASK.map((t) => [t.id, t]))
+export const CATALOGO_TASK: Readonly<Record<IdDefinizioneTask, DefinizioneTask>> = Object.fromEntries(
+  LISTA_TASK.map((t) => [t.id, t]),
+);
 
 /** La stessa lista in ordine, per mostrarla nei menu. */
-export const TASK_DISPONIBILI: readonly DefinizioneTask[] = LISTA_TASK
+export const TASK_DISPONIBILI: readonly DefinizioneTask[] = LISTA_TASK;
