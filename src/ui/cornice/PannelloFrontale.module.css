@@ -87,6 +87,21 @@
   box-shadow: 0 0 10px var(--c-fosforo);
 }
 
+/* Monitor in attesa: il verde si abbassa e "respira", come un LED di standby. */
+.verde.attesa {
+  box-shadow: none;
+  animation: respiro 2.4s ease-in-out infinite;
+}
+@keyframes respiro {
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
 @keyframes sfarfallio {
   0%,
   100% {

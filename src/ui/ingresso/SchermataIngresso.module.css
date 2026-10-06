@@ -1,0 +1,378 @@
+/*
+ * SchermataIngresso.module.css — titolo, globo, registro di avvio, menu.
+ * Stessi token del design system (tokens.css): fosforo verde, voce di
+ * V.A.L.E. in ciano, Michroma per il logo, VT323 per il terminale.
+ * Si parte dal mobile (una colonna) e si aggiunge il desktop.
+ */
+
+/* ===== MOBILE (base) ======================================================= */
+.schermo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  min-height: 100%;
+  padding: var(--sp-3) var(--sp-4) var(--sp-4);
+}
+
+.intestazione {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--sp-1) var(--sp-4);
+  padding-bottom: var(--sp-2);
+  border-bottom: 1px solid var(--c-griglia);
+  font-family: var(--font-terminale);
+  font-size: 16px;
+  letter-spacing: 0.12em;
+  color: var(--c-fosforo-tenue);
+}
+.collegamento {
+  display: none;
+}
+
+.centro {
+  flex: 1;
+  display: grid;
+  /* minmax(0, 1fr): senza, le righe "nowrap" del registro allargherebbero
+     la colonna oltre lo schermo invece di restringersi. */
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sp-5);
+  align-content: center;
+}
+
+/* --- Logo e globo ------------------------------------------------------------ */
+.scena {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.globo {
+  width: min(70vw, 300px);
+  height: auto;
+  opacity: 0.85;
+  /* L'orbita inclinata esce dal riquadro dell'SVG: la lasciamo sporgere. */
+  overflow: visible;
+}
+/* Gli elementi dell'SVG hanno classi "normali" (GloboOrbita.tsx): :global le raggiunge. */
+.globo :global(.disco) {
+  fill: var(--c-vuoto);
+  stroke: var(--c-fosforo);
+  stroke-width: 1.5;
+  filter: drop-shadow(0 0 8px rgba(125, 245, 165, 0.35));
+}
+.globo :global(.linea) {
+  fill: none;
+  stroke: var(--c-fosforo);
+  stroke-width: 0.9;
+}
+.globo :global(.tenue) {
+  stroke: var(--c-fosforo-tenue);
+}
+.globo :global(.orbita) {
+  stroke: var(--c-vale);
+  stroke-dasharray: 3 5;
+  opacity: 0.7;
+}
+.globo :global(.nave) {
+  fill: var(--c-vale);
+  filter: drop-shadow(0 0 4px rgba(92, 239, 216, 0.9));
+}
+.globo :global(.cratere) {
+  fill: var(--c-attenzione);
+  filter: drop-shadow(0 0 5px rgba(242, 193, 78, 0.8));
+}
+
+.titolo {
+  /* Il logo si sovrappone alla parte bassa del globo, come nel titolo di un film. */
+  margin: -14% 0 0;
+  font-family: var(--font-display);
+  font-size: clamp(28px, 8.5vw, 92px);
+  font-weight: 400;
+  letter-spacing: 0.24em;
+  /* letter-spacing aggiunge spazio anche dopo l'ultima lettera: lo compensiamo. */
+  margin-right: -0.24em;
+  white-space: nowrap;
+  color: var(--c-fosforo);
+  text-shadow:
+    0 0 10px rgba(125, 245, 165, 0.65),
+    0 0 40px rgba(125, 245, 165, 0.25);
+  animation: comparsaTitolo 2.4s steps(1, end) both;
+}
+.cursore {
+  margin-left: -0.2em;
+  animation: lampeggio 1s steps(1, end) infinite;
+}
+
+.sottotitolo {
+  margin: var(--sp-2) 0 0;
+  max-width: 34ch;
+  font-family: var(--font-terminale);
+  font-size: 20px;
+  letter-spacing: 0.08em;
+  color: var(--c-vale);
+  text-shadow: var(--glow-vale);
+  animation: comparsa 0.6s ease-out 1s both;
+}
+
+/* --- Registro di avvio -------------------------------------------------------- */
+.avvio {
+  list-style: none;
+  margin: 0;
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--c-griglia);
+  background: rgba(7, 16, 10, 0.7);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: var(--font-terminale);
+  font-size: 16px;
+  letter-spacing: 0.03em;
+  /* Su mobile il registro va sotto il menu: INIZIA resta a portata di pollice. */
+  order: 1;
+}
+.avvio li {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  /* Ogni riga "si scrive" da sinistra a destra (ritardo nel TSX). */
+  animation: scrittura 0.35s steps(10, end) both;
+}
+.voce {
+  color: var(--c-fosforo-tenue);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.puntini {
+  flex: 1;
+  min-width: 8px;
+  border-bottom: 1px dotted var(--c-griglia);
+  transform: translateY(-4px);
+}
+.esito {
+  color: var(--c-fosforo);
+  white-space: nowrap;
+}
+.riservato {
+  color: var(--c-critico);
+  white-space: nowrap;
+  animation: lampeggio 1.6s steps(1, end) infinite;
+}
+
+/* --- Menu ------------------------------------------------------------------------ */
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  animation: comparsa 0.5s ease-out 2.2s both;
+}
+
+.inizia {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+  min-height: 56px;
+  padding: 0 var(--sp-5);
+  border: 2px solid var(--c-fosforo);
+  background: var(--c-fosforo);
+  color: var(--c-vuoto);
+  font-family: var(--font-terminale);
+  font-size: 23px;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 0 24px rgba(125, 245, 165, 0.35);
+}
+.inizia:hover,
+.inizia:focus-visible {
+  background: var(--c-fosforo-alto);
+  outline: none;
+  box-shadow: 0 0 36px rgba(125, 245, 165, 0.6);
+}
+.freccia {
+  animation: lampeggio 1s steps(1, end) infinite;
+}
+
+.campoSeed {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-1) var(--sp-3);
+  border: 1.5px solid var(--c-fosforo-tenue);
+  font-family: var(--font-terminale);
+  font-size: 20px;
+  letter-spacing: 0.12em;
+  color: var(--c-fosforo-tenue);
+}
+.campoSeed:focus-within {
+  border-color: var(--c-fosforo);
+  box-shadow: var(--glow-bordo);
+}
+.campoSeed input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  color: var(--c-fosforo-alto);
+  font: inherit;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  outline: none;
+}
+
+.audio {
+  min-height: 40px;
+  border: 1.5px solid var(--c-fosforo-tenue);
+  background: transparent;
+  color: var(--c-fosforo);
+  font-family: var(--font-terminale);
+  font-size: 20px;
+  letter-spacing: 0.14em;
+  cursor: pointer;
+}
+.audio[aria-pressed="true"] {
+  border-color: var(--c-vale);
+  color: var(--c-vale);
+  text-shadow: var(--glow-vale);
+}
+.audio:hover {
+  border-color: var(--c-fosforo);
+}
+
+.nota {
+  margin: 0 0 var(--sp-1);
+  font-size: var(--fs-piccolo);
+  letter-spacing: 0.04em;
+  color: var(--c-fosforo-tenue);
+}
+
+/* --- Piede ------------------------------------------------------------------------ */
+.piede {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  padding-top: var(--sp-2);
+  border-top: 1px solid var(--c-griglia);
+  font-family: var(--font-terminale);
+  font-size: 16px;
+  letter-spacing: 0.14em;
+  color: var(--c-fosforo-tenue);
+}
+.lampeggia {
+  color: var(--c-fosforo);
+  animation: lampeggio 1.2s steps(1, end) infinite;
+}
+
+/* ===== DESKTOP ============================================================== */
+@media (min-width: 1100px) {
+  .schermo {
+    height: 100%;
+    padding: var(--sp-5) var(--sp-5) var(--sp-4);
+  }
+  .intestazione {
+    font-size: 18px;
+  }
+  .collegamento {
+    display: inline;
+  }
+
+  /* Registro a sinistra, scena al centro, menu a destra. */
+  .centro {
+    min-height: 0;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr) minmax(0, 1fr);
+    gap: var(--sp-5);
+    align-items: center;
+  }
+  /* Nella colonna centrale il logo si misura sulla colonna, non sullo schermo. */
+  .titolo {
+    font-size: clamp(40px, 4.6vw, 84px);
+  }
+  .inizia {
+    font-size: 28px;
+    letter-spacing: 0.12em;
+  }
+  .avvio {
+    font-size: 17px;
+  }
+  .avvio {
+    order: -1;
+    align-self: end;
+  }
+  .menu {
+    align-self: end;
+  }
+  .globo {
+    width: min(34vw, 420px);
+  }
+}
+
+/* ===== ANIMAZIONI ============================================================== */
+@keyframes lampeggio {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+@keyframes comparsa {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+@keyframes scrittura {
+  from {
+    opacity: 0;
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+}
+/* Il logo "si accende" a scatti, come un'insegna al neon che si scalda. */
+@keyframes comparsaTitolo {
+  0%,
+  40% {
+    opacity: 0;
+  }
+  45% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.2;
+  }
+  58% {
+    opacity: 1;
+  }
+  62% {
+    opacity: 0.5;
+  }
+  70%,
+  100% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .titolo,
+  .sottotitolo,
+  .avvio li,
+  .menu {
+    animation: none;
+  }
+  .cursore,
+  .freccia,
+  .riservato,
+  .lampeggia {
+    animation: none;
+  }
+}

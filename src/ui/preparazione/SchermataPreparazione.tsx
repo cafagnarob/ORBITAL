@@ -36,6 +36,7 @@
 import { useState } from "react";
 import type { Preparazione } from "../../engine/types";
 import { Monitor } from "../cornice/Monitor";
+import { useAccensione } from "../cornice/useAccensione";
 import { PannelloFrontale } from "../cornice/PannelloFrontale";
 import { FRASI_APERTURA } from "../../content/missioneIniziale";
 import { FRASI_FATTIBILITA } from "../../content/vale";
@@ -59,18 +60,25 @@ type IdScheda = (typeof SCHEDE)[number]["id"];
 interface Props {
   seed: string;
   onAvvia: (preparazione: Preparazione) => void;
+  /** true se si arriva da una missione finita (monitor già spento). */
+  daSpento?: boolean;
 }
 
-export function SchermataPreparazione({ seed, onAvvia }: Props) {
+export function SchermataPreparazione({ seed, onAvvia, daSpento = false }: Props) {
   const { prep, dispatch, riepilogo, problemi, fattibilita } = usePreparazione();
   const [scheda, setScheda] = useState<IdScheda>("crew");
+  // Il tubo del monitor: si accende all'avvio del gioco, si spegne al lancio.
+  const tubo = useAccensione(daSpento);
 
-  /** Partenza: rombo dei motori, V.A.L.E. conferma, e si passa alla Missione. */
+  /**
+   * Partenza: rombo dei motori, V.A.L.E. conferma; il monitor si spegne e,
+   * al buio, si passa alla Missione (che si accenderà già in orbita).
+   */
   function avvia() {
     suona("AVVIO");
     parla([FRASI_FATTIBILITA[fattibilita], FRASI_APERTURA[0]]);
     impostaAtmosfera("MISSIONE");
-    onAvvia(prep);
+    tubo.spegni(() => onAvvia(prep));
   }
 
   function cambiaScheda(id: IdScheda) {
@@ -82,7 +90,12 @@ export function SchermataPreparazione({ seed, onAvvia }: Props) {
   const blocco = (di: IdScheda) => `${stili.blocco} ${di === scheda ? "" : stili.nascostoMobile}`;
 
   return (
-    <Monitor frontale={<PannelloFrontale onApriTerminale={null} allerta={false} />}>
+    <Monitor
+      frontale={<PannelloFrontale onApriTerminale={null} allerta={false} standby={tubo.fase === "SPENTO"} />}
+      fase={tubo.fase}
+      onFineTransizione={tubo.fineTransizione}
+      didascalia="VALE-OS 4.1 · TERMINALE V.A.L.E. MODELLO 7"
+    >
       <div className={stili.schermo}>
         <header className={stili.intestazione}>
           <span className={stili.logo}>ORBITAL</span>

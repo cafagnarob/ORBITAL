@@ -21,6 +21,11 @@
  * La FinestraEvento sta sopra a tutto e compare da sola quando il motore
  * è in DECISIONE: la schermata non deve "aprirla", la deriva dallo stato.
  *
+ * ACCENSIONE DEL MONITOR (useAccensione)
+ * Il tubo si accende quando arriva la schermata (dopo il lancio) e si
+ * spegne/riaccende alla BUONANOTTE: al buio passa la notte, e ci si
+ * risveglia con "GIORNO 03 · 06:00 · BUONGIORNO, CAPITANO".
+ *
  * CORNICE E TERMINALE
  * Tutto è montato dentro <Monitor>, la cornice retro-futurista. Il pulsante
  * SVC sulla sua fascia frontale apre il Terminale SVC-07: aperto/chiuso è
@@ -30,6 +35,8 @@
  */
 
 import { useState } from "react";
+import { minutoDelGiorno, ORARIO_RISVEGLIO, scomponiTempo } from "../../engine/clock";
+import { useAccensione } from "../cornice/useAccensione";
 import { suona } from "../audio";
 import type { Preparazione } from "../../engine/types";
 import { Monitor } from "../cornice/Monitor";
@@ -71,16 +78,47 @@ export function SchermataMissione({ seed, preparazione, onNuovaPartita }: Props)
   const [scheda, setScheda] = useState<IdScheda>("vale");
   // Apertura del Terminale SVC-07: stato dell'interfaccia, non della partita.
   const [terminaleAperto, setTerminaleAperto] = useState(false);
+  // Il tubo del monitor: si accende all'arrivo in orbita e ogni mattina.
+  // Arriva sempre a monitor spento (dalla Preparazione): bagliore, poi accensione.
+  const tubo = useAccensione(true);
+
+  /**
+   * BUONANOTTE: il monitor si spegne; al buio si chiude il rapporto e la
+   * notte scorre fino al risveglio (06:00); poi il monitor si riaccende sul
+   * nuovo giorno. Il giocatore non vede il "salto" di otto ore: lo vive.
+   */
+  function buonanotte() {
+    tubo.spegni(() => {
+      dispatch({ tipo: "CHIUDI_RAPPORTO" });
+      dispatch({ tipo: "AVANZA" });
+    }, true);
+  }
+
+  /** Dall'epilogo: il monitor si spegne, poi si torna alla Preparazione. */
+  function nuovaPartita() {
+    tubo.spegni(onNuovaPartita);
+  }
+
+  // La scritta che appare mentre il tubo si scalda: il giorno e l'ora.
+  const { giorno } = scomponiTempo(stato.tempo);
+  const didascalia =
+    minutoDelGiorno(stato.tempo) === ORARIO_RISVEGLIO
+      ? `GIORNO ${String(giorno).padStart(2, "0")} · 06:00 · BUONGIORNO, CAPITANO`
+      : `ORBITA E-17 · GIORNO ${String(giorno).padStart(2, "0")}`;
 
   /** Classe per un blocco: nascosto su mobile se non è della scheda attiva. */
   const blocco = (di: IdScheda, extra = "") => `${stili.blocco} ${extra} ${di === scheda ? "" : stili.nascostoMobile}`;
 
   const frontale = (
-    <PannelloFrontale onApriTerminale={() => setTerminaleAperto(true)} allerta={stato.statoGioco === "DECISIONE"} />
+    <PannelloFrontale
+      onApriTerminale={() => setTerminaleAperto(true)}
+      allerta={stato.statoGioco === "DECISIONE"}
+      standby={tubo.fase === "SPENTO" || tubo.fase === "SPEGNIMENTO"}
+    />
   );
 
   return (
-    <Monitor frontale={frontale}>
+    <Monitor frontale={frontale} fase={tubo.fase} onFineTransizione={tubo.fineTransizione} didascalia={didascalia}>
       <div className={stili.schermo}>
         <Intestazione stato={stato} />
 
@@ -133,16 +171,16 @@ export function SchermataMissione({ seed, preparazione, onNuovaPartita }: Props)
           </div>
         </main>
 
-        <BarraComandi stato={stato} dispatch={dispatch} />
+        <BarraComandi stato={stato} dispatch={dispatch} onChiudiRapporto={buonanotte} />
 
         {/* Compare solo quando c'è una decisione in attesa (stato DECISIONE). */}
         <FinestraEvento stato={stato} dispatch={dispatch} />
 
         {/* Al rapporto serale: la pagina del giornale di bordo (v3.0). */}
-        <GiornaleDiBordo stato={stato} dispatch={dispatch} />
+        <GiornaleDiBordo stato={stato} onBuonanotte={buonanotte} />
 
         {/* A missione conclusa: finale, crew, direttiva, diario (v3.0). */}
-        <SchermataEpilogo stato={stato} onNuovaPartita={onNuovaPartita} />
+        <SchermataEpilogo stato={stato} onNuovaPartita={nuovaPartita} />
 
         {terminaleAperto && (
           <TerminaleSvc stato={stato} dispatch={dispatch} onChiudi={() => setTerminaleAperto(false)} />

@@ -9,7 +9,8 @@
  * schermata: è il momento in cui la giornata diventa RACCONTO. Le righe
  * le ha scritte il motore (engine/storia/diario.ts): eventi, scelte, chi ha
  * cambiato idea su V.A.L.E., risorse che finiscono.
- * Chiudendola si chiude il rapporto e la notte scorre.
+ * "Buonanotte" spegne il monitor: al buio si chiude il rapporto e la
+ * notte scorre; al mattino il monitor si riaccende (SchermataMissione).
  *
  * Come la FinestraEvento, si "deriva" dallo stato: nessun useState per
  * aprirla o chiuderla, nessun useEffect.
@@ -21,10 +22,15 @@ import { paginaDiario } from "../../engine/storia/diario";
 import { scomponiTempo } from "../../engine/clock";
 import type { StatoMissione } from "../../engine/types";
 import { Pulsante } from "../components/Pulsante";
-import type { Dispatch } from "../useMissione";
 import stili from "./GiornaleDiBordo.module.css";
 
-export function GiornaleDiBordo({ stato, dispatch }: { stato: StatoMissione; dispatch: Dispatch }) {
+interface Props {
+  stato: StatoMissione;
+  /** Spegne il monitor, fa passare la notte e lo riaccende sul mattino. */
+  onBuonanotte: () => void;
+}
+
+export function GiornaleDiBordo({ stato, onBuonanotte }: Props) {
   const idTitolo = useId();
   if (stato.statoGioco !== "RAPPORTO") return null;
 
@@ -54,7 +60,7 @@ export function GiornaleDiBordo({ stato, dispatch }: { stato: StatoMissione; dis
         </p>
 
         <footer className={stili.piede}>
-          <Pulsante variante="primario" onClick={() => dispatch({ tipo: "CHIUDI_RAPPORTO" })}>
+          <Pulsante variante="primario" onClick={onBuonanotte}>
             Buonanotte ▶
           </Pulsante>
         </footer>

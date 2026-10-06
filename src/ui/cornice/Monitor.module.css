@@ -100,3 +100,174 @@
     overflow: hidden; /* su desktop i pannelli scorrono al loro interno */
   }
 }
+
+/* ===== ACCENSIONE E SPEGNIMENTO DEL TUBO (useAccensione.ts) ================ */
+
+/* L'immagine occupa tutto il vetro; le fasi la animano. */
+.immagine {
+  min-height: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.immagine > * {
+  flex: 1;
+}
+
+/*
+ * ACCENSIONE (1.2 s): il cannone elettronico parte da un punto al centro,
+ * disegna una riga orizzontale, poi apre l'immagine in verticale. Il
+ * fosforo è sovraesposto (brightness alta, un filo di sfocatura) e si
+ * assesta con due piccoli sfarfallii, come un tubo che si scalda.
+ */
+.accensione {
+  animation: tuboAccensione 1.2s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  transform-origin: 50% 50%;
+}
+@keyframes tuboAccensione {
+  0% {
+    transform: scale(0.004, 0.002);
+    filter: brightness(8) blur(1px);
+    opacity: 1;
+  }
+  14% {
+    transform: scale(1, 0.004);
+    filter: brightness(8) blur(1px);
+  }
+  32% {
+    transform: scale(1, 1);
+    filter: brightness(3) blur(1.5px) contrast(1.4);
+  }
+  46% {
+    filter: brightness(0.6) blur(0.5px);
+  }
+  58% {
+    filter: brightness(1.7);
+  }
+  72% {
+    filter: brightness(0.85);
+  }
+  100% {
+    transform: none;
+    filter: none;
+  }
+}
+
+/*
+ * SPEGNIMENTO (0.7 s): l'immagine si illumina, si schiaccia in una riga
+ * bianca, la riga si stringe in un punto e il punto sparisce.
+ */
+.spegnimento {
+  animation: tuboSpegnimento 0.7s cubic-bezier(0.6, 0, 0.8, 0.4) both;
+  transform-origin: 50% 50%;
+}
+@keyframes tuboSpegnimento {
+  0% {
+    transform: none;
+    filter: none;
+  }
+  18% {
+    transform: scale(1, 0.85);
+    filter: brightness(1.8);
+  }
+  52% {
+    transform: scale(1, 0.004);
+    filter: brightness(9) blur(0.5px);
+  }
+  82% {
+    transform: scale(0.004, 0.004);
+    filter: brightness(9) blur(1px);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0, 0);
+    opacity: 0;
+  }
+}
+
+/* A monitor spento l'immagine non c'è proprio (e non si clicca). */
+.spento {
+  visibility: hidden;
+}
+
+/*
+ * Il bagliore: il punto di fosforo che resta acceso un istante e svanisce.
+ * La sua durata è la "pausa al buio" (la notte, il cambio di schermata).
+ */
+.bagliore {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 39;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffffff 0%, var(--c-fosforo-alto) 35%, transparent 70%);
+  box-shadow: 0 0 24px 8px rgba(125, 245, 165, 0.45);
+  animation: bagliore 2.2s ease-out both;
+}
+@keyframes bagliore {
+  0% {
+    opacity: 1;
+    transform: scale(1.4);
+  }
+  35% {
+    opacity: 0.25;
+    transform: scale(0.6);
+  }
+  60% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* La scritta di avvio: compare a metà accensione e svanisce. */
+.didascalia {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 38;
+  margin: 0;
+  /* Una fascia scura dietro la scritta: si legge anche sopra l'interfaccia. */
+  padding: var(--sp-4);
+  background: rgba(3, 8, 5, 0.94);
+  border-top: 1px solid var(--c-fosforo-tenue);
+  border-bottom: 1px solid var(--c-fosforo-tenue);
+  text-align: center;
+  font-family: var(--font-terminale);
+  font-size: clamp(20px, 3vw, 34px);
+  letter-spacing: 0.18em;
+  color: var(--c-fosforo-alto);
+  text-shadow: var(--glow-testo);
+  pointer-events: none;
+  animation: didascalia 1.6s steps(8, end) both;
+}
+@keyframes didascalia {
+  0%,
+  20% {
+    opacity: 0;
+  }
+  28%,
+  78% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Chi ha chiesto meno movimento al sistema operativo: transizioni istantanee.
+   (Durata minima, non zero: l'evento animationend deve comunque arrivare.) */
+@media (prefers-reduced-motion: reduce) {
+  .accensione,
+  .spegnimento,
+  .bagliore,
+  .didascalia {
+    animation-duration: 1ms;
+  }
+}

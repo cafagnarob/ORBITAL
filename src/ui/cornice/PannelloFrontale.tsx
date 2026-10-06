@@ -18,7 +18,8 @@
  * I LED hanno un significato:
  *   ambra lampeggiante → il gioco attende una DECISIONE
  *   ambra fisso tenue  → nessuna urgenza
- *   verde              → terminale acceso (sempre)
+ *   verde              → terminale acceso
+ *   verde che "respira" → monitor in attesa (spento per la notte)
  * ============================================================================
  */
 
@@ -31,9 +32,11 @@ interface Props {
   onApriTerminale: (() => void) | null;
   /** Accende il LED ambra lampeggiante. */
   allerta: boolean;
+  /** Monitor spento (notte, cambio schermata): il LED verde va in attesa. */
+  standby?: boolean;
 }
 
-export function PannelloFrontale({ onApriTerminale, allerta }: Props) {
+export function PannelloFrontale({ onApriTerminale, allerta, standby = false }: Props) {
   return (
     <div className={stili.frontale}>
       <div className={stili.targhetta}>
@@ -66,7 +69,7 @@ export function PannelloFrontale({ onApriTerminale, allerta }: Props) {
         <Manopola canale="ambiente" sigla="AMB" nome="Volume ambiente" />
         <Manopola canale="voce" sigla="VOCE" nome="Volume voce di V.A.L.E." />
         <span className={`${stili.led} ${stili.ambra} ${allerta ? stili.lampeggia : ""}`} aria-hidden="true" />
-        <span className={`${stili.led} ${stili.verde}`} aria-hidden="true" />
+        <span className={`${stili.led} ${stili.verde} ${standby ? stili.attesa : ""}`} aria-hidden="true" />
       </div>
     </div>
   );

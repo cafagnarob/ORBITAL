@@ -3,7 +3,9 @@
  * ambiente.ts — Il suono di fondo della nave, che cambia con la situazione
  * ============================================================================
  *
- * QUATTRO ATMOSFERE
+ * CINQUE ATMOSFERE
+ *   INGRESSO      la schermata del titolo: un ronzio basso, quasi silenzio,
+ *                 qualche segnale lontano
  *   PREPARAZIONE  hangar: ronzio basso, qualche colpo metallico lontano,
  *                 sibili pneumatici (si sta caricando la nave)
  *   MISSIONE      in orbita: ronzio dei sistemi, ventilazione, piccoli
@@ -29,7 +31,7 @@
 import { quandoPronto, type Mixer } from "./motore";
 import { rumore } from "./suoni";
 
-export type Atmosfera = "PREPARAZIONE" | "MISSIONE" | "ALLERTA" | "NOTTE";
+export type Atmosfera = "INGRESSO" | "PREPARAZIONE" | "MISSIONE" | "ALLERTA" | "NOTTE";
 
 interface Parametri {
   ronzio: number; // volume del ronzio
@@ -41,13 +43,14 @@ interface Parametri {
 }
 
 const ATMOSFERE: Record<Atmosfera, Parametri> = {
+  INGRESSO: { ronzio: 0.06, freqRonzio: 38, vento: 0.035, filtroVento: 180, allarme: 0, eventiOgni: [5, 11] },
   PREPARAZIONE: { ronzio: 0.11, freqRonzio: 42, vento: 0.05, filtroVento: 220, allarme: 0, eventiOgni: [3, 8] },
   MISSIONE: { ronzio: 0.08, freqRonzio: 55, vento: 0.09, filtroVento: 380, allarme: 0, eventiOgni: [4, 9] },
   ALLERTA: { ronzio: 0.1, freqRonzio: 58, vento: 0.07, filtroVento: 420, allarme: 0.09, eventiOgni: [3, 6] },
   NOTTE: { ronzio: 0.05, freqRonzio: 48, vento: 0.05, filtroVento: 260, allarme: 0, eventiOgni: [8, 16] },
 };
 
-let atmosfera: Atmosfera = "PREPARAZIONE";
+let atmosfera: Atmosfera = "INGRESSO";
 
 /** I nodi che restano accesi per tutta la partita. */
 interface Strati {
@@ -153,6 +156,22 @@ function evento(m: Mixer): void {
   if (atmosfera === "PREPARAZIONE") {
     if (caso < 0.5) rumore(m, e, 0, 0.9, 600 + Math.random() * 700, 14, 0.18); // colpo metallico lontano
     else rumore(m, e, 0, 0.6, 5000, 0.8, 0.05); // sibilo pneumatico
+    return;
+  }
+  if (atmosfera === "INGRESSO") {
+    // Un segnale lontano: tre impulsi deboli. (Lo stesso ritmo del segnale di E-17.)
+    for (let i = 0; i < 3; i++) {
+      const osc = m.ctx.createOscillator();
+      const g = m.ctx.createGain();
+      osc.frequency.value = 1420;
+      const t = m.ctx.currentTime + i * 0.22;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.02, t + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.15);
+      osc.connect(g).connect(e);
+      osc.start(t);
+      osc.stop(t + 0.2);
+    }
     return;
   }
   if (atmosfera === "NOTTE") {

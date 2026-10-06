@@ -34,6 +34,8 @@ export const SUONI = [
   "CONTESTA", // il Capitano contesta V.A.L.E.
   "ALLARME", // una decisione attende il Capitano
   "BIP_VALE", // V.A.L.E. sta per parlare
+  "ACCENSIONE_CRT", // il tubo catodico si accende
+  "SPEGNIMENTO_CRT", // il tubo catodico si spegne
 ] as const;
 export type IdSuono = (typeof SUONI)[number];
 
@@ -142,6 +144,21 @@ export function suona(id: IdSuono): void {
       break;
     case "ALLARME":
       for (let i = 0; i < 3; i++) tono(m, e, 740, i * 0.32, 0.18, "square", 0.07);
+      break;
+    case "ACCENSIONE_CRT":
+      // Il "tunk" del relè, la smagnetizzazione (un ronzio grave che pulsa e
+      // cala) e il crepitio statico del vetro che si carica.
+      rumore(m, e, 0, 0.06, 1800, 1, 0.4);
+      tono(m, e, 55, 0.02, 0.9, "sine", 0.35, 45);
+      tono(m, e, 110, 0.05, 0.7, "triangle", 0.08, 70);
+      rumore(m, e, 0.15, 0.6, 6000, 0.6, 0.12);
+      tono(m, e, 15600, 0.2, 1.2, "sine", 0.008);
+      break;
+    case "SPEGNIMENTO_CRT":
+      // Lo "schiocco" e un fischio che scende mentre il punto si spegne.
+      rumore(m, e, 0, 0.05, 2500, 1, 0.35);
+      tono(m, e, 900, 0.02, 0.5, "sine", 0.06, 60);
+      tono(m, e, 70, 0, 0.25, "sine", 0.25, 40);
       break;
     case "BIP_VALE":
       // Passa dal canale VOCE: se la voce è spenta, anche il bip tace.

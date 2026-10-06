@@ -11,7 +11,7 @@
   - Lingua: tutto ciò che vede il giocatore è in italiano. Gli identificatori nel codice possono essere in inglese.
 -->
 
-# ORBITAL — DESIGN v3.0
+# ORBITAL — DESIGN v3.2
 
 > **Prepara con cura. Non fidarti mai del tutto.**
 > Domanda centrale: **di cosa mi posso fidare?**
@@ -723,11 +723,26 @@ Fonte: *ORBITAL Design System* (VALE-OS rev 0.1), tradotto in `src/ui/styles/tok
 - Finestre fisse (niente trascinamento/ridimensionamento nell'MVP).
 - Si interroga V.A.L.E. con 6 **pulsanti-domanda** (STATO · PERCHÉ? · DANNI · EQUIPAGGIO · TRACCE BIO · DIRETTIVA?) e, dalla v3.0, con il campo **«Scrivi a V.A.L.E.»** (parole chiave, §10.2).
 
-**Schermate**: Missione (v0, Fase 2) · Evento/Decisione come finestra sopra la Missione (con gli eventi) · Preparazione con la sezione della navicella (Fase 4).
+**Schermate**: Ingresso (titolo, v3.2) · Missione (v0, Fase 2) · Evento/Decisione come finestra sopra la Missione (con gli eventi) · Preparazione con la sezione della navicella (Fase 4).
+
+### 16.5.1 Accensione del monitor  [PROVVISORIO — v3.1]
+Il monitor è un tubo catodico (`ui/cornice/useAccensione.ts`, animazioni in `Monitor.module.css`):
+- **Accensione** (1,2 s): punto → riga orizzontale → immagine sovraesposta che si assesta con due sfarfallii; una fascia di avvio mostra «VALE-OS 4.1 · TERMINALE V.A.L.E. MODELLO 7» o «GIORNO 03 · 06:00 · BUONGIORNO, CAPITANO».
+- **Spegnimento** (0,7 s): l'immagine si schiaccia in una riga, la riga in un punto; resta il bagliore del fosforo (2,2 s), il LED verde va in attesa.
+- Quando: all'avvio del gioco; al lancio (Preparazione → Missione); alla **buonanotte** (al buio si chiude il rapporto e passa la notte, poi buongiorno); a «Nuova missione».
+- Le fasi avanzano con l'evento `animationend` (niente timer né useEffect). Con «riduci movimento» del sistema le transizioni sono istantanee. Suoni: relè, smagnetizzazione e crepitio all'accensione; schiocco e fischio discendente allo spegnimento.
+
+### 16.5.2 Schermata d'ingresso  [PROVVISORIO — v3.2]
+Flusso del gioco: **Ingresso → Preparazione → Missione → Epilogo → Ingresso** (`App.tsx`, uno stato `fase`, niente router).
+- Al centro il logo ORBITAL (Michroma, con cursore lampeggiante) sopra **E-17 in fil di ferro** che ruota, con la nave ORB-1 in orbita (`ui/ingresso/GloboOrbita.tsx`, animazione SVG nativa). Sottotitolo nella voce di V.A.L.E.
+- **Registro di avvio** che si scrive riga per riga; l'ultima è «DIRETTIVA INTERNA [RISERVATO]», in rosso: il mistero comincia prima di giocare.
+- Menu: **INIZIA MISSIONE** (anche con INVIO: è un `<form>`), **SEED** modificabile (stesso seed = stessa partita), interruttore **AUDIO** (accende ambiente e voce a metà, ed è il gesto che sblocca l'audio del browser).
+- Atmosfera audio INGRESSO: ronzio basso e tre deboli impulsi a 1420 Hz, in eco al Segnale di E-17.
+- Desktop: registro · logo · menu in tre colonne. Mobile: logo, menu, registro (INIZIA sempre raggiungibile).
 
 ### 16.6 Audio  [BLOCCATO regole · PROVVISORIO suoni — v2.8]
 Tutto generato nel codice (`src/ui/audio/`): nessun file audio.
-- **Ambiente** (Web Audio API): ronzio, ventilazione, eventi casuali. Quattro atmosfere: PREPARAZIONE (hangar), MISSIONE, ALLERTA (decisione in attesa, impulso grave), NOTTE (rapporto serale).
+- **Ambiente** (Web Audio API): ronzio, ventilazione, eventi casuali. Cinque atmosfere: INGRESSO (titolo), PREPARAZIONE (hangar), MISSIONE, ALLERTA (decisione in attesa, impulso grave), NOTTE (rapporto serale).
 - **Suoni d'interfaccia**: innesto, cassa, rimozione, errore, conferma, avvio, accesso al terminale, contestazione, allarme. Si decide quale suonare confrontando lo stato prima e dopo l'azione (un'azione rifiutata suona ERRORE).
 - **Voce di V.A.L.E.**: sintesi vocale del browser in italiano, lenta e grave, preceduta da un bip. Legge le sue righe nuove del log, al massimo 2 per turno: il log resta la fonte completa.
 - **Controlli**: le due manopole della cornice (AMB e VOCE), 4 scatti ciascuna. I browser bloccano l'audio fino al primo gesto dell'utente: il primo giro di manopola lo sblocca. I volumi si ricordano tra le visite.
@@ -765,6 +780,8 @@ Tutto generato nel codice (`src/ui/audio/`): nessun file audio.
 | v2.2 | Reducer della missione: regole provvisorie di esecuzione (niente lavoro notturno, costi all'avvio, rischio salvato all'avvio, aiutante occupato → si procede da soli), consumi al rapporto serale, recupero notturno |
 | v2.3 | Adottata l'**Integrità dei dati** (§4.6). Adottato il design system VALE-OS (§16.5), con la UI allineata al DESIGN (scorte unificate, E-17 arido). Crew di riferimento: Mara, Adrian, Nadia, Sarah. Niente testo libero verso V.A.L.E. |
 | v2.4 | Sistema di eventi data-driven (§10.1): condizioni, effetti, scelte, stato DECISIONE, un evento per momento, output dei task come eventi, scoperte che sbloccano task. Catena del Segnale di E-17 implementata |
+| v3.2 | **Schermata d'ingresso** (§16.5.2): logo, globo di E-17, registro di avvio, seed modificabile, interruttore audio; «Nuova missione» riporta qui |
+| v3.1 | Accensione e spegnimento del monitor a tubo catodico (§16.5.1): all'avvio, al lancio, alla buonanotte e al buongiorno |
 | v3.0 | **Storia emergente alla 60 Seconds** (§10.2): mazzo di eventi narrativi con protagonista ed esiti casuali, fazioni, crew che agisce da sola, V.A.L.E. che chiude porte e rifiuta il rientro, il Confronto, giornale di bordo, imprevisti di partenza, **finali di missione con epilogo** (§15). **Cibo, acqua e ossigeno separati** (§6.1). **Testo libero verso V.A.L.E.** con parole chiave. Adottati dal mockup anche finestre ridimensionabili ed eventi trascinabili (Tappa 2) |
 | v2.8 | Schema della nave nella Preparazione (§11.5). **Audio** (§16.6): ambiente sintetizzato con 4 atmosfere, suoni d'interfaccia, voce di V.A.L.E. con la sintesi vocale del browser, manopole della cornice come controlli |
 | v2.7 | **Schermata di Preparazione** (§11.5): 10 candidati, catalogo completo del loadout con effetti graduali (IN ARRIVO), parametri della nave dai moduli, task che richiedono moduli, fattibilità, direttiva sorteggiata tra quelle compatibili con il loadout. Consumo base della nave 5 + moduli |

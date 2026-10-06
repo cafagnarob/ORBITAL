@@ -31,6 +31,8 @@ import stili from "./BarraComandi.module.css";
 interface Props {
   stato: StatoMissione;
   dispatch: Dispatch;
+  /** Chiudere il rapporto = buonanotte: spegne il monitor (SchermataMissione). */
+  onChiudiRapporto: () => void;
 }
 
 function descriviMotivo(stato: StatoMissione, motivo: MotivoSosta): string {
@@ -48,7 +50,7 @@ function descriviMotivo(stato: StatoMissione, motivo: MotivoSosta): string {
   }
 }
 
-export function BarraComandi({ stato, dispatch }: Props) {
+export function BarraComandi({ stato, dispatch, onChiudiRapporto }: Props) {
   const [rientroArmato, setRientroArmato] = useState(false);
   const rientroPossibile = stato.statoGioco === "PIANIFICAZIONE" || stato.statoGioco === "RAPPORTO";
   let testo: string;
@@ -68,7 +70,7 @@ export function BarraComandi({ stato, dispatch }: Props) {
     }
     case "RAPPORTO":
       testo = "Rapporto serale ricevuto. La crew si prepara al riposo.";
-      comando = { etichetta: "Chiudi rapporto ▶", azione: () => dispatch({ tipo: "CHIUDI_RAPPORTO" }) };
+      comando = { etichetta: "Chiudi rapporto ▶", azione: onChiudiRapporto };
       break;
     case "DECISIONE":
       testo = "V.A.L.E. attende una decisione del Capitano.";

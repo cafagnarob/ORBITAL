@@ -1,47 +1,71 @@
 /**
  * ============================================================================
- * App.tsx — Componente radice di ORBITAL: Preparazione → Missione
+ * App.tsx — Componente radice di ORBITAL: Ingresso → Preparazione → Missione
  * ============================================================================
  *
  * FLUSSO
- *   1. Il seed della partita si sceglie una volta sola, all'avvio
- *      (useState con funzione: viene chiamata solo al primo render).
- *   2. Finché `preparazione` è null si mostra la schermata di Preparazione.
- *   3. AVVIA MISSIONE consegna le scelte del Capitano: da quel momento si
- *      mostra la Missione, che crea il suo stato a partire da quelle scelte.
+ *   INGRESSO      la schermata del titolo: logo, seed, audio, INIZIA MISSIONE
+ *   PREPARAZIONE  crew e loadout
+ *   MISSIONE      in orbita attorno a E-17, fino all'epilogo
+ * Dall'epilogo "Nuova missione" riporta all'INGRESSO con un seed nuovo.
  *
  * PERCHÉ NON UN ROUTER
  * Le schermate non sono "pagine" tra cui navigare avanti e indietro: sono
  * fasi della partita. Una volta partiti non si torna alla Preparazione
  * (la nave è già in orbita). Basta uno stato: quale fase stiamo giocando.
- * Dall'epilogo (missione conclusa) si torna alla Preparazione con un seed
- * nuovo: la `key` cambia, quindi React ricrea le schermate da zero.
- * Quando arriveranno Terra e Campagna (Fase 5), qui ci sarà la fase della
- * campagna.
+ *
+ * MONITOR ACCESO O SPENTO
+ * Ogni schermata spegne il monitor prima di cedere il posto alla
+ * successiva, che quindi arriva "da spento" (daSpento) e si riaccende.
+ * Solo la prima schermata, all'apertura del gioco, parte accendendosi.
+ * `partite` conta le missioni giocate: entra nelle `key`, così React
+ * ricrea le schermate da zero a ogni nuova partita.
  * ============================================================================
  */
 
 import { useState } from "react";
 import type { Preparazione } from "./engine/types";
+import { impostaAtmosfera } from "./ui/audio";
+import { SchermataIngresso } from "./ui/ingresso/SchermataIngresso";
 import { SchermataMissione } from "./ui/missione/SchermataMissione";
 import { SchermataPreparazione } from "./ui/preparazione/SchermataPreparazione";
-import { impostaAtmosfera } from "./ui/audio";
 import { seedCasuale, seedIniziale } from "./ui/seed";
 
+type Fase = "INGRESSO" | "PREPARAZIONE" | "MISSIONE";
+
 export default function App() {
+  const [fase, setFase] = useState<Fase>("INGRESSO");
   const [seed, setSeed] = useState(seedIniziale);
   const [preparazione, setPreparazione] = useState<Preparazione | null>(null);
+  const [partite, setPartite] = useState(0);
 
-  /** Dall'epilogo: seed nuovo (casuale, si ignora ?seed=) e di nuovo la Preparazione. */
+  function inizia(seedScelto: string) {
+    setSeed(seedScelto);
+    setFase("PREPARAZIONE");
+  }
+
+  function avvia(prep: Preparazione) {
+    setPreparazione(prep);
+    setFase("MISSIONE");
+  }
+
+  /** Dall'epilogo: seed nuovo e di nuovo la schermata del titolo. */
   function nuovaPartita() {
     setSeed(seedCasuale());
     setPreparazione(null);
-    impostaAtmosfera("PREPARAZIONE");
+    setPartite((n) => n + 1);
+    setFase("INGRESSO");
+    impostaAtmosfera("INGRESSO");
   }
 
-  if (preparazione === null) {
-    // key={seed}: con un seed nuovo la Preparazione riparte da zero.
-    return <SchermataPreparazione key={seed} seed={seed} onAvvia={setPreparazione} />;
+  switch (fase) {
+    case "INGRESSO":
+      return <SchermataIngresso key={partite} seed={seed} onInizia={inizia} daSpento={partite > 0} />;
+    case "PREPARAZIONE":
+      return <SchermataPreparazione key={`${partite}-${seed}`} seed={seed} onAvvia={avvia} daSpento />;
+    case "MISSIONE":
+      return preparazione ? (
+        <SchermataMissione key={`${partite}-${seed}`} seed={seed} preparazione={preparazione} onNuovaPartita={nuovaPartita} />
+      ) : null;
   }
-  return <SchermataMissione key={seed} seed={seed} preparazione={preparazione} onNuovaPartita={nuovaPartita} />;
 }

@@ -31,6 +31,7 @@ export { suonoPreparazione } from "./annunci";
 export { LIVELLO_MASSIMO, useVolumi, type Canale } from "./impostazioni";
 export { suona, type IdSuono } from "./suoni";
 export { parla } from "./voce";
+export { sbloccaAudio } from "./motore";
 
 /** Frase di prova quando si accende la voce: conferma che il canale funziona. */
 const FRASE_CANALE_VOCE = "Canale vocale attivo, Capitano.";
@@ -44,6 +45,24 @@ export function giraManopola(canale: Canale): void {
   if (canale === "voce") {
     if (dopo === 0) zittisci();
     else if (prima === 0) parla([FRASE_CANALE_VOCE]);
+  }
+}
+
+/**
+ * L'interruttore AUDIO della schermata d'ingresso: se tutto è spento accende
+ * ambiente e voce a metà (livello 2); altrimenti spegne entrambi. È dentro
+ * un clic, quindi è anche il momento buono per sbloccare l'audio.
+ */
+export function interruttoreAudio(): void {
+  sbloccaAudio();
+  const v = leggiVolumi();
+  const acceso = v.ambiente > 0 || v.voce > 0;
+  impostaVolume("ambiente", acceso ? 0 : 2);
+  impostaVolume("voce", acceso ? 0 : 2);
+  if (acceso) zittisci();
+  else {
+    suona("CLIC");
+    parla([FRASE_CANALE_VOCE]);
   }
 }
 
