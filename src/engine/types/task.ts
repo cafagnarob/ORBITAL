@@ -1,0 +1,142 @@
+/**
+ * ============================================================================
+ * task.ts — Tipi dei task: definizione (catalogo) e istanza (in partita)
+ * ============================================================================
+ *
+ * Riferimento design: DESIGN.md §9.
+ *
+ * IL CONCETTO CHIAVE: DEFINIZIONE ≠ ISTANZA
+ * È la stessa differenza che c'è tra una ricetta e un piatto cucinato.
+ *
+ *   DefinizioneTask  → la "ricetta": cosa serve, quanto dura, quanto rischia.
+ *                      Vive in src/content/, è fissa, non cambia mai.
+ *   IstanzaTask      → il "piatto": QUESTA diagnostica, assegnata a Mara,
+ *                      iniziata alle 07:40, in corso. Vive nello stato.
+ *
+ * La stessa definizione può generare molte istanze nella stessa missione.
+ * L'istanza conserva solo l'ID della definizione, non una sua copia:
+ * così i salvataggi restano leggeri e, se correggi un numero nel catalogo,
+ * la correzione vale anche per le partite salvate.
+ *
+ * DA AGGIUNGERE PIÙ AVANTI
+ * "Condizioni richieste" e "output" (DESIGN §9) dipendono dal sistema di
+ * eventi e scoperte: li aggiungeremo nella Fase 2, quando sapremo
+ * esattamente che forma devono avere.
+ * ============================================================================
+ */
+
+import type {
+  IdDefinizioneTask,
+  IdEquipaggiamento,
+  IdIstanzaTask,
+  IdMembro,
+  Minuti,
+  Percentuale,
+  Tag,
+} from "./comuni"
+import type { AbilitaTecnica } from "./crew"
+import type { Luogo } from "./nave"
+import type { CostoRisorse } from "./risorse"
+
+// ----------------------------------------------------------------------------
+// VALORI POSSIBILI
+// ----------------------------------------------------------------------------
+
+export const CATEGORIE_TASK = [
+  "INGEGNERIA",
+  "SCIENZA",
+  "PILOTAGGIO",
+  "MEDICINA",
+  "EVA",
+  "GENERALE",
+] as const
+export type CategoriaTask = (typeof CATEGORIE_TASK)[number]
+
+/** Ciclo di vita di un'istanza (DESIGN §9). */
+export const STATI_TASK = [
+  "IN_CODA",
+  "PRONTO",
+  "IN_CORSO",
+  "IN_PAUSA",
+  "INTERROTTO",
+  "COMPLETATO",
+  "FALLITO",
+  "ANNULLATO",
+] as const
+export type StatoTask = (typeof STATI_TASK)[number]
+
+/** Esiti possibili, dal migliore al peggiore. */
+export const ESITI_TASK = [
+  "SUCCESSO_PERFETTO",
+  "SUCCESSO",
+  "SUCCESSO_PARZIALE",
+  "FALLIMENTO",
+  "FALLIMENTO_CRITICO",
+] as const
+export type EsitoTask = (typeof ESITI_TASK)[number]
+
+// ----------------------------------------------------------------------------
+// DEFINIZIONE (catalogo, in content/)
+// ----------------------------------------------------------------------------
+
+export interface DefinizioneTask {
+  id: IdDefinizioneTask
+  /** Nome mostrato al giocatore. */
+  nome: string
+  categoria: CategoriaTask
+
+  /** Abilità del RESPONSABILE che conta di più. */
+  abilitaPrincipale: AbilitaTecnica
+  /**
+   * Abilità che conta in secondo piano. Se c'è un AIUTANTE, si usa la sua;
+   * altrimenti quella del responsabile. `null` = il task non ne ha.
+   */
+  abilitaSecondaria: AbilitaTecnica | null
+  /** Se false, il task si svolge sempre da soli (es. pilotaggio). */
+  supportoAmmesso: boolean
+
+  /** Durata prima dei modificatori (fatica, velocità...). */
+  durataBase: Minuti
+  /** Rischio prima dei modificatori, 0–100. La formula è ancora [APERTO]. */
+  rischioBase: Percentuale
+  /** Dove si svolge: determina gli spostamenti automatici (DESIGN §7.6). */
+  luogo: Luogo
+
+  equipaggiamentoRichiesto: IdEquipaggiamento[]
+  costoRisorse: CostoRisorse
+  /** Fatica aggiunta al responsabile (e in parte all'aiutante). */
+  costoFatica: number
+  tag: Tag[]
+}
+
+// ----------------------------------------------------------------------------
+// ISTANZA (in partita, nello stato)
+// ----------------------------------------------------------------------------
+
+/**
+ * Un task assegnato durante la missione.
+ *
+ * PERCHÉ `| null` E NON CAMPI FACOLTATIVI (`?`)
+ * Nello stato di gioco ogni campo esiste sempre: `esito: null` dice
+ * esplicitamente "non c'è ancora un esito". Inoltre JSON.stringify elimina
+ * i campi che valgono undefined, mentre null sopravvive al salvataggio:
+ * un oggetto salvato e ricaricato resta identico all'originale.
+ */
+export interface IstanzaTask {
+  id: IdIstanzaTask
+  /** Riferimento alla "ricetta" nel catalogo. */
+  idDefinizione: IdDefinizioneTask
+
+  /** Chi esegue il task: usa l'abilità principale. */
+  responsabile: IdMembro
+  /** Aiutante facoltativo: usa l'abilità secondaria. */
+  supporto: IdMembro | null
+
+  stato: StatoTask
+  /** Minuto in cui è iniziato (null finché è in coda). */
+  inizio: Minuti | null
+  /** Minuto in cui finirà o è finito (calcolato all'avvio). */
+  fine: Minuti | null
+  /** Esito, noto solo quando il task si conclude. */
+  esito: EsitoTask | null
+}

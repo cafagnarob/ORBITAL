@@ -1,0 +1,84 @@
+/**
+ * ============================================================================
+ * missione.ts — Lo stato completo di una missione
+ * ============================================================================
+ *
+ * Riferimento design: DESIGN.md §2, §8, §16.
+ *
+ * COS'È StatoMissione
+ * È l'unico oggetto che descrive TUTTA la partita in un dato istante.
+ * Il motore lavora così:  (StatoMissione, Azione) → nuovo StatoMissione.
+ * Salvare la partita = JSON.stringify(stato). Caricarla = JSON.parse.
+ *
+ * REGOLE PER TUTTO CIÒ CHE ENTRA QUI DENTRO
+ *   1. Solo dati semplici: numeri, stringhe, booleani, null, array, oggetti.
+ *      Niente classi, funzioni, Date, Map o Set (non sopravvivono a JSON).
+ *   2. Solo ciò che non si può calcolare (vedi nave.ts).
+ *   3. Nessuna copia dei dati di catalogo: solo i loro ID.
+ *
+ * COSA ARRIVERÀ PIÙ AVANTI
+ *   - Fase 2: pianeta, eventi, `verita` e `conoscenza` (DESIGN §16.2)
+ *   - Fase 3: stato di V.A.L.E. (direttiva, comportamento, autonomia)
+ *   - Fase 5: crew e nave si sposteranno in StatoCampagna, perché
+ *     sopravvivono alla singola missione.
+ * Aggiungere campi solo quando servono evita di progettare "al buio".
+ * ============================================================================
+ */
+
+import type { IdIstanzaTask, IdMembro, Minuti } from "./comuni"
+import type { MembroCrew } from "./crew"
+import type { VoceLog } from "./log"
+import type { Nave } from "./nave"
+import type { Risorse } from "./risorse"
+import type { IstanzaTask } from "./task"
+
+/** In quale momento del ciclo di gioco ci troviamo (DESIGN §8). */
+export const STATI_GIOCO = [
+  "PIANIFICAZIONE",
+  "IN_ESECUZIONE",
+  "DECISIONE",
+  "RAPPORTO",
+] as const
+export type StatoGioco = (typeof STATI_GIOCO)[number]
+
+export interface StatoMissione {
+  // --- Casualità -------------------------------------------------------------
+  /** Seed testuale della partita, es. "E17-73A9". Non cambia mai. */
+  seed: string
+  /** Stato attuale del generatore (rng.getState()), aggiornato a ogni azione. */
+  rngState: number
+
+  // --- Tempo -----------------------------------------------------------------
+  /** Minuti dall'inizio della missione (vedi comuni.ts). */
+  tempo: Minuti
+  statoGioco: StatoGioco
+
+  // --- Entità ----------------------------------------------------------------
+  /**
+   * La crew, indicizzata per ID: `crew["mara"]` è immediato, mentre con un
+   * array dovremmo cercare ogni volta. I membri morti NON vengono rimossi:
+   * restano con stato "MORTO", perché la loro storia conta ancora.
+   */
+  crew: Record<IdMembro, MembroCrew>
+  nave: Nave
+  risorse: Risorse
+
+  // --- Task ------------------------------------------------------------------
+  /** Tutte le istanze della missione (attive e concluse), per ID. */
+  tasks: Record<IdIstanzaTask, IstanzaTask>
+  /**
+   * La coda di ogni membro: gli ID dei task che eseguirà, in ordine.
+   * Il primo è quello attuale. Un membro senza lavoro ha coda vuota [].
+   */
+  code: Record<IdMembro, IdIstanzaTask[]>
+
+  // --- Registro --------------------------------------------------------------
+  log: VoceLog[]
+
+  /**
+   * Contatore per creare nuovi ID ("task-1", "task-2"...).
+   * Non usiamo crypto.randomUUID(): è casuale e romperebbe il determinismo.
+   * Un contatore nello stato dà sempre gli stessi ID nella stessa partita.
+   */
+  contatoreId: number
+}
