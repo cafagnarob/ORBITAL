@@ -1,0 +1,60 @@
+/* Intestazione.module.css — barra a "pillola" come nel prototipo Missione. */
+
+.intestazione {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-5);
+  padding: var(--sp-1) var(--sp-5);
+  border: 2px solid var(--c-fosforo);
+  border-radius: 999px;
+  font-family: var(--font-terminale);
+  font-size: var(--fs-terminale);
+  letter-spacing: 0.08em;
+  color: var(--c-fosforo);
+}
+
+.logo {
+  font-family: var(--font-display);
+  font-size: 16px;
+  letter-spacing: 0.24em;
+  text-shadow: var(--glow-testo);
+}
+
+.sistema {
+  color: var(--c-fosforo-tenue);
+}
+
+.tempo strong {
+  font-weight: 400;
+  color: var(--c-fosforo-alto);
+  text-shadow: var(--glow-testo);
+}
+
+.statoGioco {
+  padding: 0 var(--sp-3);
+  background: var(--c-fosforo);
+  color: var(--c-vuoto);
+  border-radius: 999px;
+}
+
+.luogo {
+  margin-left: auto;
+}
+
+/* Su schermi stretti: si nasconde il superfluo, resta tempo + stato. */
+@media (max-width: 700px) {
+  .intestazione {
+    border-radius: 16px;
+    padding: var(--sp-2) var(--sp-4);
+    gap: var(--sp-1) var(--sp-3);
+    font-size: 18px;
+  }
+  .sistema,
+  .fase {
+    display: none;
+  }
+  .luogo {
+    margin-left: 0;
+  }
+}

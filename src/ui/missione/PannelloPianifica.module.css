@@ -1,0 +1,105 @@
+/* PannelloPianifica.module.css — modulo di assegnazione e stima del rischio. */
+
+.modulo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.coppia {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-3);
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: var(--fs-piccolo);
+  letter-spacing: 0.1em;
+  color: var(--c-fosforo-tenue);
+}
+
+.campo select {
+  min-height: 40px;
+  padding: 0 var(--sp-2);
+  background: var(--c-vuoto);
+  border: 1.5px solid var(--c-fosforo-tenue);
+  color: var(--c-fosforo);
+  font-family: var(--font-terminale);
+  font-size: 20px;
+  letter-spacing: 0.04em;
+}
+.campo select:disabled {
+  border-style: dashed;
+  color: var(--c-fosforo-tenue);
+}
+.campo option {
+  background: var(--c-vuoto);
+}
+
+.requisiti {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: var(--fs-piccolo);
+}
+.requisiti div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+.requisiti dt {
+  color: var(--c-fosforo-tenue);
+}
+.requisiti dd {
+  margin: 0;
+  text-align: right;
+}
+
+.stima {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1) var(--sp-4);
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--c-griglia);
+  font-family: var(--font-terminale);
+  font-size: 20px;
+  letter-spacing: 0.08em;
+  color: var(--c-fosforo);
+}
+.stima strong {
+  font-weight: 400;
+  color: var(--c-fosforo-alto);
+}
+.dettaglio {
+  width: 100%;
+  font-family: var(--font-testo);
+  font-size: var(--fs-piccolo);
+  letter-spacing: 0;
+  color: var(--c-fosforo-tenue);
+}
+
+/* Il colore del rischio vale per l'etichetta E per il numero. */
+.attenzione,
+.attenzione strong {
+  color: var(--c-attenzione);
+}
+.critico,
+.critico strong {
+  color: var(--c-critico);
+}
+
+.motivo {
+  margin: 0;
+  font-size: 13px;
+  color: var(--c-attenzione);
+}
+
+@media (max-width: 420px) {
+  .coppia {
+    grid-template-columns: 1fr;
+  }
+}

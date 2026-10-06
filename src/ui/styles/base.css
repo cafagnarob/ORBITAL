@@ -1,0 +1,79 @@
+/*
+ * ============================================================================
+ * base.css — Stili globali: reset, sfondo, effetto monitor a fosfori
+ * ============================================================================
+ *
+ * Solo ciò che vale per TUTTA la pagina. Lo stile dei singoli componenti
+ * sta nei loro file .module.css (CSS Modules), così non si pestano i piedi.
+ * ============================================================================
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background: radial-gradient(ellipse at 50% 40%, #08170d 0%, var(--c-vuoto) 75%) fixed;
+  color: var(--c-testo);
+  font-family: var(--font-testo);
+  font-size: var(--fs-testo);
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Linee di scansione del monitor: sottili, sopra a tutto, non cliccabili. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0.16) 0 1px, transparent 1px 3px);
+  z-index: 100;
+}
+
+button,
+select,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+/* Focus sempre visibile per chi usa la tastiera. */
+:focus-visible {
+  outline: 2px solid var(--c-fosforo-alto);
+  outline-offset: 2px;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--c-griglia);
+}
+
+/* Testo leggibile solo dagli screen reader. */
+.solo-lettore {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

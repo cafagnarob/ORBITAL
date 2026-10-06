@@ -1,0 +1,32 @@
+/* PannelloRisorse.module.css — righe "etichetta · valore" con barra sotto. */
+
+.lista {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.voce {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  row-gap: 4px;
+  font-family: var(--font-terminale);
+  font-size: var(--fs-terminale);
+  letter-spacing: 0.08em;
+}
+.voce dt {
+  color: var(--c-fosforo);
+}
+.voce dd {
+  margin: 0;
+  color: var(--c-fosforo-alto);
+}
+.voce > [role="meter"] {
+  grid-column: 1 / -1;
+}
+
+.nota {
+  color: var(--c-fosforo-tenue);
+  font-size: 18px;
+}

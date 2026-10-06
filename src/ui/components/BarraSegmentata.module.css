@@ -1,0 +1,30 @@
+/* BarraSegmentata.module.css — segmenti accesi/spenti, colore per tono. */
+
+.barra {
+  display: flex;
+  gap: 2px;
+  height: 8px;
+  --colore-acceso: var(--c-fosforo);
+}
+
+.acceso,
+.spento {
+  flex: 1;
+}
+.acceso {
+  background: var(--colore-acceso);
+  box-shadow: 0 0 4px var(--colore-acceso);
+}
+.spento {
+  background: var(--c-griglia);
+}
+
+.normale {
+  --colore-acceso: var(--c-fosforo);
+}
+.attenzione {
+  --colore-acceso: var(--c-attenzione);
+}
+.critico {
+  --colore-acceso: var(--c-critico);
+}

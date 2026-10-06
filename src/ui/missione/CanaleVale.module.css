@@ -1,0 +1,74 @@
+/* CanaleVale.module.css — registro con scorrimento ancorato in fondo. */
+
+.finestra {
+  min-height: 320px;
+}
+
+.registro {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column-reverse; /* il trucco: vedi il commento nel .tsx */
+  gap: var(--sp-2);
+  font-size: 13px;
+}
+
+/* --- Righe di sistema e crew --------------------------------------------- */
+.sistema,
+.crew {
+  display: grid;
+  grid-template-columns: 44px 72px 1fr;
+  gap: var(--sp-2);
+}
+.ora {
+  color: var(--c-fosforo-tenue);
+}
+.fonte {
+  color: var(--c-fosforo-tenue);
+  letter-spacing: 0.08em;
+}
+.crew .fonte {
+  color: var(--c-fosforo);
+}
+
+/* --- Messaggi di V.A.L.E. ------------------------------------------------- */
+.vale {
+  margin: var(--sp-1) 0;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid rgba(92, 239, 216, 0.4);
+  border-radius: 10px;
+  color: var(--c-vale);
+}
+.vale p {
+  margin: 4px 0 0;
+  font-size: var(--fs-testo);
+}
+.mittente {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-family: var(--font-terminale);
+  font-size: 18px;
+  letter-spacing: 0.14em;
+  text-shadow: var(--glow-vale);
+}
+.occhio {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid var(--c-vale);
+  box-shadow: inset 0 0 0 2px var(--c-pannello), inset 0 0 0 5px var(--c-vale);
+}
+
+@media (max-width: 700px) {
+  .sistema,
+  .crew {
+    grid-template-columns: 44px 1fr;
+  }
+  .fonte {
+    display: none;
+  }
+}

@@ -1,0 +1,112 @@
+/*
+ * Finestra.module.css — stile delle tre varianti di finestra.
+ * CSS Modules: le classi qui sono "locali" al componente. Vite le rinomina
+ * (es. .barra → .Finestra_barra_x7f2a), quindi non entrano mai in
+ * conflitto con classi omonime di altri componenti.
+ */
+
+.finestra {
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* permette al corpo di scorrere dentro una griglia */
+  background: var(--c-pannello);
+}
+
+.barra {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex: none;
+}
+
+.titolo {
+  margin: 0;
+  font-family: var(--font-terminale);
+  font-size: var(--fs-terminale);
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.destra {
+  margin-left: auto;
+  font-family: var(--font-terminale);
+  font-size: 18px;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.corpo {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--sp-3) var(--sp-4);
+}
+
+/* --- SISTEMA --------------------------------------------------------------- */
+.sistema {
+  border: 2px solid var(--c-fosforo);
+  box-shadow: var(--glow-bordo);
+}
+.sistema .barra {
+  background: var(--c-fosforo);
+  color: var(--c-vuoto);
+  padding: 1px var(--sp-3);
+  /* Angolo smussato in alto a destra, come nel design system. */
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 100%, 0 100%);
+  padding-right: 22px;
+}
+.marcatore {
+  font-size: 12px;
+  letter-spacing: 0.1em;
+}
+
+/* --- CONSOLE --------------------------------------------------------------- */
+.console {
+  border: 2px solid var(--c-fosforo);
+  border-radius: 18px;
+  box-shadow: var(--glow-bordo);
+}
+.console .barra {
+  margin: var(--sp-3) var(--sp-3) 0;
+  border: 1.5px solid var(--c-fosforo);
+  border-radius: 999px;
+  padding: 0 var(--sp-4);
+  color: var(--c-fosforo);
+}
+.console .titolo {
+  text-shadow: var(--glow-testo);
+}
+
+/* --- CORNICE (crocini agli angoli) ---------------------------------------- */
+.cornice {
+  position: relative;
+  border: 1px solid var(--c-griglia);
+}
+.cornice::before,
+.cornice::after {
+  content: "";
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--c-fosforo);
+}
+.cornice::before {
+  top: -2px;
+  left: -2px;
+  border-right: none;
+  border-bottom: none;
+}
+.cornice::after {
+  bottom: -2px;
+  right: -2px;
+  border-left: none;
+  border-top: none;
+}
+.cornice .barra {
+  padding: var(--sp-3) var(--sp-4) 0;
+  color: var(--c-fosforo);
+}

@@ -1,0 +1,59 @@
+/* Pulsante.module.css — varianti del pulsante (design system §04). */
+
+.pulsante {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  min-height: 40px; /* bersaglio comodo anche al tocco */
+  padding: 2px var(--sp-4);
+  border: 1.5px solid var(--c-fosforo);
+  background: transparent;
+  color: var(--c-fosforo);
+  font-family: var(--font-terminale);
+  font-size: 22px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.pulsante:hover:not(:disabled) {
+  color: var(--c-fosforo-alto);
+  border-color: var(--c-fosforo-alto);
+  box-shadow: var(--glow-bordo);
+}
+
+.primario {
+  background: var(--c-fosforo);
+  color: var(--c-vuoto);
+  box-shadow: var(--glow-bordo);
+}
+.primario:hover:not(:disabled) {
+  background: var(--c-fosforo-alto);
+  color: var(--c-vuoto);
+}
+
+.pericolo {
+  border-color: var(--c-critico);
+  color: var(--c-critico);
+}
+.pericolo:hover:not(:disabled) {
+  border-color: var(--c-critico);
+  color: var(--c-critico);
+  box-shadow: 0 0 12px rgba(255, 106, 92, 0.35);
+}
+
+.pulsante:disabled {
+  border-style: dashed;
+  border-color: var(--c-fosforo-tenue);
+  background: transparent;
+  color: var(--c-fosforo-tenue);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.piccolo {
+  min-height: 28px;
+  padding: 0 var(--sp-2);
+  font-size: 18px;
+}

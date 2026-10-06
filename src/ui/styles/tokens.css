@@ -1,0 +1,63 @@
+/*
+ * ============================================================================
+ * tokens.css — Il design system di ORBITAL tradotto in variabili CSS
+ * ============================================================================
+ *
+ * Fonte: "ORBITAL Design System" (VALE-OS rev 0.1) di Roberto.
+ *
+ * COSA SONO I TOKEN
+ * Ogni colore, font e misura ha un NOME che dice a cosa serve. I componenti
+ * usano solo i nomi (var(--c-vale)), mai i valori (#5CEFD8). Se un giorno
+ * cambi la tonalità del verde, la cambi qui e cambia ovunque.
+ *
+ * REGOLE DEL DESIGN SYSTEM (da rispettare in ogni componente)
+ *   - Il verde è l'interfaccia. Il ciano è SOLO la voce di V.A.L.E.
+ *   - Ambra e rosso compaiono SOLO per stati di rischio, sempre con un
+ *     testo che dice lo stesso (mai il colore come unica informazione).
+ *   - I codici nei log non vengono mai evidenziati.
+ *   - Testo mai sotto i 12px.
+ * ============================================================================
+ */
+
+:root {
+  /* --- Colori ------------------------------------------------------------ */
+  --c-fosforo: #7df5a5; /* primario: bordi, titoli, valori */
+  --c-fosforo-alto: #c9ffda; /* evidenziazione, hover, focus */
+  --c-fosforo-tenue: #3e8f5c; /* secondario: etichette, disattivati */
+  --c-testo: #9bd8ae; /* testo corrente (descrizioni, log) */
+  --c-griglia: #1c3d27; /* linee, divisori, segmenti spenti */
+  --c-pannello: #07100a; /* superfici delle finestre */
+  --c-vuoto: #040705; /* sfondo */
+  --c-vale: #5cefd8; /* la voce di V.A.L.E. */
+  --c-attenzione: #f2c14e; /* rischio moderato, avvisi */
+  --c-critico: #ff6a5c; /* rischio alto, guasti, ostilità */
+
+  /* --- Bagliore dei fosfori --------------------------------------------- */
+  --glow-testo: 0 0 8px rgba(125, 245, 165, 0.5);
+  --glow-bordo: 0 0 14px rgba(125, 245, 165, 0.18);
+  --glow-vale: 0 0 8px rgba(92, 239, 216, 0.55);
+
+  /* --- Tipografia -------------------------------------------------------- */
+  /* Display: logo, titoli di fase. Sempre maiuscolo, spaziatura ampia. */
+  --font-display: "Michroma", "Eurostile", sans-serif;
+  /* Terminale: numeri, menu, intestazioni di finestra. */
+  --font-terminale: "VT323", "IBM Plex Mono", monospace;
+  /* Testo: dialoghi di V.A.L.E., log, descrizioni. */
+  --font-testo: "IBM Plex Mono", ui-monospace, monospace;
+
+  --fs-piccolo: 12px; /* minimo assoluto */
+  --fs-testo: 14px;
+  --fs-terminale: 20px; /* VT323 è piccolo: va usato più grande */
+  --fs-terminale-grande: 28px;
+
+  /* --- Spaziature -------------------------------------------------------- */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+
+  /* --- Larghezza sotto cui si passa al layout a schede (mobile/tablet) --- */
+  /* Nota: le media query CSS non possono leggere variabili; il valore
+     1100px è ripetuto nei file .module.css. */
+}

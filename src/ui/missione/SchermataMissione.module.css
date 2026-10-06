@@ -1,0 +1,105 @@
+/*
+ * SchermataMissione.module.css — layout a tre colonne (desktop) o a schede (mobile).
+ * Si parte dal mobile e si "aggiunge" il desktop con min-width: è più
+ * semplice che togliere cose al desktop per farlo stare in un telefono.
+ */
+
+/* ===== MOBILE / TABLET (base) ============================================ */
+.schermo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  min-height: 100dvh;
+  padding: var(--sp-3) var(--sp-3) 0;
+}
+
+.schede {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--sp-1);
+}
+.scheda {
+  min-height: 40px;
+  border: 1.5px solid var(--c-fosforo);
+  background: transparent;
+  color: var(--c-fosforo);
+  font-family: var(--font-terminale);
+  font-size: 20px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.scheda[aria-pressed="true"] {
+  background: var(--c-fosforo);
+  color: var(--c-vuoto);
+}
+
+.griglia {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+/* Su mobile le colonne "spariscono": i blocchi scorrono uno sotto l'altro. */
+.colonna {
+  display: contents;
+}
+
+.blocco {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.blocco > section {
+  flex: 1;
+}
+
+.nascostoMobile {
+  display: none;
+}
+
+/* ===== DESKTOP ============================================================ */
+@media (min-width: 1100px) {
+  .schermo {
+    height: 100dvh;
+    padding: var(--sp-4) var(--sp-5);
+    gap: var(--sp-3);
+  }
+
+  .schede {
+    display: none;
+  }
+
+  .griglia {
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(300px, 1fr) minmax(420px, 1.5fr) minmax(340px, 1.1fr);
+    gap: var(--sp-4);
+  }
+
+  .colonna {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-4);
+    min-height: 0;
+  }
+
+  .nascostoMobile {
+    display: flex; /* su desktop si vede tutto */
+  }
+
+  .blocco {
+    flex: none;
+  }
+  .cresce {
+    flex: 1;
+  }
+}
+
+/* Schermi desktop non molto alti: il pianeta lascia spazio ai sistemi della nave. */
+@media (min-width: 1100px) and (max-height: 1000px) {
+  .colonna:last-child .blocco:last-child {
+    display: none;
+  }
+}

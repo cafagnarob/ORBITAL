@@ -1,0 +1,106 @@
+/**
+ * ============================================================================
+ * PannelloCrew.tsx — Lo stato di ogni membro: fatica, attività, coda
+ * ============================================================================
+ *
+ * Per ogni membro della crew mostra:
+ *   - nome, ruolo e condizione (SANO, FERITO...);
+ *   - fatica con la sua fascia;
+ *   - cosa sta facendo ora (task in corso, aiuto a un collega, o libero);
+ *   - la sua CODA di task, con la possibilità di rimuovere quelli non avviati.
+ *
+ * Tutto è ricavato dallo stato: per sapere se Nadia sta aiutando qualcuno
+ * cerchiamo un task IN_CORSO con supporto === "nadia".
+ * ============================================================================
+ */
+
+import { CATALOGO_TASK } from "../../content/tasks";
+import { fasciaFatica } from "../../engine/crew/fatica";
+import type { IstanzaTask, MembroCrew, StatoMissione } from "../../engine/types";
+import { BarraSegmentata } from "../components/BarraSegmentata";
+import { Finestra } from "../components/Finestra";
+import { Pulsante } from "../components/Pulsante";
+import { etichetta, formattaOra, tonoFatica, tonoStatoMembro } from "../format";
+import type { Dispatch } from "../useMissione";
+import stili from "./PannelloCrew.module.css";
+
+interface Props {
+  stato: StatoMissione;
+  dispatch: Dispatch;
+}
+
+/** Nome leggibile di un'istanza di task. */
+function nomeTask(task: IstanzaTask): string {
+  return CATALOGO_TASK[task.idDefinizione]?.nome ?? task.idDefinizione;
+}
+
+/** Descrive in una riga cosa sta facendo un membro in questo momento. */
+function attivitaAttuale(stato: StatoMissione, membro: MembroCrew): string {
+  const inCorso = Object.values(stato.tasks).filter((t) => t.stato === "IN_CORSO");
+  const proprio = inCorso.find((t) => t.responsabile === membro.id);
+  if (proprio) return `${nomeTask(proprio)} · fine ${formattaOra(proprio.fine ?? stato.tempo)}`;
+  const aiuto = inCorso.find((t) => t.supporto === membro.id);
+  if (aiuto) return `Aiuta ${stato.crew[aiuto.responsabile]?.nome ?? "?"} · ${nomeTask(aiuto)}`;
+  return "Libero";
+}
+
+export function PannelloCrew({ stato, dispatch }: Props) {
+  const membri = Object.values(stato.crew);
+  const modificabile = stato.statoGioco === "PIANIFICAZIONE" || stato.statoGioco === "IN_ESECUZIONE";
+
+  return (
+    <Finestra titolo="Equipaggio" destra={`${membri.length} A BORDO`}>
+      <ul className={stili.lista}>
+        {membri.map((m) => {
+          const fascia = fasciaFatica(m.fatica);
+          const inCoda = (stato.code[m.id] ?? [])
+            .map((id) => stato.tasks[id])
+            .filter((t): t is IstanzaTask => t !== undefined && t.stato === "IN_CODA");
+
+          return (
+            <li key={m.id} className={stili.scheda}>
+              <div className={stili.riga}>
+                <span className={stili.nome}>{m.nome}</span>
+                <span className={stili.ruolo}>{etichetta(m.ruolo)}</span>
+                <span className={`${stili.condizione} ${stili[tonoStatoMembro(m.stato)]}`}>{m.stato}</span>
+              </div>
+
+              <div className={stili.fatica}>
+                <span>
+                  FATICA {m.fatica} · {fascia}
+                </span>
+                <BarraSegmentata valore={m.fatica} massimo={100} etichetta={`Fatica di ${m.nome}`} tono={tonoFatica(fascia)} />
+              </div>
+
+              <p className={stili.attivita}>
+                <span className={stili.posizione}>{etichetta(m.posizione)}</span> ▸ {attivitaAttuale(stato, m)}
+              </p>
+
+              {inCoda.length > 0 && (
+                <ol className={stili.coda} aria-label={`Coda di ${m.nome}`}>
+                  {inCoda.map((t) => (
+                    <li key={t.id}>
+                      <span>
+                        {nomeTask(t)}
+                        {t.supporto !== null && ` + ${stato.crew[t.supporto]?.nome ?? "?"}`}
+                      </span>
+                      <Pulsante
+                        piccolo
+                        variante="pericolo"
+                        disabled={!modificabile}
+                        aria-label={`Rimuovi ${nomeTask(t)} dalla coda di ${m.nome}`}
+                        onClick={() => dispatch({ tipo: "RIMUOVI_TASK", idTask: t.id })}
+                      >
+                        ✕
+                      </Pulsante>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </Finestra>
+  );
+}
