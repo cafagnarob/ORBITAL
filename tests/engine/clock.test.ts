@@ -40,6 +40,7 @@ function conTaskInCorso(
     stato: "IN_CORSO",
     inizio: stato.tempo,
     fine,
+    rischio: 20,
     esito: null,
   }
   return { ...stato, tasks: { ...stato.tasks, [id]: task } }

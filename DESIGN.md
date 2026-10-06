@@ -11,7 +11,7 @@
   - Lingua: tutto ciò che vede il giocatore è in italiano. Gli identificatori nel codice possono essere in inglese.
 -->
 
-# ORBITAL — DESIGN v2.1
+# ORBITAL — DESIGN v2.2
 
 > **Prepara con cura. Non fidarti mai del tutto.**
 > Domanda centrale: **di cosa mi posso fidare?**
@@ -372,6 +372,16 @@ rischio    = rischio base − (competenza − 5) × 6 + penalità fatica − 5 s
 durata     = durata base × fatica (1 / 1.1 / 1.25 / 1.5) × (1 − (velocità − 5) × 0.04) × 0.85 se aiutante
 ```
 
+**Esecuzione** [PROVVISORIO, v2.2]:
+
+- Un task parte solo durante le operazioni e solo se **finisce entro le 22:00**: niente lavoro notturno; se non ci sta resta in coda.
+- Il costo in risorse si paga **all'avvio**; se non basta, il task è annullato.
+- Il rischio si calcola e si salva **all'avvio**: l'esito usa il rischio che il giocatore ha visto.
+- Se l'aiutante è occupato o non operativo, il responsabile **procede da solo** (il log lo segnala). _Da verificare in playtest: il giocatore potrebbe preferire che il task aspetti._
+- Fatica: tutta al responsabile, metà all'aiutante.
+- Spostamenti semplificati: +10 min verso un altro compartimento, +15 se si esce o rientra dall'airlock.
+- Consumi giornalieri (scorte per membro a bordo, bilancio energia) applicati al rapporto delle 22:00; il sonno recupera 35 di fatica al risveglio.
+
 **Esito**: un tiro 1–100. I primi `rischio` numeri sono fallimenti (¼ critici); dei successi, ¼ parziali e una quota perfetta (10% + 2% per punto di precisione del responsabile). Le probabilità mostrate al giocatore derivano dalle stesse soglie.
 
 ---
@@ -669,7 +679,8 @@ orbital/
 │   │   ├── tasks/        risoluzione task
 │   │   ├── events/       selezione eventi
 │   │   ├── vale/         direttiva, comportamento, filtro informativo
-│   │   ├── mission.ts    reducer missione
+│   │   ├── crew/         fatica e altre regole della crew
+│   │   ├── mission/      reducer missione: azioni, assegnazione, esecuzione, giornata
 │   │   └── campaign.ts   reducer campagna (fase 5)
 │   ├── content/
 │   │   ├── balance.ts    tutti i numeri provvisori
@@ -710,6 +721,7 @@ orbital/
 | v1.3          | Rimossa l'esclusione "NO economia" (resta esclusa ogni economia oltre ai Crediti)                                                                                                                                                                                  |
 | v2.0          | Documenti unificati. `ORD` = **Override** (non "Ordine"). "Potenziamento Navigazione" → **Array di Navigazione**. Scorte: da 8 a **7** tipologie. Loadout di riferimento ridotto a 6 equipaggiamenti. Generatore procedurale rimandato: pianeti MVP scritti a mano |
 | v2.1          | Task: responsabile + aiutante facoltativo, coda per membro. Formula del rischio e dell'esito (provvisoria). Nomi nel codice in italiano                                                                                                                            |
+| v2.2          | Reducer della missione: regole provvisorie di esecuzione (niente lavoro notturno, costi all'avvio, rischio salvato all'avvio, aiutante occupato → si procede da soli), consumi al rapporto serale, recupero notturno                                               |
 
 ---
 
@@ -723,6 +735,8 @@ orbital/
 **Da progettare:**
 
 - [ ] Finali della campagna (prima del catalogo eventi definitivo)
+- [ ] Aiutante occupato: il task parte da solo (attuale) o aspetta?
+- [ ] Mappa delle adiacenze della nave (spostamenti precisi, §7.6)
 - [ ] Effetti a soglia della fiducia in V.A.L.E.
 - [ ] Meccanica della Tavola del Capitano
 - [ ] Come le tre verità cambiano il significato degli indizi di E-17

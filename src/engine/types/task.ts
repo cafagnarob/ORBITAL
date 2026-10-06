@@ -137,6 +137,13 @@ export interface IstanzaTask {
   inizio: Minuti | null
   /** Minuto in cui finirà o è finito (calcolato all'avvio). */
   fine: Minuti | null
+  /**
+   * Rischio calcolato AL MOMENTO DELL'AVVIO (null finché è in coda).
+   * Lo salviamo invece di ricalcolarlo alla fine perché è il rischio che
+   * il giocatore ha visto e accettato: se nel frattempo cambiasse qualcosa,
+   * l'esito non deve "tradire" la stima su cui ha deciso.
+   */
+  rischio: Percentuale | null
   /** Esito, noto solo quando il task si conclude. */
   esito: EsitoTask | null
 }

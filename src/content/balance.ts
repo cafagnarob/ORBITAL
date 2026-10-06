@@ -65,5 +65,33 @@ export const BALANCE = {
     quotaPerfettoBase: 0.1,
     /** …più questa quota per ogni punto di precisione (precisione 10 → 30%). */
     quotaPerfettoPerPrecisione: 0.02,
+    /** Quota del costo di fatica che ricade sull'aiutante (0.5 = metà). */
+    quotaFaticaSupporto: 0.5,
+  },
+
+  // --------------------------------------------------------------------------
+  // SPOSTAMENTI (DESIGN §7.6 — semplificato finché non c'è la mappa della nave)
+  // --------------------------------------------------------------------------
+  spostamento: {
+    /** Minuti per raggiungere un altro compartimento. */
+    interno: 10,
+    /** Minuti in più per uscire o rientrare dall'airlock (tuta, pressione). */
+    airlock: 15,
+  },
+
+  // --------------------------------------------------------------------------
+  // GIORNATA (DESIGN §6, §8)
+  // --------------------------------------------------------------------------
+  giornata: {
+    /** Scorte consumate da ogni membro a bordo, al rapporto serale. */
+    scortePerMembro: 9,
+    /** Energia generata al giorno (DESIGN §6.2, senza moduli). */
+    generazioneEnergia: 12,
+    /** Energia consumata al giorno dai sistemi (DESIGN §6.2). */
+    consumoEnergia: 8,
+    /** Carica massima della batteria (DESIGN §6.2). */
+    capacitaBatteria: 150,
+    /** Fatica recuperata con il sonno, al risveglio. */
+    recuperoFaticaNotturno: 35,
   },
 } as const

@@ -193,6 +193,7 @@ export function creaMissioneDiProva(seed = "E17-73A9"): StatoMissione {
         stato: "IN_CODA",
         inizio: null,
         fine: null,
+        rischio: null,
         esito: null,
       },
     },
