@@ -22,6 +22,8 @@
  *                       si ferma prima se serve il Capitano)
  *   CHIUDI_RAPPORTO   → in RAPPORTO: si distribuiscono le razioni (v3.4; se
  *                       mancano, quelle predefinite) e si passa alla notte
+ *   RISOLVI_MINIGIOCO → con un minigioco in attesa (v3.6): punteggio 0–1,
+ *                       0 = lascia fare alla crew
  *   PARLA             → il Capitano parla con un membro (v3.4): una volta al
  *                       giorno per persona, non fa scorrere il tempo
  *   RISOLVI_EVENTO    → in DECISIONE (il Capitano sceglie un'opzione)
@@ -49,6 +51,7 @@ export type Azione =
   | { tipo: "AVANZA_FINO"; tempo: Minuti }
   | { tipo: "CHIUDI_RAPPORTO"; razioni?: RazioniSerali }
   | { tipo: "PARLA"; membro: IdMembro; discorso: Discorso }
+  | { tipo: "RISOLVI_MINIGIOCO"; punteggio: number }
   | { tipo: "RISOLVI_EVENTO"; idScelta: string }
   | { tipo: "SEGNALA_VOCE"; indice: number }
   | { tipo: "INSERISCI_CODICE"; codice: string }

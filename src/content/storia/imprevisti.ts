@@ -5,7 +5,7 @@
  *
  * Riferimento design: DESIGN.md §10.2 (varietà tra partite, come 60 Seconds).
  *
- * Al momento dell'inserimento in orbita il seed estrae UN imprevisto
+ * Al momento del lancio il seed estrae UN imprevisto
  * (in base al peso): una cassa rotta, un'antenna colpita, qualcuno con il
  * mal di spazio… o niente di niente. Piccole differenze che cambiano le
  * prime decisioni e, a catena, la storia. Si applica in missioneIniziale.ts
@@ -19,7 +19,7 @@ export const LISTA_IMPREVISTI: readonly DefinizioneImprevisto[] = [
   {
     id: "NESSUNO",
     peso: 3,
-    log: { fonte: "VALE", testo: "Inserimento orbitale perfetto. Nessuna anomalia." },
+    log: { fonte: "VALE", testo: "Lancio perfetto. Nessuna anomalia." },
     diario: "Partenza perfetta. Fin troppo.",
     effetti: [],
   },
@@ -70,7 +70,7 @@ export const LISTA_IMPREVISTI: readonly DefinizioneImprevisto[] = [
   {
     id: "BENVENUTO",
     peso: 1,
-    log: { fonte: "VALE", testo: "Benvenuti in orbita. Ho preparato la vostra prima giornata. Riposate, se potete." },
+    log: { fonte: "VALE", testo: "Benvenuti a bordo. Ho preparato la vostra prima giornata. Riposate, se potete." },
     diario: "V.A.L.E. ci ha accolti con una premura quasi umana.",
     effetti: [{ tipo: "FIDUCIA", delta: 6 }],
   },

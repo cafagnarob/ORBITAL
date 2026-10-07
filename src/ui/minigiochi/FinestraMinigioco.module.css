@@ -1,0 +1,123 @@
+/*
+ * FinestraMinigioco.module.css — la finestra del minigioco, sopra tutto.
+ * Mobile: occupa lo schermo e scorre. Desktop: una finestra centrata.
+ */
+
+.sfondo {
+  position: fixed;
+  inset: 0;
+  z-index: 55; /* sopra eventi (50) e diario (45): il tempo è fermo per questo */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-3);
+  background: rgba(4, 7, 5, 0.82);
+}
+
+.finestra {
+  width: min(560px, 100%);
+  max-height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  background: var(--c-pannello);
+  border: 2px solid var(--c-vale);
+  box-shadow: 0 0 40px rgba(92, 239, 216, 0.25);
+}
+
+.barra {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--sp-1) var(--sp-3);
+  padding: 2px var(--sp-4);
+  background: var(--c-vale);
+  color: var(--c-vuoto);
+  font-family: var(--font-terminale);
+  font-size: 18px;
+  letter-spacing: 0.12em;
+}
+
+.corpo {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+}
+
+.titolo {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(18px, 4.5vw, 26px);
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  color: var(--c-fosforo);
+  text-shadow: var(--glow-testo);
+}
+.sottotitolo {
+  margin: 0;
+  font-family: var(--font-terminale);
+  font-size: 20px;
+  letter-spacing: 0.08em;
+  color: var(--c-vale);
+}
+.istruzioni {
+  margin: 0;
+  line-height: 1.5;
+  color: var(--c-testo);
+}
+.nota {
+  margin: 0;
+  font-size: var(--fs-piccolo);
+  color: var(--c-fosforo-tenue);
+}
+.esito {
+  margin: 0;
+  font-family: var(--font-terminale);
+  font-size: 28px;
+  letter-spacing: 0.12em;
+  color: var(--c-fosforo-tenue);
+  text-align: center;
+}
+.esito strong {
+  font-weight: 400;
+  color: var(--c-fosforo-alto);
+}
+
+.azioni {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  justify-content: flex-end;
+}
+.primario,
+.secondario {
+  flex: 1 1 180px;
+  min-height: 48px;
+  padding: 0 var(--sp-3);
+  font-family: var(--font-terminale);
+  font-size: 22px;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+}
+.primario {
+  border: 2px solid var(--c-fosforo);
+  background: var(--c-fosforo);
+  color: var(--c-vuoto);
+}
+.primario:hover,
+.primario:focus-visible {
+  background: var(--c-fosforo-alto);
+  outline: none;
+}
+.secondario {
+  border: 2px solid var(--c-fosforo-tenue);
+  background: transparent;
+  color: var(--c-fosforo);
+}
+.secondario:hover,
+.secondario:focus-visible {
+  border-color: var(--c-fosforo);
+  outline: none;
+}

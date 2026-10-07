@@ -26,7 +26,7 @@ import type { Ruolo, StatoMembro } from "./crew";
 import type { FonteLog } from "./log";
 import type { Compartimento, SistemaCore, StatoAccesso } from "./nave";
 import type { Risorse } from "./risorse";
-import type { CausaFine, EsitoCasuale, Fazione, SelettoreMembro } from "./storia";
+import type { CausaFine, EsitoCasuale, Fazione, FaseViaggio, SelettoreMembro } from "./storia";
 import type { EsitoTask } from "./task";
 import type { ClasseDirettiva, FiltroVale } from "./vale";
 
@@ -105,6 +105,16 @@ export type Condizione =
   /** Un modulo è installato sulla nave. */
   | { tipo: "MODULO"; id: IdModulo }
   /**
+   * Un task completato da MENO di `ore` ore e non "annullato" da un
+   * fallimento successivo di `invalidatoDa` (v3.7: i preparativi della
+   * scansione scadono — la traiettoria deriva, la calibrazione si perde).
+   */
+  | { tipo: "TASK_VALIDO"; task: IdDefinizioneTask; ore: number; invalidatoDa?: IdDefinizioneTask }
+  /** La missione è in una di queste fasi del viaggio (v3.7). */
+  | { tipo: "FASE"; fasi: FaseViaggio[] }
+  /** Nessun membro della crew è morto o disperso (v3.7). */
+  | { tipo: "CREW_INTEGRA" }
+  /**
    * Un evento è accaduto da MENO di `ore` ore (eventualmente con una certa
    * scelta). Serve ai task temporanei: «il meteorite resta a portata per 18 ore».
    */
@@ -150,7 +160,9 @@ export type Effetto =
   /** Una riga in più nel giornale di bordo (con {P} e {S}). */
   | { tipo: "DIARIO"; testo: string }
   /** La missione finisce: il finale si sceglie tra quelli compatibili con la causa. */
-  | { tipo: "FINE_MISSIONE"; causa: CausaFine };
+  | { tipo: "FINE_MISSIONE"; causa: CausaFine }
+  /** La nave lascia l'orbita e comincia il viaggio di rientro (v3.7). */
+  | { tipo: "PARTENZA" };
 
 /** Su chi agisce un effetto "personale". */
 export type Destinatario = "RESPONSABILE" | "PROTAGONISTA" | "SECONDO" | "TUTTI";

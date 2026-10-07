@@ -154,5 +154,8 @@ export function creaMissioneDiProva(seed = "E17-73A9"): StatoMissione {
     imprevisto: null,
     esito: null,
     colloqui: [],
+    minigioco: null,
+    partenza: null,
+    obiettiviCompletati: [],
   };
 }

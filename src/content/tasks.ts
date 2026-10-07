@@ -17,6 +17,8 @@
  *   - RICARICA    dopo un completamento, quante ore prima che torni (null =
  *                 una volta sola, 0 = routine sempre disponibile);
  *   - RESA        cosa produce se riesce (risorse, riparazioni, cure).
+ *   - MINIGIOCO   (v3.6) come il Capitano può aiutare: la meccanica (RADAR,
+ *                 SINTONIA…) con titolo e istruzioni adatti al lavoro.
  *
  * I task "temporanei" (meteorite, relitto, soccorso...) si aprono con un
  * evento dei turni (content/eventiTurno.ts) e restano disponibili poche ore:
@@ -39,6 +41,11 @@ const dopo = (task: IdDefinizioneTask, volte = 1): Condizione => ({ tipo: "TASK_
 const dopoEvento = (id: IdEvento, scelta: string | undefined, ore: number): Condizione =>
   scelta === undefined ? { tipo: "EVENTO_RECENTE", id, ore } : { tipo: "EVENTO_RECENTE", id, scelta, ore };
 
+/** Solo in orbita attorno a E-17 (v3.7): durante i viaggi il cratere non si vede. */
+const IN_ORBITA: Condizione = { tipo: "FASE", fasi: ["ORBITA"] };
+/** I preparativi della scansione, che scadono (v3.7): validi per `ore`, annullati da una scansione fallita. */
+const valido = (task: IdDefinizioneTask, ore: number): Condizione => ({ tipo: "TASK_VALIDO", task, ore, invalidatoDa: "T-SCANSIONE-OBIETTIVO" });
+
 /**
  * Valori di default: ogni task li sovrascrive dove serve. Lo "spread"
  * (`...BASE`) copia questi campi nell'oggetto; quelli scritti dopo vincono.
@@ -60,6 +67,7 @@ const LISTA_TASK: DefinizioneTask[] = [
   {
     ...BASE,
     id: "T-DIAGNOSTICA",
+    minigioco: { tipo: "SEQUENZA", titolo: "Sequenza diagnostica", istruzioni: "Memorizza l'ordine dei test dei moduli e ripetilo." },
     nome: "Diagnostica dei sistemi",
     categoria: "INGEGNERIA",
     abilitaPrincipale: "INGEGNERIA",
@@ -76,6 +84,7 @@ const LISTA_TASK: DefinizioneTask[] = [
   {
     ...BASE,
     id: "T-MANUTENZIONE-SV",
+    minigioco: { tipo: "PRESSIONE", titolo: "Pressione del circuito", istruzioni: "Tieni la pressione dell'impianto nella fascia verde mentre si sostituiscono i filtri." },
     nome: "Manutenzione del supporto vitale",
     categoria: "INGEGNERIA",
     abilitaPrincipale: "INGEGNERIA",
@@ -93,14 +102,15 @@ const LISTA_TASK: DefinizioneTask[] = [
   {
     ...BASE,
     id: "T-CORREZIONE-ORBITA",
-    nome: "Correzione d'orbita",
+    minigioco: { tipo: "MANOVRA", titolo: "Finestra di accensione", istruzioni: "Con i propulsori laterali tieni la nave dentro il corridoio di traiettoria." },
+    nome: "Correzione di traiettoria",
     categoria: "PILOTAGGIO",
     abilitaPrincipale: "PILOTAGGIO",
     supportoAmmesso: false,
     durataBase: 45,
     rischioBase: 35,
     luogo: "COMANDO",
-    costoRisorse: { carburante: 2 },
+    costoRisorse: { carburante: 1 }, // v3.7: piccole correzioni, da ripetere (la traiettoria «scade»)
     costoFatica: 8,
     tag: ["MANOVRA"],
     ricaricaOre: 12,
@@ -109,6 +119,7 @@ const LISTA_TASK: DefinizioneTask[] = [
   {
     ...BASE,
     id: "T-SCANSIONE-CRATERE",
+    minigioco: { tipo: "RADAR", titolo: "Scansione del cratere", istruzioni: "Muovi lo scanner sul cratere, segui il segnale e aggancia il punto più intenso." },
     nome: "Scansione orbitale del cratere",
     categoria: "SCIENZA",
     abilitaPrincipale: "SCIENZA",
@@ -119,12 +130,14 @@ const LISTA_TASK: DefinizioneTask[] = [
     equipaggiamentoRichiesto: ["SENSORE_PROFONDO"],
     costoRisorse: { energia: 4 },
     costoFatica: 12,
+    sblocco: [IN_ORBITA],
     tag: ["SCANSIONE", "CRATERE"],
     ricaricaOre: 24,
   },
   {
     ...BASE,
     id: "T-ISPEZIONE-ESTERNA",
+    minigioco: { tipo: "RADAR", titolo: "Trova la crepa", istruzioni: "Passa il rilevatore sullo scafo: dove il segnale sale c'è la microfrattura." },
     nome: "Ispezione esterna dello scafo",
     categoria: "EVA",
     abilitaPrincipale: "EVA",
@@ -142,6 +155,7 @@ const LISTA_TASK: DefinizioneTask[] = [
   {
     ...BASE,
     id: "T-INVENTARIO",
+    minigioco: { tipo: "RICERCA", titolo: "Conta le casse", istruzioni: "Trova nella stiva le casse con i codici richiesti prima che scada il tempo." },
     nome: "Inventario della stiva",
     categoria: "GENERALE",
     abilitaPrincipale: "INGEGNERIA",
@@ -157,6 +171,7 @@ const LISTA_TASK: DefinizioneTask[] = [
   {
     ...BASE,
     id: "T-VISITA-MEDICA",
+    minigioco: { tipo: "CONFRONTO", titolo: "Tracciati vitali", istruzioni: "Riconosci il tracciato identico a quello di riferimento: gli altri nascondono un'anomalia." },
     nome: "Controllo medico della crew",
     categoria: "MEDICINA",
     abilitaPrincipale: "MEDICINA",
@@ -172,6 +187,7 @@ const LISTA_TASK: DefinizioneTask[] = [
   {
     ...BASE,
     id: "T-PAUSA",
+    minigioco: { tipo: "TEMPISMO", titolo: "Respira a tempo", istruzioni: "Premi quando l'indicatore entra nella fascia del respiro: tre respiri lenti." },
     nome: "Pausa in habitat",
     categoria: "GENERALE",
     abilitaPrincipale: "MEDICINA",
@@ -186,6 +202,7 @@ const LISTA_TASK: DefinizioneTask[] = [
   {
     ...BASE,
     id: "T-PANNELLI",
+    minigioco: { tipo: "SINTONIA", titolo: "Angolo dei pannelli", istruzioni: "Ruota i pannelli finché la curva di potenza coincide con quella del picco." },
     nome: "Orientamento dei pannelli solari",
     categoria: "INGEGNERIA",
     abilitaPrincipale: "INGEGNERIA",
@@ -201,6 +218,7 @@ const LISTA_TASK: DefinizioneTask[] = [
   {
     ...BASE,
     id: "T-RICICLO-ACQUA",
+    minigioco: { tipo: "PRESSIONE", titolo: "Ciclo di filtraggio", istruzioni: "Regola la valvola: troppa pressione rompe le membrane, troppo poca non filtra." },
     nome: "Ciclo di recupero dell'acqua",
     categoria: "INGEGNERIA",
     abilitaPrincipale: "INGEGNERIA",
@@ -221,6 +239,7 @@ const LISTA_TASK: DefinizioneTask[] = [
   {
     ...BASE,
     id: "T-RICOGNIZIONE-DRONE",
+    minigioco: { tipo: "MANOVRA", titolo: "Pilotaggio del drone", istruzioni: "Guida il drone nel canyon: resta nel corridoio mentre il vento lo spinge." },
     nome: "Ricognizione con drone",
     categoria: "PILOTAGGIO",
     abilitaPrincipale: "PILOTAGGIO",
@@ -234,11 +253,12 @@ const LISTA_TASK: DefinizioneTask[] = [
     tag: ["DRONE", "CRATERE"],
     ricaricaOre: 24,
     // Prima si guarda il cratere dall'orbita, poi si manda il drone.
-    sblocco: [dopo("T-SCANSIONE-CRATERE")],
+    sblocco: [IN_ORBITA, dopo("T-SCANSIONE-CRATERE")],
   },
   {
     ...BASE,
     id: "T-ANALISI-SEGNALE",
+    minigioco: { tipo: "SINTONIA", titolo: "Sintonizza il segnale", istruzioni: "Sposta la frequenza finché la tua onda si sovrappone a quella ricevuta." },
     nome: "Analisi del segnale",
     categoria: "SCIENZA",
     abilitaPrincipale: "SCIENZA",
@@ -256,6 +276,7 @@ const LISTA_TASK: DefinizioneTask[] = [
   {
     ...BASE,
     id: "T-ELETTROLISI",
+    minigioco: { tipo: "PRESSIONE", titolo: "Cella elettrolitica", istruzioni: "Mantieni la pressione dell'idrogeno nella fascia sicura." },
     nome: "Elettrolisi d'emergenza",
     categoria: "SCIENZA",
     abilitaPrincipale: "SCIENZA",
@@ -274,6 +295,7 @@ const LISTA_TASK: DefinizioneTask[] = [
   {
     ...BASE,
     id: "T-COLTURA",
+    minigioco: { tipo: "CONFRONTO", titolo: "Campioni sani", istruzioni: "Trova la coltura con lo stesso spettro di quella sana." },
     nome: "Coltura idroponica",
     categoria: "SCIENZA",
     abilitaPrincipale: "SCIENZA",
@@ -291,6 +313,7 @@ const LISTA_TASK: DefinizioneTask[] = [
   {
     ...BASE,
     id: "T-RAZIONAMENTO",
+    minigioco: { tipo: "RICERCA", titolo: "Lotti in scadenza", istruzioni: "Trova i lotti da consumare per primi prima che scada il tempo." },
     nome: "Piano di razionamento",
     categoria: "MEDICINA",
     abilitaPrincipale: "MEDICINA",
@@ -306,7 +329,8 @@ const LISTA_TASK: DefinizioneTask[] = [
   {
     ...BASE,
     id: "T-RICALIBRAZIONE",
-    nome: "Ricalibrazione dei sensori",
+    minigioco: { tipo: "SINTONIA", titolo: "Taratura dei sensori", istruzioni: "Allinea la risposta del sensore alla curva campione." },
+    nome: "Calibrazione dei sensori",
     categoria: "SCIENZA",
     abilitaPrincipale: "SCIENZA",
     abilitaSecondaria: "INGEGNERIA",
@@ -316,13 +340,14 @@ const LISTA_TASK: DefinizioneTask[] = [
     costoRisorse: { energia: 2 },
     costoFatica: 8,
     tag: ["CALIBRAZIONE"],
-    ricaricaOre: 48,
+    ricaricaOre: 12, // v3.7: la calibrazione «scade» (24 h) e va rifatta
     resa: { sistema: { id: "SCIENZA", delta: 10 } },
-    sblocco: [dopo("T-DIAGNOSTICA"), dalGiorno(2)],
+    sblocco: [], // v3.7: fa parte della scaletta della missione
   },
   {
     ...BASE,
     id: "T-CONTATTO-TERRA",
+    minigioco: { tipo: "SINTONIA", titolo: "Finestra di contatto", istruzioni: "Sintonizza l'antenna sulla portante della Terra prima che la finestra si chiuda." },
     nome: "Finestra di contatto con la Terra",
     categoria: "PILOTAGGIO",
     abilitaPrincipale: "PILOTAGGIO",
@@ -340,6 +365,7 @@ const LISTA_TASK: DefinizioneTask[] = [
   {
     ...BASE,
     id: "T-ESERCITAZIONE-EVA",
+    minigioco: { tipo: "TEMPISMO", titolo: "Agganci di sicurezza", istruzioni: "Aggancia il moschettone quando il punto d'ancoraggio passa nella zona." },
     nome: "Esercitazione in airlock",
     categoria: "EVA",
     abilitaPrincipale: "EVA",
@@ -356,6 +382,7 @@ const LISTA_TASK: DefinizioneTask[] = [
   {
     ...BASE,
     id: "T-RIPARAZIONE-SCAFO",
+    minigioco: { tipo: "TEMPISMO", titolo: "Saldatura", istruzioni: "Premi quando la torcia è sulla fessura: tre punti di saldatura." },
     nome: "Riparazione dello scafo",
     categoria: "EVA",
     abilitaPrincipale: "EVA",
@@ -375,6 +402,7 @@ const LISTA_TASK: DefinizioneTask[] = [
   {
     ...BASE,
     id: "T-MANUTENZIONE-PROPULSORI",
+    minigioco: { tipo: "SEQUENZA", titolo: "Sequenza di accensione", istruzioni: "Ripeti la sequenza di prova degli ugelli nell'ordine giusto." },
     nome: "Manutenzione dei propulsori",
     categoria: "INGEGNERIA",
     abilitaPrincipale: "INGEGNERIA",
@@ -392,6 +420,7 @@ const LISTA_TASK: DefinizioneTask[] = [
   {
     ...BASE,
     id: "T-MAPPATURA",
+    minigioco: { tipo: "RADAR", titolo: "Punto di riferimento", istruzioni: "Cerca con lo scanner il punto di riferimento della mappa e aggancialo." },
     nome: "Mappatura completa del cratere",
     categoria: "SCIENZA",
     abilitaPrincipale: "SCIENZA",
@@ -405,11 +434,12 @@ const LISTA_TASK: DefinizioneTask[] = [
     tag: ["CRATERE", "MAPPATURA"],
     ricaricaOre: null, // una mappa si fa una volta
     resa: { sistema: { id: "NAVIGAZIONE", delta: 12 } },
-    sblocco: [dopo("T-SCANSIONE-CRATERE", 2), dalGiorno(3)],
+    sblocco: [IN_ORBITA, dopo("T-SCANSIONE-CRATERE", 2), dalGiorno(3)],
   },
   {
     ...BASE,
     id: "T-RICICLO-POTENZIATO",
+    minigioco: { tipo: "PRESSIONE", titolo: "Osmosi inversa", istruzioni: "Tieni la pressione delle membrane nella fascia verde." },
     bonus: true,
     nome: "Riciclo idrico potenziato",
     categoria: "INGEGNERIA",
@@ -428,6 +458,7 @@ const LISTA_TASK: DefinizioneTask[] = [
   {
     ...BASE,
     id: "T-RACCOLTA-DETRITI",
+    minigioco: { tipo: "MANOVRA", titolo: "Raccolta dei detriti", istruzioni: "Segui la scia dei detriti restando nel corridoio di raccolta." },
     bonus: true,
     nome: "Raccolta di detriti orbitali",
     categoria: "PILOTAGGIO",
@@ -443,11 +474,12 @@ const LISTA_TASK: DefinizioneTask[] = [
     ricaricaOre: 48,
     // Dai detriti metallici si ricava propellente per i motori ionici.
     resa: { risorse: { carburante: 4 } },
-    sblocco: [dalGiorno(3)],
+    sblocco: [IN_ORBITA, dalGiorno(3)],
   },
   {
     ...BASE,
     id: "T-SONDAGGIO-PROFONDO",
+    minigioco: { tipo: "RADAR", titolo: "Sorgente profonda", istruzioni: "Muovi lo scanner profondo e aggancia l'origine dell'eco." },
     bonus: true,
     nome: "Sondaggio profondo della sorgente",
     categoria: "SCIENZA",
@@ -461,11 +493,12 @@ const LISTA_TASK: DefinizioneTask[] = [
     costoFatica: 14,
     tag: ["SEGNALE", "SONDAGGIO"],
     ricaricaOre: 48,
-    sblocco: [dopo("T-ANALISI-SEGNALE")],
+    sblocco: [IN_ORBITA, dopo("T-ANALISI-SEGNALE")],
   },
   {
     ...BASE,
     id: "T-ANALISI-CAMPIONI",
+    minigioco: { tipo: "CONFRONTO", titolo: "Spettrometria", istruzioni: "Trova il campione con lo stesso spettro di quello di riferimento." },
     bonus: true,
     nome: "Analisi dei campioni raccolti",
     categoria: "SCIENZA",
@@ -494,6 +527,7 @@ const LISTA_TASK: DefinizioneTask[] = [
   {
     ...BASE,
     id: "T-ESPLORA-METEORITE",
+    minigioco: { tipo: "RADAR", titolo: "Trova la vena", istruzioni: "Passa il rilevatore sulla roccia e aggancia la vena più ricca." },
     bonus: true,
     nome: "Esplorazione del meteorite",
     categoria: "EVA",
@@ -513,6 +547,7 @@ const LISTA_TASK: DefinizioneTask[] = [
   {
     ...BASE,
     id: "T-RECUPERO-RELITTO",
+    minigioco: { tipo: "RICERCA", titolo: "Inventario del relitto", istruzioni: "Nella stiva del relitto trova le casse ancora integre prima che finisca l'ossigeno della tuta." },
     bonus: true,
     nome: "Recupero dal relitto",
     categoria: "EVA",
@@ -531,6 +566,7 @@ const LISTA_TASK: DefinizioneTask[] = [
   {
     ...BASE,
     id: "T-RACCOLTA-GHIACCIO",
+    minigioco: { tipo: "MANOVRA", titolo: "Nella coda della cometa", istruzioni: "Resta nel corridoio della coda: fuori, i frammenti colpiscono lo scafo." },
     nome: "Raccolta di ghiaccio cometario",
     categoria: "PILOTAGGIO",
     abilitaPrincipale: "PILOTAGGIO",
@@ -548,6 +584,7 @@ const LISTA_TASK: DefinizioneTask[] = [
   {
     ...BASE,
     id: "T-RIPARA-SERBATOIO",
+    minigioco: { tipo: "TEMPISMO", titolo: "Saldatura del serbatoio", istruzioni: "Premi quando la torcia è sulla perdita: tre punti di saldatura." },
     nome: "Riparazione del serbatoio idrico",
     categoria: "INGEGNERIA",
     abilitaPrincipale: "INGEGNERIA",
@@ -563,6 +600,7 @@ const LISTA_TASK: DefinizioneTask[] = [
   {
     ...BASE,
     id: "T-BONIFICA-DISPENSA",
+    minigioco: { tipo: "CONFRONTO", titolo: "Lotti contaminati", istruzioni: "Trova il lotto con lo stesso profilo di quello sano." },
     nome: "Bonifica della dispensa",
     categoria: "MEDICINA",
     abilitaPrincipale: "MEDICINA",
@@ -579,6 +617,7 @@ const LISTA_TASK: DefinizioneTask[] = [
   {
     ...BASE,
     id: "T-SOCCORSO",
+    minigioco: { tipo: "PRESSIONE", titolo: "Equalizza l'airlock", istruzioni: "Tieni la pressione tra le due navi nella fascia verde durante il passaggio." },
     nome: "Assistenza alla nave in avaria",
     categoria: "INGEGNERIA",
     abilitaPrincipale: "INGEGNERIA",
@@ -595,6 +634,7 @@ const LISTA_TASK: DefinizioneTask[] = [
   {
     ...BASE,
     id: "T-BLINDATURA",
+    minigioco: { tipo: "TEMPISMO", titolo: "Rivetti", istruzioni: "Premi quando il rivettatore è sul foro: tre rivetti." },
     nome: "Blindatura dei boccaporti",
     categoria: "INGEGNERIA",
     abilitaPrincipale: "INGEGNERIA",
@@ -610,12 +650,85 @@ const LISTA_TASK: DefinizioneTask[] = [
   },
 
   // ==========================================================================
+  // LA SCALETTA DELLA MISSIONE (v3.7): in orbita, per acquisire l'area
+  // d'interesse servono calibrazione (valida 24 h), traiettoria (12 h) e
+  // antenna riparata; poi la scansione, solo nella finestra 10:00–16:00.
+  // ==========================================================================
+  {
+    ...BASE,
+    id: "T-RIPARA-ANTENNA",
+    minigioco: { tipo: "TEMPISMO", titolo: "Saldatura dell'antenna", istruzioni: "Premi quando la torcia è sul giunto rotto: tre punti di saldatura sull'antenna del sensore." },
+    nome: "Riparazione dell'antenna del sensore",
+    categoria: "EVA",
+    abilitaPrincipale: "EVA",
+    abilitaSecondaria: "INGEGNERIA",
+    durataBase: 150,
+    rischioBase: 40,
+    luogo: "ESTERNO_NAVE",
+    equipaggiamentoRichiesto: ["TUTA_EVA_MK2", "KIT_RIPARAZIONE"],
+    costoRisorse: { energia: 3 },
+    costoFatica: 22,
+    tag: ["EVA", "RIPARAZIONE", "ANTENNA"],
+    ricaricaOre: null, // riparata una volta, resta riparata
+    resa: { sistema: { id: "SCIENZA", delta: 15 } },
+    sblocco: [IN_ORBITA],
+  },
+  {
+    ...BASE,
+    id: "T-SCANSIONE-OBIETTIVO",
+    minigioco: { tipo: "RADAR", titolo: "L'area d'interesse", istruzioni: "Muovi lo scanner profondo sul cratere e aggancia il punto da cui partono le anomalie." },
+    nome: "Scansione dell'area d'interesse",
+    categoria: "SCIENZA",
+    abilitaPrincipale: "SCIENZA",
+    abilitaSecondaria: "PILOTAGGIO",
+    durataBase: 180,
+    rischioBase: 35,
+    luogo: "LABORATORIO",
+    equipaggiamentoRichiesto: ["SENSORE_PROFONDO"],
+    costoRisorse: { energia: 6 },
+    costoFatica: 15,
+    tag: ["SCANSIONE", "CRATERE", "OBIETTIVO"],
+    ricaricaOre: null, // riuscita una volta, l'obiettivo è raggiunto
+    finestra: { da: 10, a: 16 },
+    sblocco: [
+      IN_ORBITA,
+      valido("T-RICALIBRAZIONE", 24),
+      valido("T-CORREZIONE-ORBITA", 12),
+      dopo("T-RIPARA-ANTENNA"),
+    ],
+  },
+
+  // ==========================================================================
+  // DI CONTORNO (v3.7)
+  // ==========================================================================
+  {
+    ...BASE,
+    id: "T-RECUPERO-SR9",
+    minigioco: { tipo: "MANOVRA", titolo: "Aggancio della sonda", istruzioni: "Guida il drone verso la sonda alla deriva: resta nel corridoio di avvicinamento." },
+    nome: "Recupero della sonda SR-9",
+    categoria: "PILOTAGGIO",
+    abilitaPrincipale: "PILOTAGGIO",
+    abilitaSecondaria: "INGEGNERIA",
+    durataBase: 150,
+    rischioBase: 35,
+    luogo: "COMANDO",
+    equipaggiamentoRichiesto: ["DRONE_RICOGNIZIONE"],
+    costoRisorse: { energia: 4, carburante: 1 },
+    costoFatica: 12,
+    tag: ["DRONE", "SR9"],
+    ricaricaOre: null,
+    bonus: true,
+    sblocco: [IN_ORBITA, dopo("T-SCANSIONE-CRATERE")],
+  },
+
+  // ==========================================================================
   // LEGATI A V.A.L.E.
   // ==========================================================================
   {
     // Compare solo quando il Capitano ha contestato un'affermazione di V.A.L.E.
     ...BASE,
     id: "T-VERIFICA-DATI",
+    minigioco: { tipo: "CONFRONTO", titolo: "Dati grezzi", istruzioni: "Trova tra i dati grezzi quelli identici al rapporto di V.A.L.E.: gli altri sono stati modificati." },
     nome: "Verifica dei dati grezzi",
     categoria: "SCIENZA",
     abilitaPrincipale: "SCIENZA",
@@ -633,6 +746,7 @@ const LISTA_TASK: DefinizioneTask[] = [
     // Riapre tutto, ma lei registra l'intervento: tensione +2.
     ...BASE,
     id: "T-SBLOCCO-MANUALE",
+    minigioco: { tipo: "SEQUENZA", titolo: "Codice di bypass", istruzioni: "Memorizza e ripeti la sequenza di bypass delle porte." },
     nome: "Sblocco manuale delle porte",
     categoria: "INGEGNERIA",
     abilitaPrincipale: "INGEGNERIA",

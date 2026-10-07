@@ -82,6 +82,10 @@ describe("catalogo dei task", () => {
     }
   });
 
+  it("ogni task ha un minigioco (v3.6)", () => {
+    for (const t of TASK_DISPONIBILI) expect(t.minigioco, t.id).toBeDefined();
+  });
+
   it("le scoperte richieste esistono nel catalogo delle scoperte", () => {
     for (const t of TASK_DISPONIBILI) {
       for (const s of t.scoperteRichieste) expect(CATALOGO_SCOPERTE).toHaveProperty(s);

@@ -10,8 +10,9 @@
  *   DERIVA           si vuole rientrare ma il carburante è sotto la riserva
  *   CONTROLLO_VALE   V.A.L.E. prende la nave (evento "Rimani in stazione")
  *   MORTE            non c'è più nessuno vivo a bordo
- * Più la scadenza: dopo il giorno 10 la finestra di rientro si chiude e la
- * nave riparte da sola (o resta alla deriva, se non c'è carburante).
+ * Dalla v3.7 il RIENTRO è una fase giocata (storia/viaggio.ts): l'ordine
+ * di rientro fa PARTIRE la nave, e la missione finisce all'ARRIVO, tre
+ * giorni dopo. La finestra di rientro si apre da sola al giorno 8.
  *
  * QUALE FINALE
  * Una causa ammette più finali: RIENTRO può essere "con la verità", "con
@@ -31,6 +32,7 @@ import type { CausaFine, DefinizioneFinale, StatoMissione } from "../types";
 import { livelloAutonomia } from "../vale/comportamento";
 import { elenco, giornoDi, scriviDiario } from "./diario";
 import { fazioneDi, membriAttivi } from "./fazioni";
+import { avviaRientro, faseViaggio, giornoArrivo, giornoFinestraRientro, valeComanda } from "./viaggio";
 
 /** Il finale per questa causa, nello stato attuale. */
 export function scegliFinale(stato: StatoMissione, contesto: ContestoMissione, causa: CausaFine): DefinizioneFinale | null {
@@ -43,9 +45,13 @@ export function scegliFinale(stato: StatoMissione, contesto: ContestoMissione, c
 /** Chiude la missione (sulla BOZZA). Da qui ogni azione di gioco è rifiutata. */
 export function concludiMissione(bozza: StatoMissione, contesto: ContestoMissione, richiesta: CausaFine): void {
   if (bozza.statoGioco === "CONCLUSA") return;
-  // Si vuole rientrare ma il carburante è sotto la riserva: si va alla deriva.
+  // Un rientro "immediato" (senza viaggio, es. da un evento) con il carburante
+  // sotto la riserva va alla deriva. All'ARRIVO (partenza già fatta) la
+  // riserva è già stata spesa: niente controllo.
   const causa: CausaFine =
-    richiesta === "RIENTRO" && bozza.risorse.carburante < BALANCE.preparazione.riservaRientro ? "DERIVA" : richiesta;
+    richiesta === "RIENTRO" && bozza.partenza === null && bozza.risorse.carburante < BALANCE.preparazione.riservaRientro
+      ? "DERIVA"
+      : richiesta;
   const finale = scegliFinale(bozza, contesto, causa);
   bozza.esito = { finale: finale?.id ?? "SCONOSCIUTO", causa, tempo: bozza.tempo };
   bozza.eventi.inAttesa = null;
@@ -59,6 +65,9 @@ export function verificaRientro(stato: StatoMissione): string | null {
   if (stato.statoGioco !== "PIANIFICAZIONE" && stato.statoGioco !== "RAPPORTO") {
     return "Il rientro si ordina in pianificazione o al rapporto serale";
   }
+  const fase = faseViaggio(stato);
+  if (fase === "ANDATA") return "Siamo ancora in viaggio verso E-17";
+  if (fase === "RIENTRO") return "Siamo già sulla rotta di rientro";
   return null;
 }
 
@@ -76,10 +85,8 @@ export function ordinaRientro(bozza: StatoMissione, contesto: ContestoMissione):
     bozza.vale.tensione += 1;
     return false;
   }
-  const carburanteOk = bozza.risorse.carburante >= BALANCE.preparazione.riservaRientro;
   scriviLog(bozza, "SISTEMA", "Capitano: Rotta per la Terra.");
-  scriviLog(bozza, "VALE", carburanteOk ? "Rotta calcolata. Accensione dei motori." : "Carburante insufficiente per la traiettoria di rientro.");
-  concludiMissione(bozza, contesto, "RIENTRO");
+  avviaRientro(bozza, contesto, concludiMissione);
   return true;
 }
 
@@ -94,11 +101,23 @@ export function controllaFine(bozza: StatoMissione, contesto: ContestoMissione, 
     concludiMissione(bozza, contesto, "MORTE");
     return;
   }
-  if (risveglio && giornoDi(bozza) > BALANCE.storia.durataMissione) {
-    scriviLog(bozza, "VALE", "Capitano. La finestra di rientro si chiude oggi.");
-    // Se V.A.L.E. comanda la nave, la nave non parte.
-    const valeComanda = !bozza.vale.override && livelloAutonomia(bozza, contesto) >= BALANCE.storia.autonomiaBlocco;
-    concludiMissione(bozza, contesto, valeComanda ? "CONTROLLO_VALE" : "RIENTRO");
+  if (!risveglio) return;
+  const oggi = giornoDi(bozza);
+
+  // In viaggio verso casa: all'alba del giorno d'arrivo la missione finisce.
+  const arrivo = giornoArrivo(bozza);
+  if (arrivo !== null && oggi >= arrivo) {
+    scriviLog(bozza, "VALE", "Capitano. Siamo in orbita terrestre. Bentornati.");
+    concludiMissione(bozza, contesto, "RIENTRO");
+    return;
+  }
+
+  // In orbita: al giorno 8 si apre la finestra di rientro e la nave parte da sola…
+  if (bozza.partenza === null && oggi >= giornoFinestraRientro()) {
+    scriviLog(bozza, "VALE", "Capitano. La finestra di rientro è aperta.");
+    // …a meno che V.A.L.E. non comandi la nave: allora la nave non parte.
+    if (valeComanda(bozza, contesto)) concludiMissione(bozza, contesto, "CONTROLLO_VALE");
+    else avviaRientro(bozza, contesto, concludiMissione);
   }
 }
 

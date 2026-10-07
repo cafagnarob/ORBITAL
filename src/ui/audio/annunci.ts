@@ -72,6 +72,8 @@ export function suoniMissione(prima: StatoMissione, dopo: StatoMissione, azione:
     default:
       suoni.push("CLIC");
   }
+  // Un minigioco è appena comparso (v3.6): il fischio del terminale.
+  if (dopo.minigioco !== null && prima.minigioco === null) suoni.push("TERMINALE");
   // Una decisione è appena comparsa: l'allarme ha la precedenza su tutto.
   if (dopo.statoGioco === "DECISIONE" && prima.statoGioco !== "DECISIONE") suoni.push("ALLARME");
   return suoni;
@@ -109,7 +111,10 @@ export function suonoPreparazione(prima: Preparazione, dopo: Preparazione, azion
     if (n(dopo) < n(prima)) return "RIMUOVI";
     return "ERRORE";
   }
-  return "CONFERMA"; // CARICA
+  if (azione.tipo === "AGGIUNGI_INDISPENSABILE") return "INNESTO";
+  // CARICA a nave vuota = «Svuota la nave».
+  if (azione.tipo === "CARICA") return azione.preparazione.crew.length === 0 ? "RIMUOVI" : "CONFERMA";
+  return "CONFERMA";
 }
 
 // ----------------------------------------------------------------------------

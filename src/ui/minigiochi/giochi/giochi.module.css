@@ -1,0 +1,230 @@
+/*
+ * giochi.module.css — Stili comuni degli otto minigiochi.
+ * Stesso fosforo del resto del gioco. Tutto si adatta alla larghezza: l'area
+ * di gioco è un SVG quadrato (viewBox 0–100) largo al massimo 360px, e i
+ * tasti sono grandi abbastanza per il pollice (≥ 48px).
+ */
+
+.gioco {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+  outline: none;
+}
+
+/* L'area di gioco: quadrata, centrata, mai più larga dello schermo. */
+.area {
+  width: min(100%, 360px);
+  aspect-ratio: 1;
+  display: block;
+  background: var(--c-vuoto);
+  border: 1.5px solid var(--c-fosforo-tenue);
+  touch-action: none; /* il dito muove lo scanner, non la pagina */
+  cursor: crosshair;
+}
+.areaLarga {
+  width: min(100%, 420px);
+  aspect-ratio: 2 / 1;
+  display: block;
+  background: var(--c-vuoto);
+  border: 1.5px solid var(--c-fosforo-tenue);
+}
+
+/* Linee e forme dentro gli SVG (le classi sono "globali" all'SVG del gioco). */
+.griglia {
+  fill: none;
+  stroke: var(--c-griglia);
+  stroke-width: 0.5;
+}
+.traccia {
+  fill: none;
+  stroke: var(--c-fosforo);
+  stroke-width: 1.2;
+  filter: drop-shadow(0 0 2px rgba(125, 245, 165, 0.7));
+}
+.tracciaTenue {
+  fill: none;
+  stroke: var(--c-fosforo-tenue);
+  stroke-width: 1;
+  stroke-dasharray: 2 2;
+}
+.bersaglio {
+  fill: none;
+  stroke: var(--c-vale);
+  stroke-width: 1.2;
+}
+.zona {
+  fill: rgba(125, 245, 165, 0.18);
+  stroke: var(--c-fosforo);
+  stroke-width: 0.6;
+}
+.pericolo {
+  fill: rgba(255, 106, 92, 0.15);
+}
+
+/* Barra del tempo che resta. */
+.tempo {
+  width: min(100%, 360px);
+  height: 6px;
+  background: var(--c-griglia);
+}
+.tempo span {
+  display: block;
+  height: 100%;
+  background: var(--c-fosforo);
+}
+.tempo.urgente span {
+  background: var(--c-critico);
+}
+
+/* Indicatore testuale (intensità, allineamento…). */
+.lettura {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: baseline;
+  font-family: var(--font-terminale);
+  font-size: 20px;
+  letter-spacing: 0.1em;
+  color: var(--c-fosforo-tenue);
+}
+.lettura strong {
+  font-weight: 400;
+  color: var(--c-fosforo-alto);
+}
+
+/* I tasti: grandi, per il mouse e per il pollice. */
+.tasti {
+  display: flex;
+  gap: var(--sp-2);
+  width: min(100%, 360px);
+}
+.tasto {
+  flex: 1;
+  min-height: 52px;
+  border: 2px solid var(--c-fosforo);
+  background: transparent;
+  color: var(--c-fosforo);
+  font-family: var(--font-terminale);
+  font-size: 24px;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+.tasto:hover,
+.tasto:focus-visible {
+  background: rgba(125, 245, 165, 0.12);
+  outline: none;
+}
+.tasto[aria-pressed="true"],
+.tasto:active {
+  background: var(--c-fosforo);
+  color: var(--c-vuoto);
+}
+.primario {
+  background: var(--c-fosforo);
+  color: var(--c-vuoto);
+}
+
+/* Il cursore della sintonia: un input range con il look del fosforo. */
+.cursore {
+  width: min(100%, 360px);
+  accent-color: var(--c-fosforo);
+  height: 32px;
+}
+
+/* SEQUENZA: i pulsanti colorati. */
+.pad {
+  display: grid;
+  grid-template-columns: repeat(var(--colonne, 2), 1fr);
+  gap: var(--sp-2);
+  width: min(100%, 300px);
+}
+.pad button {
+  aspect-ratio: 1.4;
+  border: 2px solid var(--c-fosforo-tenue);
+  background: var(--c-pannello);
+  color: var(--c-fosforo-tenue);
+  font-family: var(--font-terminale);
+  font-size: 22px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.pad button.acceso {
+  background: var(--c-fosforo);
+  border-color: var(--c-fosforo-alto);
+  color: var(--c-vuoto);
+  box-shadow: 0 0 18px rgba(125, 245, 165, 0.7);
+}
+.pad button:disabled {
+  cursor: default;
+}
+
+/* CONFRONTO e RICERCA: griglie di scelte. */
+.scelte {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--sp-2);
+  width: min(100%, 420px);
+}
+.scelte button,
+.casse button {
+  padding: var(--sp-1);
+  border: 1.5px solid var(--c-fosforo-tenue);
+  background: var(--c-vuoto);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.scelte button:hover,
+.casse button:hover {
+  border-color: var(--c-fosforo);
+}
+.scelte svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.casse {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  width: min(100%, 360px);
+}
+.casse button {
+  min-height: 48px;
+  color: var(--c-testo);
+  font-family: var(--font-terminale);
+  font-size: 18px;
+  letter-spacing: 0.06em;
+}
+.casse button.trovata {
+  background: var(--c-fosforo);
+  color: var(--c-vuoto);
+  border-color: var(--c-fosforo);
+}
+.casse button.sbagliata {
+  border-color: var(--c-critico);
+  color: var(--c-critico);
+}
+.richiesti {
+  display: flex;
+  gap: var(--sp-2);
+  font-family: var(--font-terminale);
+  font-size: 22px;
+  letter-spacing: 0.08em;
+  color: var(--c-vale);
+}
+.richiesti .fatto {
+  color: var(--c-fosforo-tenue);
+  text-decoration: line-through;
+}
+
+.aiuto {
+  margin: 0;
+  font-size: var(--fs-piccolo);
+  color: var(--c-fosforo-tenue);
+  text-align: center;
+}

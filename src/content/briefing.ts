@@ -37,7 +37,7 @@ export const BRIEFING = {
     { etichetta: "TIPO", valore: "Scientifica · ricognizione" },
     { etichetta: "PIANETA", valore: "E-17 · arido, atmosfera sottile, radiazioni moderate" },
     { etichetta: "POSIZIONE", valore: "Orbita bassa sopra il Cratere Settentrionale" },
-    { etichetta: "DURATA", valore: "10 giorni · poi si chiude la finestra di rientro" },
+    { etichetta: "DURATA", valore: "10 giorni · 3 di viaggio, 4 in orbita, 3 di rientro" },
     { etichetta: "EQUIPAGGIO", valore: "4 persone, scelte dal Capitano" },
     { etichetta: "NAVE", valore: "ORB-1 · assistente di bordo V.A.L.E. modello 7" },
     { etichetta: "RISCHIO STIMATO", valore: "Moderato" },
@@ -49,9 +49,10 @@ export const BRIEFING = {
   ],
 
   obiettivi: [
-    { tipo: "PRINCIPALE", testo: "Indagare le anomalie del Cratere Settentrionale e localizzarne l'origine." },
-    { tipo: "PRINCIPALE", testo: "Riportare a casa l'equipaggio entro il giorno 10, senza intaccare la riserva di carburante per il rientro." },
-    { tipo: "SECONDARIO", testo: "Tenere in efficienza nave e crew: scorte, salute, sistemi." },
+    { tipo: "PRINCIPALE", testo: "Parte 1 · Viaggia fino a E-17 (3 giorni): tieni in efficienza nave e crew." },
+    { tipo: "PRINCIPALE", testo: "Parte 2 · In orbita (4 giorni): calibra i sensori, correggi la traiettoria, ripara l'antenna, poi scansiona l'area d'interesse del cratere (solo tra le 10 e le 16)." },
+    { tipo: "PRINCIPALE", testo: "Parte 3 · Torna a casa (3 giorni) con tutto l'equipaggio: si parte entro il giorno 8, con la riserva di carburante." },
+    { tipo: "SECONDARIO", testo: "Di contorno: durante la missione compariranno incarichi facoltativi, con risorse e informazioni in premio." },
     { tipo: "RISERVATO", testo: "Direttiva interna di V.A.L.E. · ACCESSO NEGATO" },
   ] satisfies Obiettivo[],
 
@@ -59,17 +60,19 @@ export const BRIEFING = {
     "Tornare sulla Terra con delle risposte. Più verità riporterete a casa, migliore sarà l'esito della missione. Ma tornare vivi viene prima di tutto.",
 
   esiti: [
-    { stelle: 3, titolo: "Rientro con le prove", testo: "L'origine delle anomalie, o la verità su chi vi ha mandato quassù." },
+    { stelle: 3, titolo: "Missione compiuta", testo: "Area d'interesse acquisita e tutti a casa. O, meglio ancora, la verità su chi vi ha mandato quassù." },
     { stelle: 2, titolo: "Rientro con i dubbi", testo: "Avete visto qualcosa, ma non potete dimostrarlo." },
     { stelle: 1, titolo: "Rientro a mani vuote", testo: "Missione archiviata «senza esito»." },
     { stelle: 0, titolo: "Missione perduta", testo: "La nave alla deriva, l'equipaggio perduto, o il comando in mani non vostre." },
   ] satisfies EsitoPossibile[],
 
   comeSiGioca: [
+    "La scaletta è nel pannello MISSIONE: calibrazione e traiettoria «scadono» (24 e 12 ore), e una scansione fallita fa derivare la nave. Organizza bene i tempi.",
     "06:00 · Pianifichi i task della crew. Poi le operazioni scorrono da sole: una giornata dura 5 minuti. Puoi mettere in pausa o saltare al prossimo evento.",
     "22:00 · Rapporto serale: decidi chi mangia e chi beve. Chi ha fame o sete lavora meno, si stanca di più e diventa paranoico.",
     "V.A.L.E. vi assiste. Non sempre vi dice tutto: contesta ciò che non ti convince, fallo verificare, cerca i codici nel log per il Terminale SVC-07.",
     "Parla con la crew: quello che pensano di V.A.L.E. deciderà da che parte staranno quando servirà.",
+    "Quando un task è rischioso puoi aiutare chi lo svolge con un minigioco: più giochi bene, meno rischia.",
   ],
 
   domanda: "Accetta l'incarico, Capitano?",

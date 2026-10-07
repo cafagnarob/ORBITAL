@@ -18,6 +18,7 @@
 import { scomponiTempo } from "../clock";
 import type { ContestoMissione } from "../mission/contesto";
 import { contaFazione, membriAttivi } from "../storia/fazioni";
+import { faseViaggio } from "../storia/viaggio";
 import { livelloAutonomia } from "../vale/comportamento";
 import { ESITI_TASK, type Condizione, type EsitoTask, type IdIstanzaTask, type StatoMissione } from "../types";
 
@@ -131,7 +132,42 @@ export function verificaCondizione(
           (c.scelta === undefined || r.scelta === c.scelta) &&
           stato.tempo - r.tempo < c.ore * 60,
       );
+
+    // --- Super-missione (v3.7) ---------------------------------------------
+    case "TASK_VALIDO":
+      return taskValido(stato, c.task, c.ore, c.invalidatoDa);
+    case "FASE":
+      return c.fasi.includes(faseViaggio(stato));
+    case "CREW_INTEGRA":
+      return Object.values(stato.crew).every((m) => m.stato !== "MORTO" && m.stato !== "DISPERSO");
   }
+}
+
+/**
+ * Un task completato da meno di `ore` ore e non annullato da un fallimento
+ * SUCCESSIVO di `invalidatoDa` (es. la scansione fallita fa derivare la nave:
+ * la correzione di traiettoria fatta prima non vale più).
+ */
+export function taskValido(stato: StatoMissione, idTask: string, ore: number, invalidatoDa?: string): boolean {
+  const tasks = Object.values(stato.tasks);
+  const ultimoFallimento = invalidatoDa
+    ? Math.max(-1, ...tasks.filter((t) => t.idDefinizione === invalidatoDa && t.stato === "FALLITO").map((t) => t.fine ?? -1))
+    : -1;
+  return tasks.some(
+    (t) =>
+      t.idDefinizione === idTask &&
+      t.stato === "COMPLETATO" &&
+      t.fine !== null &&
+      stato.tempo - t.fine < ore * 60 &&
+      t.fine > ultimoFallimento,
+  );
+}
+
+/** Fino a quando un task completato resta valido (null se non lo è). Per la UI. */
+export function validoFinoA(stato: StatoMissione, idTask: string, ore: number, invalidatoDa?: string): number | null {
+  if (!taskValido(stato, idTask, ore, invalidatoDa)) return null;
+  const ultimo = Math.max(...Object.values(stato.tasks).filter((t) => t.idDefinizione === idTask && t.stato === "COMPLETATO").map((t) => t.fine ?? 0));
+  return ultimo + ore * 60;
 }
 
 /** Quante volte un task è stato COMPLETATO (i fallimenti non contano). */

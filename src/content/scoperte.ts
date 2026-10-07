@@ -67,6 +67,15 @@ export const CATALOGO_SCOPERTE: Readonly<Record<IdScoperta, DefinizioneScoperta>
     titolo: "Obiettivo di discesa",
     descrizione: "Il Capitano ha indicato il cratere come zona d'interesse per l'atterraggio.",
   },
+  // --- La super-missione (v3.7) ------------------------------------------------
+  AREA_ACQUISITA: {
+    titolo: "Area d'interesse acquisita",
+    descrizione: "La scansione profonda ha registrato il punto del cratere da cui partono le anomalie.",
+  },
+  REGISTRO_SR9: {
+    titolo: "Il registro della SR-9",
+    descrizione: "L'ultimo pacchetto della sonda: una richiesta di contatto da un'origine sconosciuta, poi il silenzio.",
+  },
   // --- Storia emergente (v3.0) ------------------------------------------------
   BLOCCO_VALE: {
     titolo: "Porte chiuse",

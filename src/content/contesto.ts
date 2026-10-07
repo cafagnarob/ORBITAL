@@ -18,6 +18,7 @@ import { CATALOGO_EVENTI } from "./eventi";
 import { CATALOGO_EQUIPAGGIAMENTO, CATALOGO_MODULI, CATALOGO_SCORTE } from "./loadout";
 import { CATALOGO_TASK } from "./tasks";
 import { TESTI_VALE } from "./vale";
+import { TASK_OBBLIGATORI } from "./missione";
 import { CONTENUTI_STORIA } from "./storia";
 
 export const CONTESTO_GIOCO: ContestoMissione = {
@@ -38,4 +39,5 @@ export const CATALOGHI_PREPARAZIONE: CataloghiPreparazione = {
   scorte: CATALOGO_SCORTE,
   task: CATALOGO_TASK,
   direttive: CATALOGO_DIRETTIVE,
+  taskObbligatori: TASK_OBBLIGATORI,
 };

@@ -15,7 +15,7 @@ export const TESTI_COLLOQUI: TestiColloqui = {
   DIFENDI_VALE: {
     CONVINTO: [
       "Va bene, Capitano. Se lei si fida, ci provo anch'io.",
-      "Ha ragione: senza V.A.L.E. non saremmo nemmeno arrivati in orbita.",
+      "Ha ragione: senza V.A.L.E. non saremmo nemmeno partiti.",
       "D'accordo. Le darò un'altra possibilità.",
       "Forse sono solo stanco di sospettare di tutto.",
     ],

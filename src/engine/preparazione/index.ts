@@ -11,3 +11,4 @@
 export { applicaPreparazione } from "./reducer";
 export { carico, riepilogoPreparazione, risorseIniziali, spazioOccupato, tagABordo, type Riepilogo } from "./riepilogo";
 export { fattibilita, problemiPreparazione, taskNonDisponibili } from "./verifica";
+export { attrezzaturaIndispensabile, indispensabileMancante, type Indispensabile } from "./indispensabile";

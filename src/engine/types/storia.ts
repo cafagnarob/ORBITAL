@@ -156,6 +156,31 @@ export interface ContenutiStoria {
   epiloghiCrew: Readonly<Record<Fazione | "MORTO", readonly string[]>>;
   /** Le risposte della crew ai discorsi del Capitano (v3.4). */
   colloqui: TestiColloqui;
+  /** Gli obiettivi della missione, principali e secondari (v3.7). */
+  obiettivi: readonly DefinizioneObiettivo[];
+}
+
+// ----------------------------------------------------------------------------
+// LA SUPER-MISSIONE (v3.7): fasi del viaggio e obiettivi
+// ----------------------------------------------------------------------------
+
+/** ANDATA verso E-17 · ORBITA attorno al pianeta · RIENTRO verso la Terra. */
+export const FASI_VIAGGIO = ["ANDATA", "ORBITA", "RIENTRO"] as const;
+export type FaseViaggio = (typeof FASI_VIAGGIO)[number];
+
+/** Un obiettivo della missione: principale (la scaletta) o secondario (di contorno). */
+export interface DefinizioneObiettivo {
+  id: string;
+  tipo: "PRINCIPALE" | "SECONDARIO";
+  titolo: string;
+  descrizione: string;
+  /** Quando compare nel pannello Missione ([] = da subito). */
+  visibile: Condizione[];
+  /** Quando è raggiunto (tutte vere). */
+  completato: Condizione[];
+  /** Cosa si guadagna (una volta sola), e come lo si racconta. */
+  ricompensa: Effetto[];
+  testoRicompensa: string;
 }
 
 // ----------------------------------------------------------------------------

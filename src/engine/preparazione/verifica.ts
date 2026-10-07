@@ -21,6 +21,7 @@
  */
 
 import { BALANCE } from "../../content/balance";
+import { attrezzaturaIndispensabile, indispensabileMancante } from "./indispensabile";
 import type {
   CataloghiPreparazione,
   DefinizioneTask,
@@ -77,6 +78,12 @@ export function problemiPreparazione(prep: Preparazione, cat: CataloghiPreparazi
   if (r.bilancioEnergia < 0) avvisa(`Energia in calo di ${-r.bilancioEnergia} al giorno.`);
   if (prep.crew.length > 0 && !prep.crew.some((id) => cat.candidati[id]?.ruolo === "MEDICO")) {
     avvisa("Nessun medico a bordo.");
+  }
+  // La scaletta della missione (v3.7): senza questa attrezzatura è impossibile.
+  const mancanti = indispensabileMancante(prep, attrezzaturaIndispensabile(cat.taskObbligatori ?? [], cat));
+  if (mancanti.length > 0) {
+    const nomi = mancanti.map((id) => cat.moduli[id]?.nome ?? cat.equipaggiamento[id]?.nome ?? id);
+    avvisa(`Obiettivo principale impossibile senza: ${nomi.join(", ")}.`);
   }
   const bloccati = taskNonDisponibili(prep, cat);
   if (bloccati.length > 0) {

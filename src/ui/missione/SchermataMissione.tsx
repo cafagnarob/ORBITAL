@@ -47,12 +47,14 @@ import { useMissione } from "../useMissione";
 import { BarraComandi } from "./BarraComandi";
 import { CanaleVale } from "./CanaleVale";
 import { FinestraEvento } from "./FinestraEvento";
+import { FinestraMinigioco } from "../minigiochi/FinestraMinigioco";
 import { GiornaleDiBordo } from "./GiornaleDiBordo";
 import { SchermataEpilogo } from "./SchermataEpilogo";
 import { Intestazione } from "./Intestazione";
 import { PannelloCrew } from "./PannelloCrew";
 import { PannelloNave } from "./PannelloNave";
 import { PannelloPianeta } from "./PannelloPianeta";
+import { PannelloMissione } from "./PannelloMissione";
 import { PannelloPianifica } from "./PannelloPianifica";
 import { PannelloRisorse } from "./PannelloRisorse";
 import { PannelloScoperte } from "./PannelloScoperte";
@@ -160,7 +162,14 @@ export function SchermataMissione({ seed, preparazione, onNuovaPartita }: Props)
             </div>
           </div>
 
-          <div className={stili.colonna}>
+          {/* Terza colonna: con il pannello MISSIONE (v3.7) è più alta dello
+              schermo, quindi su desktop scorre al suo interno (classe .scorre)
+              invece di finire sotto la barra dei comandi. */}
+          <div className={`${stili.colonna} ${stili.scorre}`}>
+            {/* La super-missione (v3.7): fasi, scaletta, obiettivi. */}
+            <div className={blocco("task")}>
+              <PannelloMissione stato={stato} />
+            </div>
             <div className={blocco("task")}>
               <PannelloPianifica stato={stato} dispatch={dispatch} />
             </div>
@@ -174,6 +183,9 @@ export function SchermataMissione({ seed, preparazione, onNuovaPartita }: Props)
         </main>
 
         <BarraComandi stato={stato} dispatch={dispatch} onChiudiRapporto={buonanotte} tempo={tempo} />
+
+        {/* Un minigioco proposto all'avvio di un task (v3.6): il tempo è fermo. */}
+        <FinestraMinigioco stato={stato} dispatch={dispatch} />
 
         {/* Compare solo quando c'è una decisione in attesa (stato DECISIONE). */}
         <FinestraEvento stato={stato} dispatch={dispatch} />

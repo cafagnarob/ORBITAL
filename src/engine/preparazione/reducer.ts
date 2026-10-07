@@ -54,6 +54,22 @@ export function applicaPreparazione(
       // Una copia: chi ha passato l'oggetto non deve poterlo cambiare dopo.
       return structuredClone(azione.preparazione);
 
+    case "AGGIUNGI_INDISPENSABILE": {
+      // Si aggiunge solo ciò che manca, in ordine, finché ci sono slot.
+      const aggiungi = (lista: readonly string[], nuovi: readonly string[], limite: number, esiste: (id: string) => boolean) => {
+        const risultato = [...lista];
+        for (const id of nuovi) {
+          if (!risultato.includes(id) && esiste(id) && risultato.length < limite) risultato.push(id);
+        }
+        return risultato;
+      };
+      return {
+        ...prep,
+        moduli: aggiungi(prep.moduli, azione.moduli, p.slotModuli, (id) => Boolean(cat.moduli[id])),
+        equipaggiamento: aggiungi(prep.equipaggiamento, azione.equipaggiamento, p.slotEquipaggiamento, (id) => Boolean(cat.equipaggiamento[id])),
+      };
+    }
+
     case "IMPOSTA_SCORTA": {
       const def = cat.scorte[azione.id];
       if (!def) return prep;

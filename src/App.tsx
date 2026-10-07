@@ -28,6 +28,7 @@ import { useState } from "react";
 import type { Preparazione } from "./engine/types";
 import { impostaAtmosfera } from "./ui/audio";
 import { SchermataBriefing } from "./ui/briefing/SchermataBriefing";
+import { ProvaMinigiochi } from "./ui/minigiochi/ProvaMinigiochi";
 import { SchermataIngresso } from "./ui/ingresso/SchermataIngresso";
 import { SchermataMissione } from "./ui/missione/SchermataMissione";
 import { SchermataPreparazione } from "./ui/preparazione/SchermataPreparazione";
@@ -35,7 +36,16 @@ import { seedCasuale, seedIniziale } from "./ui/seed";
 
 type Fase = "INGRESSO" | "BRIEFING" | "PREPARAZIONE" | "MISSIONE";
 
+/** ?prova=minigiochi apre il banco di prova dei minigiochi (per chi sviluppa). */
+const PROVA_MINIGIOCHI = new URLSearchParams(window.location.search).get("prova") === "minigiochi";
+
 export default function App() {
+  if (PROVA_MINIGIOCHI) return <ProvaMinigiochi />;
+  return <Gioco />;
+}
+
+/** Il gioco vero: le fasi Ingresso → Briefing → Preparazione → Missione. */
+function Gioco() {
   const [fase, setFase] = useState<Fase>("INGRESSO");
   const [seed, setSeed] = useState(seedIniziale);
   const [preparazione, setPreparazione] = useState<Preparazione | null>(null);

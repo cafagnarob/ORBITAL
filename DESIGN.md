@@ -11,7 +11,7 @@
   - Lingua: tutto ciò che vede il giocatore è in italiano. Gli identificatori nel codice possono essere in inglese.
 -->
 
-# ORBITAL — DESIGN v3.5
+# ORBITAL — DESIGN v3.7
 
 > **Prepara con cura. Non fidarti mai del tutto.**
 > Domanda centrale: **di cosa mi posso fidare?**
@@ -411,7 +411,27 @@ I task non sono tutti disponibili subito e **un lavoro fatto non si rifà subito
 - **Resa** (`resa`): ciò che un task riuscito produce (risorse, integrità di un sistema o dello scafo, cure), × 1,5 perfetto · × 1 successo · × 0,5 parziale · × 0 fallimento.
 - **Bonus**: i task offerti da un modulo o da un evento non generano l'avviso «task impossibili» nella Preparazione.
 - Catalogo: **34 task** (10 dal primo giorno, 15 a catena, per giorno o da un modulo, 7 aperti da eventi, 2 legati a V.A.L.E.). Elenco completo nel foglio «ORBITAL · Eventi e task».
-- La pianificazione mostra **Disponibili** e **Non ora** (con il motivo: «assegnato a Mara», «di nuovo da G3 · 09:00»), più resa, ripetibilità e **scadenza** dei temporanei (⏳).
+- La pianificazione mostra **solo i task disponibili adesso** (v3.6; prima anche «Non ora»), con resa, ripetibilità e **scadenza** dei temporanei (⏳).
+
+### 9.2 Minigiochi  [PROVVISORIO — v3.6]
+Il Capitano può **aiutare la crew** a fare un task con un minigioco coerente con il lavoro. Ogni task ne ha uno (`minigioco` nel catalogo: meccanica + titolo + istruzioni).
+- **Quando compare**: all'avvio del task. **Sempre** se il rischio è ≥ 40%; altrimenti nel **30%** dei casi (dado deterministico: hash di seed e ID del task); mai sotto il 6%. Uno alla volta. Il **tempo si ferma** (AVANZA e AVANZA_FINO rifiutano) finché non si gioca o si rinuncia.
+- **Effetto**: punteggio 0–1 → rischio del task **−20 punti × punteggio** (azione `RISOLVI_MINIGIOCO`). Giocare male o rinunciare («Lascia fare a …») non peggiora nulla. Difficoltà 1–3 dal rischio (≥ 35 media, ≥ 55 alta).
+- **Le 8 meccaniche** (`ui/minigiochi/giochi/`):
+
+| Meccanica | Si gioca | Task |
+|---|---|---|
+| RADAR | muovi lo scanner, segui l'intensità, aggancia | scansione, mappatura, sondaggio, ispezione scafo, meteorite |
+| SINTONIA | sovrapponi la tua onda a quella bersaglio, BLOCCA | analisi segnale, contatto Terra, ricalibrazione, pannelli |
+| SEQUENZA | memorizza e ripeti i moduli accesi | diagnostica, propulsori, sblocco manuale |
+| PRESSIONE | tieni premuto per restare nella fascia verde | supporto vitale, ricicli, elettrolisi, soccorso |
+| MANOVRA | ◀ ▶ per restare nel corridoio che serpeggia | correzione d'orbita, drone, detriti, ghiaccio |
+| TEMPISMO | premi quando il cursore è nella zona (3 colpi) | saldature, blindatura, esercitazione EVA, pausa |
+| CONFRONTO | trova il tracciato identico al riferimento (3 turni) | visita medica, coltura, campioni, bonifica, verifica dati |
+| RICERCA | trova le casse con i codici richiesti | inventario, razionamento, relitto |
+
+- Tecnica: i giochi in tempo reale usano una **simulazione** (`ui/minigiochi/simulazione.ts`): stato + funzione `passo` pura + comandi del giocatore, ciclo `requestAnimationFrame` collegato a React con `useSyncExternalStore` (niente useEffect). Mouse, tocco e tastiera.
+- **Banco di prova**: `?prova=minigiochi` apre tutti i minigiochi a ogni livello, per collaudarli.
 
 ---
 
@@ -515,8 +535,14 @@ Schermata prima della missione (`src/ui/preparazione/`, motore in `src/engine/pr
 - **Vincoli**: 4 crew · 4 slot moduli · 6 slot equipaggiamento · 1000 kg (crew compresa) · 200 unità di stiva (+100 con Espansione Stoccaggio). Gli slot bloccano la scelta; il peso no (si vede il problema e si decide cosa togliere).
 - **Fattibilità** (§14.4), derivata dai problemi: BLOCCANTE (crew incompleta, peso, stiva, niente scorte) → IMPOSSIBILE; AVVISO (meno di 8 giorni di scorte, niente carburante operativo, energia in calo, nessun medico, task impossibili) → RISCHIOSA; altrimenti POSSIBILE. V.A.L.E. dice «La missione è operativamente possibile.» sia per POSSIBILE sia per RISCHIOSA.
 - **Direttiva**: si sorteggia col seed *dopo* la Preparazione, solo tra le direttive i cui tag `richiede` sono tutti a bordo (D01 e D12 richiedono SCANSIONE, D05 richiede DRONE). Se nessuna è possibile, si sceglie tra tutte.
-- Si parte dal **loadout di riferimento** (§13.8): 934 kg, consumo 8/giorno, 540 scorte, 26 di carburante.
+- Dalla v3.7 si parte dalla **nave vuota** (§11.6). Il loadout di riferimento (§13.8) resta solo come esempio di bilanciamento.
 - **Schema della nave** (v2.8): sopra il catalogo, la ORB-1 in sezione laterale si riempie mentre scegli: 4 alloggi dei moduli (con sigla), compartimento potenziato acceso, rastrelliera dei 6 equipaggiamenti, stiva a celle da 10 unità colorate per tipo, serbatoio con la linea della riserva di rientro, crew al proprio posto.
+
+### 11.6 Nave vuota e attrezzatura indispensabile  [PROVVISORIO — v3.7]
+- La Preparazione parte da `PREPARAZIONE_VUOTA`: nessuna crew, nessun modulo, nessun oggetto, nessuna scorta. È il Capitano a riempire la nave.
+- **Carica l'indispensabile** (`AGGIUNGI_INDISPENSABILE`): aggiunge, senza togliere nulla e finché ci sono slot, solo moduli ed equipaggiamento richiesti dai **task obbligatori** dell'obiettivo principale (`TASK_OBBLIGATORI` in `content/missione.ts`). Oggi: Kit di Riparazione, Sensore Profondo, Tuta EVA Mk2. **Non** sceglie crew né scorte.
+- Il calcolo è derivato (`engine/preparazione/indispensabile.ts`): se cambiano i task obbligatori, cambia da solo anche il pulsante.
+- **Svuota la nave** riporta tutto a zero. Se manca qualcosa di indispensabile la verifica mostra l'AVVISO «Obiettivo principale impossibile senza: …».
 
 ---
 
@@ -664,6 +690,21 @@ Requisiti: OBBLIGATORIO · CONSIGLIATO · OPZIONALE.
 
 ### 14.5 Mistero della campagna
 `mistero locale → indizio globale → mistero della campagna`. E-17 può lasciare domande riprese su altri pianeti (es. K-22, S-08) tramite log e codici persistenti.
+
+### 14.6 Super-missione E-17  [PROVVISORIO — v3.7]
+Una missione = **tre fasi** derivate da giorno e `partenza` (`engine/storia/viaggio.ts`), durate in `balance.missione`:
+1. **ANDATA** (G1–3): viaggio. Sopravvivenza, manutenzione di nave e crew, eventi di viaggio (VG1–VG4). I task di orbita non sono disponibili e il rientro non si può ordinare.
+2. **ORBITA** (G4–7): si studia il cratere senza atterrare. **Scaletta** dell'obiettivo principale:
+   - Calibrazione dei sensori → valida **24 h**;
+   - Correzione di traiettoria → valida **12 h**;
+   - Riparazione dell'antenna in EVA (danneggiata all'arrivo, M-ARRIVO) → una volta sola.
+   - Poi la **Scansione dell'area d'interesse**, che **parte solo tra le 10:00 e le 16:00** (`finestra`).
+   Se un prerequisito scade, o la scansione fallisce, i prerequisiti a tempo vanno rifatti (condizione `TASK_VALIDO` con `invalidatoDa`). Al via i requisiti sono ricontrollati: se non valgono più il task è annullato.
+3. **RIENTRO** (3 giorni dalla partenza): «Lascia l'orbita» (RIENTRA, effetto `PARTENZA`, S20/S22) o in automatico all'apertura della finestra (G8). Serve la riserva di carburante, altrimenti DERIVA. Eventi di viaggio (VG1–VG3, VG5). All'arrivo la missione si conclude.
+- **Obiettivi** (`content/missione.ts`, `engine/storia/obiettivi.ts`): PRINCIPALI P1 Raggiungi E-17 · P2 Acquisisci l'area d'interesse · P3 Riporta a casa tutta la crew. DI CONTORNO (obiettivi secondari durante la missione, con ricompensa una sola volta): recupero SR-9 (energia, comunicazioni), mappatura (codice VL-D7-X), cometa (scienza), Calliope (fiducia), contatti con la Terra (cibo e acqua).
+- **Finale MISSIONE_COMPIUTA** (★★★): rientro + area acquisita + crew integra.
+- UI: pannello MISSIONE (fasi, scaletta con ✓ valido fino a… / ✗ scaduto, finestra, obiettivi di contorno), intestazione con la fase.
+- **Quante missioni**: per ora una sola (E-17). La campagna su altri pianeti (K-22, S-08…) userà lo stesso schema ed è da progettare.
 
 ---
 
@@ -830,6 +871,8 @@ Tutto generato nel codice (`src/ui/audio/`): nessun file audio.
 | v2.2 | Reducer della missione: regole provvisorie di esecuzione (niente lavoro notturno, costi all'avvio, rischio salvato all'avvio, aiutante occupato → si procede da soli), consumi al rapporto serale, recupero notturno |
 | v2.3 | Adottata l'**Integrità dei dati** (§4.6). Adottato il design system VALE-OS (§16.5), con la UI allineata al DESIGN (scorte unificate, E-17 arido). Crew di riferimento: Mara, Adrian, Nadia, Sarah. Niente testo libero verso V.A.L.E. |
 | v2.4 | Sistema di eventi data-driven (§10.1): condizioni, effetti, scelte, stato DECISIONE, un evento per momento, output dei task come eventi, scoperte che sbloccano task. Catena del Segnale di E-17 implementata |
+| v3.7 | **Super-missione E-17** (§14.6): andata 3 g · orbita 4 g · rientro 3 g; scaletta con prerequisiti che scadono e finestra della scansione; obiettivi principali e di contorno; eventi di viaggio; finale Missione compiuta. **Nave vuota** + «Carica l'indispensabile» (§11.6) |
+| v3.6 | **Minigiochi** (§9.2): 8 meccaniche, uno per ogni task; compaiono all'avvio (sempre se il rischio è alto) e riducono il rischio fino a −20. La lista dei task mostra solo quelli disponibili |
 | v3.5 | Giornata da **5 minuti**; pulsante **⏭ Salta** al prossimo momento importante (§8.1) |
 | v3.4 | **Razioni alla 60 Seconds** (§6.4): piena / mezza / niente per ognuno; fame e sete tolgono task, fatica e salute e rendono paranoici. **Colloqui del Capitano** (§7.8) e 7 eventi d'opinione (S23–S29). **Briefing di missione** (§16.5.3). Giornata da **10 minuti** |
 | v3.3 | **Tempo reale** (§8.1): 1 s = 1 min, giornata di 15 minuti, pausa, cambi turno. **Progressione dei task** (§9.1): sblocco, ricarica, resa, task temporanei; catalogo da 9 a 34 task. **Eventi dei turni** (§10.3): viaggiatori, furti, occasioni, guai di bordo |

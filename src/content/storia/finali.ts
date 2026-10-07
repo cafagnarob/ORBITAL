@@ -77,6 +77,18 @@ const LISTA_FINALI: DefinizioneFinale[] = [
       "Rientrano {VIVI}, e con loro la prova: la direttiva nascosta di V.A.L.E., estratta dal suo stesso terminale. Qualcuno, sulla Terra, sapeva cosa c'era su E-17 prima della partenza. Adesso lo sapete anche voi.",
   },
   {
+    // v3.7: la super-missione riuscita. Sotto «la verità» (che vale di più),
+    // sopra «il segnale»: l'obiettivo raggiunto e nessuno lasciato indietro.
+    id: "MISSIONE_COMPIUTA",
+    titolo: "Missione compiuta",
+    cause: ["RIENTRO"],
+    condizioni: [{ tipo: "SCOPERTA", id: "AREA_ACQUISITA" }, { tipo: "CREW_INTEGRA" }],
+    priorita: 25,
+    tono: "normale",
+    testo:
+      "Rientrano tutti: {VIVI}. Nella stiva dei dati c'è l'area d'interesse del Cratere Settentrionale, il punto esatto da cui parte il segnale. L'agenzia parla di successo. Voi ricordate le notti in orbita, e la voce di V.A.L.E. che contava i giorni.",
+  },
+  {
     id: "RIENTRO_CON_IL_SEGNALE",
     titolo: "Il segnale",
     cause: ["RIENTRO"],

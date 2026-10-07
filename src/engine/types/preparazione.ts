@@ -48,6 +48,8 @@ export interface CataloghiPreparazione {
   /** Servono per mostrare cosa sblocca ogni oggetto. */
   task: Readonly<Record<IdDefinizioneTask, DefinizioneTask>>;
   direttive: Readonly<Record<IdDirettiva, DefinizioneDirettiva>>;
+  /** I task obbligatori della missione (v3.7): la loro attrezzatura è «indispensabile». */
+  taskObbligatori?: readonly IdDefinizioneTask[];
 }
 
 /** Le azioni della schermata di Preparazione. */
@@ -57,7 +59,12 @@ export type AzionePreparazione =
   | { tipo: "SCEGLI_EQUIPAGGIAMENTO"; id: IdEquipaggiamento }
   | { tipo: "IMPOSTA_SCORTA"; id: IdScorta; quantita: number }
   /** Sostituisce tutte le scelte, es. "ripristina il loadout di riferimento". */
-  | { tipo: "CARICA"; preparazione: Preparazione };
+  | { tipo: "CARICA"; preparazione: Preparazione }
+  /**
+   * Aggiunge (senza togliere nulla) moduli ed equipaggiamento indispensabili
+   * alla missione (v3.7), finché ci sono slot liberi.
+   */
+  | { tipo: "AGGIUNGI_INDISPENSABILE"; moduli: IdModulo[]; equipaggiamento: IdEquipaggiamento[] };
 
 /** Fattibilità della missione (DESIGN §14.4). */
 export const FATTIBILITA = ["POSSIBILE", "RISCHIOSA", "IMPOSSIBILE"] as const;

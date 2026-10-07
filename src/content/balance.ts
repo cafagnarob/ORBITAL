@@ -166,8 +166,7 @@ export const BALANCE = {
     autonomiaBlocco: 4,
     /** Tensione aggiunta da uno sblocco manuale riuscito. */
     tensioneSblocco: 2,
-    /** Dopo questo giorno la finestra di rientro si chiude: la missione finisce. */
-    durataMissione: 10,
+    // (v3.7: la durata della missione ora è in `missione`, fase per fase.)
   },
 
   // --------------------------------------------------------------------------
@@ -214,6 +213,35 @@ export const BALANCE = {
     controproducente: -4,
     /** Fatica tolta da un discorso di incoraggiamento riuscito. */
     sollievo: 12,
+  },
+
+  // --------------------------------------------------------------------------
+  // LA SUPER-MISSIONE (DESIGN §14.6 — v3.7)
+  // --------------------------------------------------------------------------
+  missione: {
+    /** Giorni di viaggio verso E-17: si arriva in orbita al risveglio del giorno 4. */
+    giorniAndata: 3,
+    /** Giorni in orbita: la finestra di rientro si apre al risveglio del giorno 8. */
+    giorniOrbita: 4,
+    /** Giorni del viaggio di rientro: si arriva a casa al risveglio successivo. */
+    giorniRientro: 3,
+  },
+
+  // --------------------------------------------------------------------------
+  // MINIGIOCHI (DESIGN §9.2 — v3.6)
+  // --------------------------------------------------------------------------
+  minigiochi: {
+    /** Da questo rischio (%) il minigioco compare sempre all'avvio del task. */
+    sogliaRischio: 40,
+    /** Sotto la soglia compare con questa probabilità. */
+    probabilita: 0.3,
+    /** Sotto questo rischio non compare mai (non c'è niente da migliorare). */
+    rischioMinimo: 6,
+    /** Punti di rischio tolti da un minigioco perfetto (punteggio 1). */
+    bonusMassimo: 20,
+    /** Rischio da cui il minigioco è di livello 2 e 3. */
+    difficoltaMedia: 35,
+    difficoltaAlta: 55,
   },
 
   // --------------------------------------------------------------------------

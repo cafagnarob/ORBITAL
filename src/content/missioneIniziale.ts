@@ -40,6 +40,12 @@ import { LISTA_DIRETTIVE } from "./direttive";
 import { LISTA_IMPREVISTI } from "./storia";
 
 /** Il loadout del playthrough di riferimento: ~969 kg su 1000. */
+/**
+ * La nave VUOTA (v3.7): la Preparazione parte da qui. È il Capitano a
+ * scegliere crew, moduli, attrezzatura e scorte.
+ */
+export const PREPARAZIONE_VUOTA: Preparazione = { crew: [], moduli: [], equipaggiamento: [], scorte: {} };
+
 export const PREPARAZIONE_DI_RIFERIMENTO: Preparazione = {
   crew: ["mara", "adrian", "nadia", "sarah"],
   moduli: ["LABORATORIO_AVANZATO", "POTENZIAMENTO_SUPPORTO_VITALE", "MODULO_OPERAZIONI_ESTERNE", "ARRAY_NAVIGAZIONE"],
@@ -56,9 +62,9 @@ export const PREPARAZIONE_DI_RIFERIMENTO: Preparazione = {
   scorte: { CASSA_CIBO: 10, CASSA_ACQUA: 8, TANICA_CARBURANTE: 2, CASSA_SCORTE_MEDICHE: 1 },
 };
 
-/** Le prime parole di V.A.L.E. in orbita (anche lette ad alta voce all'avvio). */
+/** Le prime parole di V.A.L.E. dopo il lancio (anche lette ad alta voce all'avvio). v3.7: si parte in viaggio, non in orbita. */
 export const FRASI_APERTURA = [
-  "Inserimento orbitale completato. Pianeta E-17.",
+  "Lancio completato. Rotta per E-17: arrivo previsto fra tre giorni.",
   "Capitano. Sistemi nominali. In attesa di istruzioni.",
 ] as const;
 
@@ -138,6 +144,9 @@ export function creaMissioneIniziale(
     imprevisto: null,
     esito: null,
     colloqui: [],
+    minigioco: null,
+    partenza: null,
+    obiettiviCompletati: [],
   };
 
   applicaImprevisto(stato);

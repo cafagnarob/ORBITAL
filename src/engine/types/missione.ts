@@ -33,7 +33,7 @@ import type { EsitoMissione, RegistroColloquio, VoceDiario } from "./storia";
 import type { VoceLog } from "./log";
 import type { Nave } from "./nave";
 import type { Risorse } from "./risorse";
-import type { IstanzaTask } from "./task";
+import type { IstanzaTask, MinigiocoInAttesa } from "./task";
 
 /** In quale momento del ciclo di gioco ci troviamo (DESIGN §8). */
 export const STATI_GIOCO = ["PIANIFICAZIONE", "IN_ESECUZIONE", "DECISIONE", "RAPPORTO", "CONCLUSA"] as const;
@@ -117,6 +117,19 @@ export interface StatoMissione {
   esito: EsitoMissione | null;
   /** I colloqui del Capitano con la crew (v3.4): uno al giorno per persona. */
   colloqui: RegistroColloquio[];
+  /**
+   * Un minigioco proposto all'avvio di un task (v3.6), o null. Finché c'è,
+   * il tempo non scorre: si gioca (o si rinuncia) con RISOLVI_MINIGIOCO.
+   */
+  minigioco: MinigiocoInAttesa | null;
+  /**
+   * Il viaggio (v3.7): il minuto in cui la nave ha lasciato l'orbita di
+   * E-17 per tornare a casa, o null. La FASE (andata, orbita, rientro) si
+   * calcola dal giorno e da questo valore (engine/storia/viaggio.ts).
+   */
+  partenza: Minuti | null;
+  /** Gli obiettivi già raggiunti (e ricompensati), in ordine. */
+  obiettiviCompletati: string[];
 
   /**
    * Contatore per creare nuovi ID ("task-1", "task-2"...).

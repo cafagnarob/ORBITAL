@@ -33,8 +33,9 @@ import type { Rng } from "../rng";
 import { calcolaSoglie, tiraEsito } from "../tasks/esito";
 import { valutaTask } from "../tasks/valutazione";
 import type { EsitoTask, IdIstanzaTask, Luogo, Minuti, ResaTask, Risorse, StatoMissione } from "../types";
-import { MOLTIPLICATORE_RESA } from "../tasks/disponibilita";
+import { MOLTIPLICATORE_RESA, taskSbloccato } from "../tasks/disponibilita";
 import { modificaSalute } from "../crew/salute";
+import { proponiMinigioco } from "../tasks/minigiochi";
 import { capacitaGiornaliera, consumaCapacita } from "../crew/razioni";
 import { AUTONOMIA_RIFIUTO, livelloAutonomia } from "../vale/comportamento";
 import { risolviVerifica, TAG_VERIFICA } from "../vale/contestazioni";
@@ -144,6 +145,21 @@ export function avviaTask(bozza: StatoMissione, contesto: ContestoMissione, idTa
   // Non c'è tempo per finirlo oggi: resta in coda, senza cambiare nulla.
   if (fine > fineOperazioni(bozza.tempo)) return "IN_ATTESA";
 
+  // FINESTRA (v3.7): certi task partono solo in certe ore (il cratere è
+  // inquadrabile dalle 10 alle 16). Fuori dalla finestra si aspetta in coda.
+  if (def.finestra) {
+    const ora = minutoDelGiorno(bozza.tempo) / 60;
+    if (ora < def.finestra.da || ora >= def.finestra.a) return "IN_ATTESA";
+  }
+
+  // Le condizioni possono essere cambiate da quando è stato assegnato (v3.7):
+  // la traiettoria corretta è "scaduta", l'occasione è passata, si è partiti…
+  if (!taskSbloccato(bozza, contesto, def)) {
+    rimuoviDallaCoda(bozza, idTask);
+    scriviLog(bozza, "SISTEMA", `${def.nome} annullato: le condizioni non ci sono più`);
+    return "ANNULLATO";
+  }
+
   // Il compartimento può essere stato chiuso da V.A.L.E. dopo l'assegnazione.
   if (luogoBloccato(bozza, def.luogo)) {
     rimuoviDallaCoda(bozza, idTask);
@@ -196,6 +212,9 @@ export function avviaTask(bozza: StatoMissione, contesto: ContestoMissione, idTa
   task.rischio = valutazione.rischio;
 
   if (contrastaDirettiva(bozza, contesto, def)) bozza.vale.tensione += BALANCE.vale.tensioneTaskContrario;
+
+  // Il Capitano può dare una mano con un minigioco (v3.6).
+  proponiMinigioco(bozza, def, task);
 
   responsabile.posizione = def.luogo;
   if (supporto !== null) supporto.posizione = def.luogo;

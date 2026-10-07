@@ -11,6 +11,7 @@
  */
 
 import { describe, it, expect } from "vitest";
+import { BALANCE } from "../../../src/content/balance";
 import { applicaAzione, type Azione, type ContestoMissione } from "../../../src/engine/mission";
 import { createRng } from "../../../src/engine/rng";
 import { contaFazione, fazioneDaFiducia } from "../../../src/engine/storia/fazioni";
@@ -160,19 +161,38 @@ describe("fine della missione", () => {
     expect(() => applicaAzione(fine, { tipo: "AVANZA" }, c)).toThrow(/conclusa/);
   });
 
+  /** Lo stato di prova, ma al giorno 5 alle 06:00: in orbita attorno a E-17 (v3.7). */
+  const inOrbita = (tensione = 0) => ({ ...stato(tensione), tempo: 4 * 1440 + 360 });
+
+  it("durante il viaggio d'andata il rientro non si può ordinare", () => {
+    expect(() => esegui(stato(), c, [{ tipo: "RIENTRA" }])).toThrow(/in viaggio verso E-17/);
+  });
+
   it("RIENTRA senza carburante oltre la riserva porta alla deriva", () => {
-    const s = stato();
+    const s = inOrbita();
     s.risorse.carburante = 10;
     expect(esegui(s, c, [{ tipo: "RIENTRA" }]).esito?.causa).toBe("DERIVA");
   });
 
+  it("RIENTRA fa partire la nave: si paga la riserva, la missione finisce all'arrivo", () => {
+    const s = esegui(inOrbita(), c, [{ tipo: "RIENTRA" }]);
+    expect(s.statoGioco).not.toBe("CONCLUSA");
+    expect(s.partenza).toBe(s.tempo);
+    expect(s.risorse.carburante).toBe(inOrbita().risorse.carburante - BALANCE.preparazione.riservaRientro);
+    // Si salta in avanti di tre giorni, all'alba: si arriva a casa.
+    const vigilia: StatoMissione = { ...s, tempo: s.tempo + 3 * 1440 - 1, statoGioco: "IN_ESECUZIONE" };
+    const arrivo = esegui(vigilia, contesto({ catalogoEventi: {} }), [{ tipo: "AVANZA" }]);
+    expect(arrivo.esito?.causa).toBe("RIENTRO");
+  });
+
   it("con autonomia AUTONOMA V.A.L.E. rifiuta il rientro (finché non c'è l'override)", () => {
-    const s = esegui(stato(9), c, [{ tipo: "RIENTRA" }]); // IN_CONFLITTO 2 + 9/3 = 5 → autonomia 4
+    const s = esegui(inOrbita(9), c, [{ tipo: "RIENTRA" }]); // IN_CONFLITTO 2 + 9/3 = 5 → autonomia 4
     expect(s.statoGioco).toBe("PIANIFICAZIONE");
+    expect(s.partenza).toBeNull();
     expect(s.log.some((v) => v.codici.includes("ORD-01"))).toBe(true);
-    const conOverride = stato(9);
+    const conOverride = inOrbita(9);
     conOverride.vale.override = true;
-    expect(esegui(conOverride, c, [{ tipo: "RIENTRA" }]).statoGioco).toBe("CONCLUSA");
+    expect(esegui(conOverride, c, [{ tipo: "RIENTRA" }]).partenza).not.toBeNull();
   });
 
   it("se nessuno è più vivo la missione finisce in MORTE", () => {

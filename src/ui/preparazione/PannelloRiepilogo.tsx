@@ -19,7 +19,10 @@
  */
 
 import { BALANCE } from "../../content/balance";
-import { PREPARAZIONE_DI_RIFERIMENTO } from "../../content/missioneIniziale";
+import { PREPARAZIONE_VUOTA } from "../../content/missioneIniziale";
+import { CATALOGHI_PREPARAZIONE } from "../../content/contesto";
+import { CATALOGO_EQUIPAGGIAMENTO, CATALOGO_MODULI } from "../../content/loadout";
+import { attrezzaturaIndispensabile, indispensabileMancante } from "../../engine/preparazione";
 import { FRASI_FATTIBILITA } from "../../content/vale";
 import type { Riepilogo } from "../../engine/preparazione";
 import type { Fattibilita, Preparazione, ProblemaPreparazione } from "../../engine/types";
@@ -39,6 +42,9 @@ interface Props {
 }
 
 export function PannelloRiepilogo({ prep, riepilogo: r, problemi, fattibilita, dispatch }: Props) {
+  // L'attrezzatura indispensabile alla missione, e quanta ne manca (v3.7).
+  const indispensabile = attrezzaturaIndispensabile(CATALOGHI_PREPARAZIONE.taskObbligatori ?? [], CATALOGHI_PREPARAZIONE);
+  const mancanti = indispensabileMancante(prep, indispensabile);
   const p = BALANCE.preparazione;
   const tonoCarico: Tono =
     r.carico.totale > p.caricoMassimo ? "critico" : r.carico.totale > p.caricoMassimo * 0.95 ? "attenzione" : "normale";
@@ -159,13 +165,30 @@ export function PannelloRiepilogo({ prep, riepilogo: r, problemi, fattibilita, d
         </ul>
       )}
 
-      <Pulsante
-        piccolo
-        className={stili.ripristina}
-        onClick={() => dispatch({ tipo: "CARICA", preparazione: PREPARAZIONE_DI_RIFERIMENTO })}
-      >
-        Loadout di riferimento
-      </Pulsante>
+      {/* v3.7: niente più «loadout di riferimento» (riempiva tutta la nave):
+          si può solo aggiungere l'indispensabile o ricominciare da zero. */}
+      <div className={stili.azioniRapide}>
+        <Pulsante
+          piccolo
+          variante={mancanti.length > 0 ? "primario" : "secondario"}
+          disabled={mancanti.length === 0}
+          onClick={() => dispatch({ tipo: "AGGIUNGI_INDISPENSABILE", ...indispensabile })}
+        >
+          {mancanti.length > 0 ? "Carica l'indispensabile" : "Indispensabile a bordo ✓"}
+        </Pulsante>
+        <Pulsante
+          piccolo
+          variante="pericolo"
+          onClick={() => dispatch({ tipo: "CARICA", preparazione: PREPARAZIONE_VUOTA })}
+        >
+          Svuota la nave
+        </Pulsante>
+      </div>
+      {mancanti.length > 0 && (
+        <p className={stili.notaIndispensabile}>
+          Indispensabile per la scaletta: {mancanti.map((id) => CATALOGO_EQUIPAGGIAMENTO[id]?.nome ?? CATALOGO_MODULI[id]?.nome ?? id).join(", ")}. Crew e scorte le scegli tu.
+        </p>
+      )}
     </Finestra>
   );
 }

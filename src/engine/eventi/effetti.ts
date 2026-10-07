@@ -25,6 +25,7 @@ import { conNomi } from "../storia/attori";
 import { scriviDiario } from "../storia/diario";
 import { modificaFiduciaCrew, modificaFiduciaMembro } from "../storia/fazioni";
 import { concludiMissione } from "../storia/fine";
+import { avviaRientro } from "../storia/viaggio";
 import { sbloccaTutto } from "../storia/iniziative";
 import { limita } from "../tasks/rischio";
 import type { Destinatario, Effetto, IdIstanzaTask, IdMembro, MembroCrew, StatoMissione } from "../types";
@@ -154,6 +155,10 @@ function applicaEffetto(bozza: StatoMissione, effetto: Effetto, ambito: Ambito, 
 
     case "FINE_MISSIONE":
       concludiMissione(bozza, contesto, effetto.causa);
+      break;
+
+    case "PARTENZA":
+      avviaRientro(bozza, contesto, concludiMissione);
       break;
   }
 }

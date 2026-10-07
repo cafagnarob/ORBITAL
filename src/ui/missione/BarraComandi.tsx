@@ -16,6 +16,8 @@
  * la giornata dura 5 minuti reali; la LINEA DEL GIORNO mostra dove
  * siamo tra le 07:00 e le 22:00, con le tacche dei cambi turno.
  *
+ * LASCIA L'ORBITA (v3.0, v3.7): solo in orbita attorno a E-17, in
+ * pianificazione e al rapporto, la nave può partire prima della finestra.
  * ORDINA IL RIENTRO (v3.0): in pianificazione e al rapporto c'è anche il
  * pulsante per tornare a casa, che chiude la missione. È irreversibile,
  * quindi chiede conferma: il primo clic "arma" il pulsante (useState),
@@ -30,6 +32,7 @@ import { useState } from "react";
 import { CATALOGO_TASK } from "../../content/tasks";
 import { faseGiornata, minutoDelGiorno, ORARI_TURNO, ORARIO_OPERAZIONI, ORARIO_RAPPORTO, prossimoMomento, type MotivoSosta } from "../../engine/clock";
 import type { StatoMissione } from "../../engine/types";
+import { verificaRientro } from "../../engine/storia/fine";
 import { Pulsante } from "../components/Pulsante";
 import { formattaOra } from "../format";
 import type { Dispatch, TempoReale } from "../useMissione";
@@ -69,7 +72,8 @@ function descriviMotivo(stato: StatoMissione, motivo: MotivoSosta): string {
 
 export function BarraComandi({ stato, dispatch, onChiudiRapporto, tempo }: Props) {
   const [rientroArmato, setRientroArmato] = useState(false);
-  const rientroPossibile = stato.statoGioco === "PIANIFICAZIONE" || stato.statoGioco === "RAPPORTO";
+  // Le stesse regole del motore (v3.7: solo in orbita, non già partiti).
+  const rientroPossibile = verificaRientro(stato) === null;
   let testo: string;
   let comando: { etichetta: string; azione: () => void } | null;
   /** Il salto al prossimo momento: solo durante le operazioni. */
@@ -81,6 +85,12 @@ export function BarraComandi({ stato, dispatch, onChiudiRapporto, tempo }: Props
       comando = { etichetta: "Avvia operazioni ▶", azione: () => dispatch({ tipo: "AVVIA_OPERAZIONI" }) };
       break;
     case "IN_ESECUZIONE": {
+      // Un minigioco in attesa (v3.6): niente pausa né salto, si gioca prima.
+      if (stato.minigioco !== null) {
+        testo = "Il Capitano assiste la crew. Tempo fermo.";
+        comando = null;
+        break;
+      }
       const prossimo = prossimoMomento(stato);
       const cosa = prossimo.motivi.map((m) => descriviMotivo(stato, m)).join(" · ");
       const etichettaTempo = tempo.nascosto ? "IN PAUSA (scheda nascosta)" : tempo.pausa ? "IN PAUSA" : "▶ IN CORSO";
@@ -146,7 +156,7 @@ export function BarraComandi({ stato, dispatch, onChiudiRapporto, tempo }: Props
           }}
           onBlur={() => setRientroArmato(false)}
         >
-          {rientroArmato ? "Confermi il rientro?" : "Ordina il rientro"}
+          {rientroArmato ? "Confermi la partenza?" : "Lascia l'orbita"}
         </Pulsante>
       )}
       {salto && (

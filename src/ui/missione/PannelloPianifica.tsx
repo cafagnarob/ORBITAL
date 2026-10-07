@@ -22,12 +22,10 @@
  * integrità dei dati può differire da quello vero (DESIGN §4.6).
  * Il rischio vero viene fissato all'avvio del task.
  *
- * QUALI TASK SI VEDONO (v3.3)
- * La lista si DERIVA a ogni render da disponibilitaTask():
- *   - DISPONIBILI: si possono scegliere;
- *   - NON ORA: già assegnati a qualcuno o in ricarica, visibili ma
- *     disabilitati, con il motivo («in ricarica fino a G2 · 09:00»);
- *   - i task non ancora sbloccati o già esauriti non compaiono.
+ * QUALI TASK SI VEDONO (v3.3, v3.6)
+ * La lista si DERIVA a ogni render da disponibilitaTask(): compaiono SOLO
+ * i task DISPONIBILI adesso. Quelli già assegnati, in ricarica, non ancora
+ * sbloccati o esauriti non si vedono (riappariranno quando si potranno fare).
  * Il task scelto è "effettivo": se nel frattempo diventa indisponibile
  * (lo ha preso un altro, è scaduto) si passa al primo disponibile.
  * ============================================================================
@@ -37,7 +35,7 @@ import { useState, type FormEvent } from "react";
 import { CONTESTO_GIOCO } from "../../content/contesto";
 import { CATALOGO_TASK, TASK_DISPONIBILI } from "../../content/tasks";
 import { puoLavorare, stimaRischio, verificaAssegnazione } from "../../engine/mission";
-import { disponibilitaTask, scadenzaTask, type Disponibilita } from "../../engine/tasks/disponibilita";
+import { disponibilitaTask, scadenzaTask } from "../../engine/tasks/disponibilita";
 import { calcolaSoglie, probabilitaEsiti } from "../../engine/tasks/esito";
 import { formattaTempo } from "../../engine/clock";
 import { valutaTask } from "../../engine/tasks/valutazione";
@@ -55,13 +53,6 @@ interface Props {
 
 /** Valore della select "aiutante" che significa "nessuno". */
 const NESSUNO = "";
-
-/** Perché un task è visibile ma non selezionabile adesso. */
-function motivoNonOra(stato: StatoMissione, disp: Disponibilita): string {
-  if (disp.tipo === "IN_CORSO") return `assegnato a ${stato.crew[disp.chi]?.nome ?? disp.chi}`;
-  if (disp.tipo === "IN_RICARICA") return `di nuovo da ${formattaTempo(disp.finoA)}`;
-  return "";
-}
 
 /** «Ogni 24 h», «Una volta sola», «Sempre». */
 function descriviRicarica(def: DefinizioneTask): string {
@@ -85,7 +76,6 @@ export function PannelloPianifica({ stato, dispatch }: Props) {
   // La lista dei task, divisa in "si può fare" e "non ora" (vedi intestazione).
   const elenco = TASK_DISPONIBILI.map((def) => ({ def, disp: disponibilitaTask(stato, CONTESTO_GIOCO, def) }));
   const pronti = elenco.filter((x) => x.disp.tipo === "DISPONIBILE");
-  const nonOra = elenco.filter((x) => x.disp.tipo === "IN_CORSO" || x.disp.tipo === "IN_RICARICA");
   const [idScelto, setIdTask] = useState(TASK_DISPONIBILI[0]?.id ?? "");
   // Il task "effettivo": quello scelto, se si può ancora fare; altrimenti il primo disponibile.
   const idTask = pronti.some((x) => x.def.id === idScelto) ? idScelto : (pronti[0]?.def.id ?? "");
@@ -145,23 +135,12 @@ export function PannelloPianifica({ stato, dispatch }: Props) {
         <label className={stili.campo}>
           <span>TASK</span>
           <select value={idTask} onChange={(e) => setIdTask(e.target.value)}>
-            <optgroup label={`Disponibili (${pronti.length})`}>
-              {pronti.map(({ def: t }) => (
-                <option key={t.id} value={t.id}>
-                  {t.nome}
-                  {scadenzaTask(stato, t) !== null ? " ⏳" : ""}
-                </option>
-              ))}
-            </optgroup>
-            {nonOra.length > 0 && (
-              <optgroup label="Non ora">
-                {nonOra.map(({ def: t, disp }) => (
-                  <option key={t.id} value={t.id} disabled>
-                    {t.nome} — {motivoNonOra(stato, disp)}
-                  </option>
-                ))}
-              </optgroup>
-            )}
+            {pronti.map(({ def: t }) => (
+              <option key={t.id} value={t.id}>
+                {t.nome}
+                {scadenzaTask(stato, t) !== null ? " ⏳" : ""}
+              </option>
+            ))}
           </select>
         </label>
 
@@ -225,6 +204,14 @@ export function PannelloPianifica({ stato, dispatch }: Props) {
               <dt>RIPETIBILE</dt>
               <dd>{descriviRicarica(def)}</dd>
             </div>
+            {def.finestra && (
+              <div className={stili.scade}>
+                <dt>PARTE SOLO</dt>
+                <dd>
+                  {def.finestra.da}:00–{def.finestra.a}:00
+                </dd>
+              </div>
+            )}
             {scadenzaTask(stato, def) !== null && (
               <div className={stili.scade}>
                 <dt>SCADE</dt>

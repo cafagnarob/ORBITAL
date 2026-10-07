@@ -73,6 +73,7 @@ export function useMissione(seed: string, preparazione: Preparazione) {
   function battito(minuti: number): void {
     const s = ultimo.current;
     if (s.statoGioco !== "IN_ESECUZIONE" || faseGiornata(s.tempo) !== "OPERAZIONI") return;
+    if (s.minigioco !== null) return; // il Capitano sta aiutando la crew: tempo fermo
     dispatch({ tipo: "AVANZA_FINO", tempo: s.tempo + minuti });
   }
 
@@ -80,6 +81,7 @@ export function useMissione(seed: string, preparazione: Preparazione) {
   const scorre =
     stato.statoGioco === "IN_ESECUZIONE" &&
     faseGiornata(stato.tempo) === "OPERAZIONI" &&
+    stato.minigioco === null &&
     !tempoReale.pausa &&
     !tempoReale.nascosto;
 

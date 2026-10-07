@@ -89,6 +89,16 @@
     display: flex; /* su desktop si vede tutto */
   }
 
+  /* v3.7: la colonna più lunga scorre dentro la griglia. Il padding a destra
+     tiene la barra di scorrimento staccata dai pannelli. */
+  .scorre {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-right: var(--sp-2);
+    scrollbar-width: thin;
+    scrollbar-color: var(--c-fosforo-tenue) transparent;
+  }
+
   .blocco {
     flex: none;
   }

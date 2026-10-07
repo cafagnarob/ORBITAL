@@ -465,7 +465,7 @@ export const EVENTI_TURNO: DefinizioneEvento[] = [
     peso: 3,
     condizioni: [TURNO, dalGiorno(2)],
     fonte: "VALE",
-    testo: "Capitano. Un corpo roccioso di trenta metri attraverserà la nostra orbita. Resterà a portata per diciotto ore.",
+    testo: "Capitano. Un corpo roccioso di trenta metri attraverserà la nostra rotta. Resterà a portata per diciotto ore.",
     codici: [],
     effetti: [],
     scelte: [

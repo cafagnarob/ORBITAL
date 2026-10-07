@@ -23,6 +23,7 @@ import { EVENTI_TURNO } from "../../src/content/eventiTurno";
 import { TASK_DISPONIBILI } from "../../src/content/tasks";
 import { scomponiTempo } from "../../src/engine/clock";
 import { applicaAzione, verificaAssegnazione, verificaScelta, type Azione } from "../../src/engine/mission";
+import { verificaRientro } from "../../src/engine/storia/fine";
 import type { StatoMissione } from "../../src/engine/types";
 
 const gioca = (s: StatoMissione, a: Azione) => applicaAzione(s, a, CONTESTO_GIOCO);
@@ -49,7 +50,7 @@ function partita(seed: string, n: number, stile: Stile): StatoMissione {
     const giorno = scomponiTempo(s.tempo).giorno;
     switch (s.statoGioco) {
       case "PIANIFICAZIONE": {
-        if (stile === "FRETTOLOSO" && giorno >= 5) {
+        if (stile === "FRETTOLOSO" && giorno >= 5 && verificaRientro(s) === null) {
           s = gioca(s, { tipo: "RIENTRA" });
           if (s.statoGioco === "CONCLUSA") break;
         }
@@ -62,7 +63,8 @@ function partita(seed: string, n: number, stile: Stile): StatoMissione {
         break;
       }
       case "IN_ESECUZIONE":
-        s = gioca(s, { tipo: "AVANZA" });
+        // Un minigioco in attesa (v3.6): il bot gioca "così così".
+        s = gioca(s, s.minigioco ? { tipo: "RISOLVI_MINIGIOCO", punteggio: 0.5 } : { tipo: "AVANZA" });
         break;
       case "RAPPORTO":
         s = gioca(s, { tipo: "CHIUDI_RAPPORTO" });

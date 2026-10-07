@@ -126,6 +126,18 @@
   font-size: 13px;
 }
 
-.ripristina {
-  width: 100%;
+/* v3.7: i due tasti rapidi (indispensabile, svuota) e la nota sotto. */
+.azioniRapide {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+}
+.azioniRapide > * {
+  flex: 1 1 140px;
+}
+.notaIndispensabile {
+  margin: var(--sp-2) 0 0;
+  font-size: var(--fs-piccolo);
+  color: var(--c-fosforo-tenue);
 }

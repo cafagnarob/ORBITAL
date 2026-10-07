@@ -37,6 +37,7 @@
  */
 
 import { EVENTI_TURNO } from "./eventiTurno";
+import { EVENTI_MISSIONE } from "./eventiMissione";
 import { EVENTI_STORIA } from "./storia/eventi";
 import type { DefinizioneEvento, IdEvento } from "../engine/types";
 
@@ -389,5 +390,5 @@ const LISTA_EVENTI: DefinizioneEvento[] = [
  * emergente (v3.0) + eventi dei turni (v3.3: viaggiatori, occasioni, guai).
  */
 export const CATALOGO_EVENTI: Readonly<Record<IdEvento, DefinizioneEvento>> = Object.fromEntries(
-  [...LISTA_EVENTI, ...EVENTI_STORIA, ...EVENTI_TURNO].map((e) => [e.id, e]),
+  [...LISTA_EVENTI, ...EVENTI_STORIA, ...EVENTI_TURNO, ...EVENTI_MISSIONE].map((e) => [e.id, e]),
 );

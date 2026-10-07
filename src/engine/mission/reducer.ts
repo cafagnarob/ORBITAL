@@ -39,6 +39,8 @@ import { controllaFine, ordinaRientro, verificaRientro } from "../storia/fine";
 import { iniziativeMattino } from "../storia/iniziative";
 import { distribuisciRazioni, razioniPredefinite, verificaRazioni } from "../crew/razioni";
 import { parla, verificaColloquio } from "../storia/colloqui";
+import { risolviMinigioco } from "../tasks/minigiochi";
+import { controllaObiettivi } from "../storia/obiettivi";
 import { createRng, type Rng } from "../rng";
 import type { StatoGioco, StatoMissione } from "../types";
 import { assegnaTask, rimuoviDallaCoda, verificaAssegnazione, verificaRimozione } from "./assegnazione";
@@ -96,6 +98,7 @@ export function applicaAzione(stato: StatoMissione, azione: Azione, contesto: Co
 
     case "AVANZA": {
       richiediStato(bozza, ["IN_ESECUZIONE"], azione);
+      senzaMinigioco(bozza);
       eseguiMomento(bozza, contesto, rng, prossimoMomento(bozza));
       break;
     }
@@ -105,6 +108,7 @@ export function applicaAzione(stato: StatoMissione, azione: Azione, contesto: Co
       // Si attraversano, in ordine, tutti i momenti importanti fino a X; ci
       // si ferma prima se uno di essi chiede il Capitano (decisione, rapporto).
       richiediStato(bozza, ["IN_ESECUZIONE"], azione);
+      senzaMinigioco(bozza);
       if (azione.tempo < bozza.tempo) throw new Error(`AVANZA_FINO: il tempo non torna indietro (${bozza.tempo} → ${azione.tempo})`);
       while (statoAttuale(bozza) === "IN_ESECUZIONE") {
         const momento = prossimoMomento(bozza);
@@ -113,7 +117,14 @@ export function applicaAzione(stato: StatoMissione, azione: Azione, contesto: Co
           break;
         }
         eseguiMomento(bozza, contesto, rng, momento);
+        // Un task appena partito ha proposto un minigioco: il tempo si ferma qui.
+        if (bozza.minigioco !== null) break;
       }
+      break;
+    }
+
+    case "RISOLVI_MINIGIOCO": {
+      risolviMinigioco(bozza, azione.punteggio);
       break;
     }
 
@@ -191,8 +202,16 @@ export function applicaAzione(stato: StatoMissione, azione: Azione, contesto: Co
       return azioneNonGestita(azione);
   }
 
+  // Obiettivi della missione appena raggiunti (v3.7): ricompensa una volta sola.
+  controllaObiettivi(bozza, contesto);
+
   bozza.rngState = rng.getState();
   return bozza;
+}
+
+/** Il tempo non scorre mentre un minigioco aspetta il Capitano (v3.6). */
+function senzaMinigioco(stato: StatoMissione): void {
+  if (stato.minigioco !== null) throw new Error("Minigioco in attesa: prima va giocato o rifiutato");
 }
 
 /**

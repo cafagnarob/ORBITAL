@@ -71,7 +71,8 @@ function partita(seed: string, giorni: number, n: number): StatoMissione {
         s = gioca(pianifica(contestaFiltrate(s)), { tipo: "AVVIA_OPERAZIONI" });
         break;
       case "IN_ESECUZIONE":
-        s = gioca(s, { tipo: "AVANZA" });
+        // Un minigioco in attesa (v3.6): il bot gioca "così così".
+        s = gioca(s, s.minigioco ? { tipo: "RISOLVI_MINIGIOCO", punteggio: 0.5 } : { tipo: "AVANZA" });
         break;
       case "RAPPORTO":
         s = gioca(s, { tipo: "CHIUDI_RAPPORTO" });

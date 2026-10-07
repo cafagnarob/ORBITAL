@@ -148,6 +148,39 @@ export interface DefinizioneTask {
    * Preparazione non lo segnala come "task impossibile".
    */
   bonus?: boolean;
+  /**
+   * MINIGIOCO (v3.6): come il Capitano può aiutare la crew in questo task.
+   * Compare all'avvio, sempre se il rischio è alto, altrimenti a volte.
+   * Facoltativo nel tipo (i task di prova dei test non ne hanno), ma il
+   * catalogo vero ne dà uno a ogni task (controllato da un test).
+   */
+  minigioco?: MinigiocoTask;
+  /**
+   * FINESTRA (v3.7): il task può PARTIRE solo tra queste ore (es. il
+   * cratere è inquadrabile dalle 10 alle 16). Fuori, resta in coda.
+   */
+  finestra?: { da: number; a: number };
+}
+
+/** Le meccaniche dei minigiochi (ui/minigiochi/giochi/). */
+export const TIPI_MINIGIOCO = ["RADAR", "SINTONIA", "SEQUENZA", "PRESSIONE", "MANOVRA", "TEMPISMO", "CONFRONTO", "RICERCA"] as const;
+export type TipoMinigioco = (typeof TIPI_MINIGIOCO)[number];
+
+/** Il minigioco di un task: la meccanica, più titolo e istruzioni adatti al lavoro. */
+export interface MinigiocoTask {
+  tipo: TipoMinigioco;
+  /** Es. "Trova la crepa". */
+  titolo: string;
+  /** Una frase: cosa fare. */
+  istruzioni: string;
+}
+
+/** Un minigioco proposto e non ancora giocato (nello stato della missione). */
+export interface MinigiocoInAttesa {
+  idTask: IdIstanzaTask;
+  tipo: TipoMinigioco;
+  /** 1 facile · 2 medio · 3 difficile: cresce con il rischio del task. */
+  difficolta: 1 | 2 | 3;
 }
 
 /** Ciò che un task riuscito restituisce alla nave e alla crew. */

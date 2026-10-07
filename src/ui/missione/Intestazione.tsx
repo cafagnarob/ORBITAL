@@ -13,10 +13,18 @@
 import { faseGiornata, scomponiTempo } from "../../engine/clock";
 import type { StatoMissione } from "../../engine/types";
 import { E17_NOTO } from "../../content/pianeti/e17";
+import { faseViaggio } from "../../engine/storia/viaggio";
+import type { FaseViaggio } from "../../engine/types";
 import { CONTESTO_GIOCO } from "../../content/contesto";
 import { integritaDati } from "../../engine/mission";
 import { etichetta, formattaOra, tonoIntegrita } from "../format";
 import stili from "./Intestazione.module.css";
+
+const LUOGO: Record<FaseViaggio, string> = {
+  ANDATA: `IN VIAGGIO → ${E17_NOTO.id}`,
+  ORBITA: `${E17_NOTO.id} · ORBITA`,
+  RIENTRO: "RIENTRO → TERRA",
+};
 
 export function Intestazione({ stato }: { stato: StatoMissione }) {
   const { giorno } = scomponiTempo(stato.tempo);
@@ -36,7 +44,8 @@ export function Intestazione({ stato }: { stato: StatoMissione }) {
       <span className={stili.integrita}>
         INTEGRITÀ DATI <strong className={stili[tonoIntegrita(integrita)]}>{integrita}%</strong>
       </span>
-      <span className={stili.luogo}>{E17_NOTO.id} · ORBITA</span>
+      {/* Dove siamo nel viaggio (v3.7): andata, orbita o rientro. */}
+      <span className={stili.luogo}>{LUOGO[faseViaggio(stato)]}</span>
     </header>
   );
 }
