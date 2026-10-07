@@ -10,7 +10,8 @@
  *   2. gli OBIETTIVI PRINCIPALI, con la SCALETTA dell'acquisizione:
  *        ✓ valido fino a G5 · 14:00   ✗ scaduto (da rifare)   ☐ da fare
  *      (la validità viene da validoFinoA, la stessa regola del motore);
- *   3. gli OBIETTIVI SECONDARI comparsi finora.
+ *   3. gli OBIETTIVI SECONDARI comparsi finora, chiusi in un <details>
+ *      (v3.7.1: il pannello occupava troppo spazio).
  * ============================================================================
  */
 
@@ -31,7 +32,8 @@ const NOMI_FASE: Record<FaseViaggio, string> = { ANDATA: "ANDATA", ORBITA: "ORBI
 /** Stato di un passo della scaletta, per l'icona e la riga. */
 function statoPasso(stato: StatoMissione, task: string, validitaOre: number | null): { icona: string; nota: string; tono: string } {
   const fatti = contaCompletati(stato, task);
-  if (validitaOre === null) return fatti > 0 ? { icona: "✓", nota: "fatto", tono: stili.fatto ?? "" } : { icona: "☐", nota: "da fare", tono: "" };
+  if (validitaOre === null)
+    return fatti > 0 ? { icona: "✓", nota: "fatto", tono: stili.fatto ?? "" } : { icona: "☐", nota: "da fare", tono: "" };
   const fino = validoFinoA(stato, task, validitaOre, SCANSIONE_OBIETTIVO.task);
   if (fino !== null) return { icona: "✓", nota: `valido fino a ${formattaTempo(fino)}`, tono: stili.fatto ?? "" };
   if (fatti > 0) return { icona: "✗", nota: "scaduto · da rifare", tono: stili.scaduto ?? "" };
@@ -76,7 +78,12 @@ export function PannelloMissione({ stato }: { stato: StatoMissione }) {
             <span className={stili.icona}>{completato(o) ? "✓" : "☐"}</span>
             <div>
               <strong>{o.titolo}</strong>
-              {o.id === "P3" && <span className={stili.nota}> · a bordo {vivi}/{Object.keys(stato.crew).length}</span>}
+              {o.id === "P3" && (
+                <span className={stili.nota}>
+                  {" "}
+                  · a bordo {vivi}/{Object.keys(stato.crew).length}
+                </span>
+              )}
               {/* La scaletta dell'acquisizione, sotto l'obiettivo P2. */}
               {o.id === "P2" && !scansioneFatta && (
                 <ol className={stili.scaletta}>
@@ -102,9 +109,13 @@ export function PannelloMissione({ stato }: { stato: StatoMissione }) {
         ))}
       </ul>
 
+      {/* Di contorno: chiusi in un <details> (elemento HTML nativo, si apre
+          con un clic senza useState) per lasciare spazio alla Pianificazione. */}
       {secondari.length > 0 && (
-        <>
-          <h3 className={stili.titolo}>DI CONTORNO</h3>
+        <details className={stili.contorno}>
+          <summary>
+            DI CONTORNO · {secondari.filter(completato).length}/{secondari.length}
+          </summary>
           <ul className={stili.obiettivi}>
             {secondari.map((o) => (
               <li key={o.id} className={completato(o) ? stili.fatto : ""}>
@@ -116,7 +127,7 @@ export function PannelloMissione({ stato }: { stato: StatoMissione }) {
               </li>
             ))}
           </ul>
-        </>
+        </details>
       )}
     </Finestra>
   );

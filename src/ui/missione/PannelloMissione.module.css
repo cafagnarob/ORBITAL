@@ -91,3 +91,24 @@
   gap: 2px;
   font-size: var(--fs-testo);
 }
+
+/* Obiettivi di contorno ripiegabili (v3.7.1). */
+.contorno {
+  margin-top: var(--sp-3);
+  border-top: 1px dashed var(--c-griglia);
+  padding-top: var(--sp-1);
+}
+.contorno summary {
+  cursor: pointer;
+  font-family: var(--font-terminale);
+  font-size: 17px;
+  letter-spacing: 0.14em;
+  color: var(--c-fosforo-tenue);
+}
+.contorno summary:hover,
+.contorno[open] summary {
+  color: var(--c-fosforo);
+}
+.contorno[open] summary {
+  margin-bottom: var(--sp-2);
+}

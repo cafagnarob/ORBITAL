@@ -18,6 +18,7 @@ import { creaMissioneIniziale, PREPARAZIONE_VUOTA } from "../../src/content/miss
 import { applicaPreparazione, attrezzaturaIndispensabile, problemiPreparazione } from "../../src/engine/preparazione";
 import { applicaAzione, verificaAssegnazione, verificaScelta, type Azione } from "../../src/engine/mission";
 import { faseViaggio } from "../../src/engine/storia/viaggio";
+import { CATALOGO_EVENTI } from "../../src/content/eventi";
 import type { AbilitaTecnica, StatoMissione } from "../../src/engine/types";
 
 const gioca = (s: StatoMissione, a: Azione) => applicaAzione(s, a, CONTESTO_GIOCO);
@@ -109,6 +110,30 @@ describe("la super-missione E-17", () => {
     const normali = partite.filter((s) => s.esito?.causa === "RIENTRO" && s.partenza !== null);
     expect(normali.length).toBeGreaterThan(0);
     for (const s of normali) expect(Math.floor((s.esito?.tempo ?? 0) / 1440) + 1).toBe(Math.floor((s.partenza ?? 0) / 1440) + 1 + 3);
+  });
+});
+
+describe("gli eventi rispettano la fase del viaggio (v3.7.1)", () => {
+  // Un evento che parla di ciò che si vede SUL pianeta (la superficie,
+  // l'emisfero, qualcosa che "sfiora E-17") può succedere solo in orbita.
+  // Bug trovato da Roberto: il segnale «dall'emisfero nord» arrivava già
+  // durante il viaggio, dopo una diagnostica riuscita.
+  const DEL_PIANETA = /superficie|emisfero|sfiora E-17/i;
+  // I tag che appartengono SOLO a task sbloccati in orbita (es. CRATERE, SR9).
+  const tasks = Object.values(CONTESTO_GIOCO.catalogoTask);
+  const soloOrbita = (t: (typeof tasks)[number]) => t.sblocco.some((c) => c.tipo === "FASE" && !c.fasi.includes("ANDATA"));
+  const TAG_DI_ORBITA = new Set(
+    tasks.flatMap((t) => t.tag).filter((tag) => tasks.filter((t) => t.tag.includes(tag)).every(soloOrbita)),
+  );
+
+  it("ogni evento che descrive il pianeta da vicino richiede la fase ORBITA", () => {
+    const senzaFase = Object.values(CATALOGO_EVENTI)
+      .filter((e) => DEL_PIANETA.test(e.testo))
+      .filter((e) => !e.condizioni.some((c) => c.tipo === "FASE" && c.fasi.includes("ORBITA") && !c.fasi.includes("ANDATA")))
+      // Gli eventi che seguono un task possibile SOLO in orbita sono già al sicuro.
+      .filter((e) => !e.condizioni.some((c) => c.tipo === "TASK_CONCLUSO_ORA" && c.tag !== undefined && TAG_DI_ORBITA.has(c.tag)))
+      .map((e) => e.id);
+    expect(senzaFase).toEqual([]);
   });
 });
 

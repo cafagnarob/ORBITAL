@@ -24,14 +24,19 @@
  *     riesce a uscire dall'orbita e resta ALLA DERIVA (fine della missione);
  *   - se V.A.L.E. comanda la nave (autonomia AUTONOMA, niente override),
  *     alla finestra la nave non parte: CONTROLLO_VALE.
+ *
+ * LA TRATTA (v3.7.1)
+ * Per la Plancia (ui/missione/plancia) serve sapere QUANTO manca: la tratta
+ * in corso va dal risveglio della partenza al risveglio del giorno d'arrivo.
+ * È di nuovo un calcolo, non un dato salvato.
  * ============================================================================
  */
 
 import { BALANCE } from "../../content/balance";
-import { scomponiTempo } from "../clock";
+import { ORARIO_RISVEGLIO, scomponiTempo } from "../clock";
 import type { ContestoMissione } from "../mission/contesto";
 import { scriviLog } from "../mission/log";
-import type { FaseViaggio, StatoMissione } from "../types";
+import type { FaseViaggio, Minuti, StatoMissione } from "../types";
 import { livelloAutonomia } from "../vale/comportamento";
 import { scriviDiario } from "./diario";
 
@@ -52,6 +57,33 @@ export function giornoFinestraRientro(): number {
 /** Il giorno d'arrivo a casa (null se non si è ancora partiti). */
 export function giornoArrivo(stato: StatoMissione): number | null {
   return stato.partenza === null ? null : giorno(stato.partenza) + BALANCE.missione.giorniRientro;
+}
+
+/** Una tratta di viaggio: da dove a dove, e a che punto siamo. */
+export interface Tratta {
+  destinazione: "E-17" | "TERRA";
+  /** Minuto di partenza e minuto d'arrivo previsto. */
+  da: Minuti;
+  a: Minuti;
+  /** 0 = appena partiti, 1 = arrivati. */
+  progresso: number;
+  minutiAllArrivo: Minuti;
+}
+
+/** Il risveglio (06:00) di un giorno, in minuti dall'inizio della missione. */
+const risveglioDel = (g: number): Minuti => (g - 1) * 1440 + ORARIO_RISVEGLIO;
+
+/** La tratta in corso, o null se siamo in orbita. */
+export function trattaInCorso(stato: StatoMissione): Tratta | null {
+  const fase = faseViaggio(stato);
+  if (fase === "ORBITA") return null;
+  const m = BALANCE.missione;
+  const [destinazione, da, a]: [Tratta["destinazione"], Minuti, Minuti] =
+    fase === "ANDATA"
+      ? ["E-17", risveglioDel(1), risveglioDel(m.giorniAndata + 1)]
+      : ["TERRA", stato.partenza ?? stato.tempo, risveglioDel(giornoArrivo(stato) ?? 0)];
+  const progresso = Math.min(1, Math.max(0, (stato.tempo - da) / Math.max(1, a - da)));
+  return { destinazione, da, a, progresso, minutiAllArrivo: Math.max(0, a - stato.tempo) };
 }
 
 /** V.A.L.E. ha il comando della nave? */

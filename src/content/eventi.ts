@@ -63,6 +63,10 @@ const LISTA_EVENTI: DefinizioneEvento[] = [
         ],
       },
       { tipo: "NON_SCOPERTA", id: "SEGNALE_RILEVATO" },
+      // v3.7.1: il segnale viene «dalla superficie, emisfero nord»: si può
+      // captare solo in orbita. Prima bastava una diagnostica riuscita,
+      // anche il primo giorno di viaggio.
+      { tipo: "FASE", fasi: ["ORBITA"] },
     ],
     fonte: "VALE",
     testo: "Capitano. Ho rilevato un segnale artificiale proveniente dalla superficie. Emisfero nord. Origine sconosciuta.",

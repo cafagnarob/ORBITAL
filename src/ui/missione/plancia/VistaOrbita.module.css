@@ -1,0 +1,441 @@
+/*
+ * VistaOrbita.module.css — globo che ruota, schede, anelli di acquisizione.
+ *
+ * La classe del modo sta sul contenitore (.osservazione / .acquisizione /
+ * .acquisita): da lì il CSS decide cosa mostrare. Il componente non deve
+ * fare `if` su ogni pezzo.
+ */
+
+.vista {
+  position: relative;
+  container-type: size;
+  aspect-ratio: 400 / 150;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(125, 245, 165, 0.1), transparent 45%),
+    linear-gradient(rgba(28, 61, 39, 0.35) 1px, transparent 1px) 0 0 / 100% 20px,
+    linear-gradient(90deg, rgba(28, 61, 39, 0.35) 1px, transparent 1px) 0 0 / 20px 100%,
+    var(--c-vuoto);
+  font-family: var(--font-terminale);
+  color: var(--c-fosforo);
+}
+
+/* Desktop: altezza fissa come la vista di viaggio. */
+@media (min-width: 1100px) {
+  .vista {
+    aspect-ratio: auto;
+    height: clamp(110px, 14vh, 150px);
+  }
+}
+/* Quattro colonne (≥ 1600px): la Plancia ha una colonna sua e la riempie. */
+@media (min-width: 1600px) {
+  .vista {
+    height: 100%;
+    min-height: 150px;
+  }
+}
+/*
+ * Il palco: il più grande possibile senza uscire dalla vista (come
+ * object-fit: contain). cqw/cqh = percentuali della vista, che è un
+ * container (container-type: size, sopra).
+ * Due palchi, uno per disposizione (vedi il .tsx):
+ *   .larga  400×150 → altezza = min(tutta, larghezza × 150/400)
+ *   .alta   400×280 → altezza = min(tutta, larghezza × 280/400)
+ */
+.palco {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+}
+.larga {
+  height: min(100cqh, 37.5cqw);
+  aspect-ratio: 400 / 150;
+}
+.alta {
+  display: none;
+  height: min(100cqh, 70cqw);
+  aspect-ratio: 400 / 280;
+}
+/* Container query sulla FORMA: se la vista non è una striscia larga,
+   si usa la disposizione alta (globo grande, quattro schede). */
+@container (aspect-ratio < 2.1) {
+  .larga {
+    display: none;
+  }
+  .alta {
+    display: block;
+  }
+}
+
+.disegno {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: var(--c-fosforo);
+}
+
+/* --- GLOBO --------------------------------------------------------------------- */
+.disco {
+  fill: var(--c-pannello);
+  stroke: none;
+}
+.bordo {
+  stroke-width: 1.2;
+  filter: drop-shadow(0 0 4px rgba(125, 245, 165, 0.8));
+}
+.reticolo {
+  stroke-width: 0.5;
+  opacity: 0.75;
+}
+.crateri {
+  stroke-width: 0.6;
+  opacity: 0.8;
+}
+
+.meridiano {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: meridiano 18s infinite;
+}
+/* scaleX da 1 → 0 → −1 → 0 → 1: le tempistiche alternate (ease-in/ease-out)
+   imitano un seno, così il meridiano accelera al centro come su una sfera. */
+@keyframes meridiano {
+  0% {
+    transform: scaleX(1);
+    animation-timing-function: ease-in;
+  }
+  25% {
+    transform: scaleX(0);
+    animation-timing-function: ease-out;
+  }
+  50% {
+    transform: scaleX(-1);
+    animation-timing-function: ease-in;
+  }
+  75% {
+    transform: scaleX(0);
+    animation-timing-function: ease-out;
+  }
+  100% {
+    transform: scaleX(1);
+  }
+}
+
+.orbita {
+  stroke: var(--c-fosforo-tenue);
+  stroke-width: 0.7;
+  stroke-dasharray: 3 4;
+  animation: scorre 2.4s linear infinite;
+}
+@keyframes scorre {
+  to {
+    stroke-dashoffset: -14;
+  }
+}
+
+/* --- BERSAGLIO --------------------------------------------------------------------- */
+.bersaglio {
+  stroke-width: 1;
+  stroke: var(--c-fosforo-alto);
+}
+.impulso {
+  stroke: var(--c-fosforo-alto);
+  stroke-width: 0.8;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: impulso 2.2s ease-out infinite;
+}
+@keyframes impulso {
+  from {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* --- SCHEDE (osservazione) -------------------------------------------------------- */
+.scheda {
+  position: absolute;
+  margin: 0;
+  max-width: 26%;
+  padding: 3px 6px;
+  border: 1px solid var(--c-fosforo);
+  background: rgba(4, 7, 5, 0.88);
+  box-shadow: 0 0 10px rgba(125, 245, 165, 0.15);
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  line-height: 1.05;
+  opacity: 0;
+  animation: scheda 16s infinite;
+}
+.scheda div {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+}
+.scheda dt {
+  color: var(--c-fosforo-tenue);
+}
+.scheda dd {
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Posizioni delle schede: in alto (a, b) e, nella disposizione alta,
+   anche in basso (c, d). */
+.scheda_a {
+  left: 2%;
+  top: 7%;
+}
+.scheda_b {
+  right: 2%;
+  top: 7%;
+  animation-delay: 1.4s;
+}
+.scheda_c {
+  left: 2%;
+  bottom: 18%;
+  width: 26%;
+  animation-delay: 2.8s;
+}
+.scheda_d {
+  right: 2%;
+  bottom: 18%;
+  animation-delay: 4.2s;
+}
+.alta .scheda_a,
+.alta .scheda_b {
+  top: 4%;
+}
+/* Nella disposizione alta il palco è più largo: le schede possono allargarsi. */
+.alta .scheda {
+  max-width: 34%;
+}
+/* Compare con uno sfarfallio (come un vecchio monitor), resta, si spegne. */
+@keyframes scheda {
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  3% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  4% {
+    opacity: 0.3;
+  }
+  5%,
+  82% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  86%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Il piccolo grafico a barre dello "spettro" (scheda c). */
+.spettro {
+  display: flex !important;
+  align-items: flex-end;
+  gap: 3px;
+  height: 22px;
+  margin-top: 2px;
+}
+.spettro span {
+  flex: 1;
+  background: var(--c-fosforo);
+  transform-origin: bottom;
+  animation: barra 1.8s ease-in-out infinite alternate;
+}
+@keyframes barra {
+  from {
+    transform: scaleY(0.35);
+  }
+}
+
+/* Le linee schede → globo si "disegnano" insieme alle schede. */
+.linee polyline {
+  stroke-width: 0.7;
+  stroke-dasharray: 90;
+  stroke-dashoffset: 90;
+  animation: linea 16s infinite;
+}
+.linea_b {
+  animation-delay: 1.4s !important;
+}
+.linea_c {
+  animation-delay: 2.8s !important;
+}
+.linea_d {
+  animation-delay: 4.2s !important;
+}
+@keyframes linea {
+  0% {
+    stroke-dashoffset: 90;
+    opacity: 1;
+  }
+  4%,
+  82% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  86%,
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+}
+
+/* --- ACQUISIZIONE ---------------------------------------------------------------- */
+.aggancio,
+.mirino {
+  display: none;
+}
+.acquisizione .aggancio,
+.acquisizione .mirino,
+.acquisita .mirino {
+  display: inline;
+}
+.acquisizione .scheda,
+.acquisizione .linee {
+  display: none;
+}
+
+.anello1,
+.anello2 {
+  stroke: var(--c-attenzione);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.anello1 {
+  stroke-width: 3;
+  stroke-dasharray: 26 8;
+  animation: gira 5s linear infinite;
+}
+.anello2 {
+  stroke-width: 1;
+  stroke-dasharray: 3 7;
+  animation: gira 8s linear infinite reverse;
+}
+.fascio {
+  fill: var(--c-attenzione);
+  stroke: none;
+  opacity: 0.22;
+  transform-box: view-box; /* l'origine (centro del globo) è nello style del .tsx */
+  animation: gira 2.6s linear infinite;
+}
+@keyframes gira {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.mirino {
+  stroke: var(--c-attenzione);
+  stroke-width: 1;
+  animation: mirino 0.9s steps(2) infinite;
+}
+@keyframes mirino {
+  50% {
+    opacity: 0.2;
+  }
+}
+.acquisizione .bersaglio,
+.acquisizione .impulso {
+  stroke: var(--c-attenzione);
+}
+
+/* ACQUISITA: il mirino si ferma, il cratere si riempie. */
+.acquisita .mirino {
+  stroke: var(--c-fosforo-alto);
+  animation: none;
+}
+.acquisita .bersaglio {
+  fill: var(--c-fosforo-alto);
+}
+
+/* --- TESTI ---------------------------------------------------------------------- */
+/* Il testo del modo sta in basso al centro: in alto ci sono le schede. */
+.modo {
+  position: absolute;
+  left: 50%;
+  bottom: 3px;
+  margin: 0;
+  transform: translateX(-50%);
+  padding: 0 6px;
+  background: rgba(4, 7, 5, 0.8);
+  font-size: 14px;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+  text-shadow: var(--glow-testo);
+}
+.alta .modo {
+  bottom: 9%;
+  font-size: 15px;
+}
+.acquisizione .modo {
+  color: var(--c-attenzione);
+  animation: mirino 1.2s steps(2) infinite;
+}
+.acquisita .modo {
+  color: var(--c-fosforo-alto);
+}
+.coordinate {
+  display: none;
+  position: absolute;
+  left: 50%;
+  bottom: 2px;
+  margin: 0;
+  transform: translateX(-50%);
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  color: var(--c-fosforo-tenue);
+  white-space: nowrap;
+}
+.alta .coordinate {
+  display: block;
+}
+
+/* Telefono: testi più piccoli. */
+@media (max-width: 480px) {
+  .scheda {
+    font-size: 12px;
+    max-width: 30%;
+  }
+  .modo {
+    font-size: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .meridiano,
+  .orbita,
+  .impulso,
+  .spettro span,
+  .anello1,
+  .anello2,
+  .fascio,
+  .mirino,
+  .modo {
+    animation: none !important;
+  }
+  /* Senza animazione le schede restano semplicemente visibili. */
+  .scheda {
+    animation: none;
+    opacity: 1;
+  }
+  .linee polyline {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}

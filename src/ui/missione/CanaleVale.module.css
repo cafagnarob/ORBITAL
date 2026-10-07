@@ -3,6 +3,13 @@
 .finestra {
   min-height: 320px;
 }
+/* Desktop (v3.7.1): la colonna centrale ospita anche Plancia e strumenti.
+   Il canale deve potersi stringere; a scorrere sono i messaggi. */
+@media (min-width: 1100px) {
+  .finestra {
+    min-height: 200px;
+  }
+}
 
 .canale {
   height: 100%;
@@ -33,6 +40,21 @@
   gap: var(--sp-2);
   padding-top: var(--sp-2);
   border-top: 1px solid var(--c-griglia);
+}
+/* Desktop (v3.7.1): le domande stanno su UNA riga che scorre in orizzontale,
+   così il canale lascia più spazio ai messaggi (la colonna ora ospita anche
+   la Plancia e gli strumenti della nave). */
+@media (min-width: 1100px) {
+  .domande {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--c-fosforo-tenue) transparent;
+    padding-bottom: 2px;
+  }
+  .domande > * {
+    flex: none;
+  }
 }
 
 /* --- Contesta / stato della contestazione --------------------------------- */

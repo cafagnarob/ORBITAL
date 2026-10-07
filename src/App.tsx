@@ -29,6 +29,7 @@ import type { Preparazione } from "./engine/types";
 import { impostaAtmosfera } from "./ui/audio";
 import { SchermataBriefing } from "./ui/briefing/SchermataBriefing";
 import { ProvaMinigiochi } from "./ui/minigiochi/ProvaMinigiochi";
+import { ProvaPlancia } from "./ui/missione/plancia/ProvaPlancia";
 import { SchermataIngresso } from "./ui/ingresso/SchermataIngresso";
 import { SchermataMissione } from "./ui/missione/SchermataMissione";
 import { SchermataPreparazione } from "./ui/preparazione/SchermataPreparazione";
@@ -36,11 +37,16 @@ import { seedCasuale, seedIniziale } from "./ui/seed";
 
 type Fase = "INGRESSO" | "BRIEFING" | "PREPARAZIONE" | "MISSIONE";
 
-/** ?prova=minigiochi apre il banco di prova dei minigiochi (per chi sviluppa). */
-const PROVA_MINIGIOCHI = new URLSearchParams(window.location.search).get("prova") === "minigiochi";
+/**
+ * Banchi di prova (per chi sviluppa):
+ *   ?prova=minigiochi → tutti i minigiochi;
+ *   ?prova=plancia    → Plancia e strumenti della nave in ogni stato (v3.7.1).
+ */
+const PROVA = new URLSearchParams(window.location.search).get("prova");
 
 export default function App() {
-  if (PROVA_MINIGIOCHI) return <ProvaMinigiochi />;
+  if (PROVA === "minigiochi") return <ProvaMinigiochi />;
+  if (PROVA === "plancia") return <ProvaPlancia />;
   return <Gioco />;
 }
 

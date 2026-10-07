@@ -1,0 +1,200 @@
+/*
+ * Strumenti.module.css — quadrante dello scafo e indicatori a lancetta.
+ *
+ * I TONI
+ * La classe .normale / .attenzione / .critico sta sul contenitore e imposta
+ * la variabile --tono: arco, lancetta e numero la usano tutti. Un solo
+ * punto da cambiare per colorare uno strumento.
+ */
+
+.normale {
+  --tono: var(--c-fosforo);
+}
+.attenzione {
+  --tono: var(--c-attenzione);
+}
+.critico {
+  --tono: var(--c-critico);
+}
+
+/* Parti comuni dei disegni */
+.tacca,
+.taccaLunga {
+  stroke: var(--c-fosforo-tenue);
+  stroke-width: 0.8;
+}
+.taccaLunga {
+  stroke: var(--c-fosforo);
+  stroke-width: 1.4;
+}
+.traccia {
+  fill: none;
+  stroke: var(--c-griglia);
+  stroke-width: 3;
+}
+.arco {
+  fill: none;
+  stroke: var(--tono);
+  stroke-width: 3;
+  filter: drop-shadow(0 0 2px var(--tono));
+  transition: stroke-dasharray 0.8s ease-out;
+}
+
+/* --- QUADRANTE DELLO SCAFO ------------------------------------------------------ */
+.quadrante {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.quadrante svg {
+  width: 100%;
+  max-width: 86px;
+  aspect-ratio: 1;
+  display: block;
+}
+.cerchio,
+.cerchioTratteggio,
+.croce {
+  fill: none;
+  stroke: var(--c-fosforo-tenue);
+  stroke-width: 0.6;
+}
+.cerchioTratteggio {
+  stroke-dasharray: 2 2;
+}
+.croce {
+  opacity: 0.5;
+}
+.fascio {
+  fill: var(--tono);
+  opacity: 0.18;
+  transform-box: view-box;
+  transform-origin: 50px 50px;
+  animation: gira 4s linear infinite;
+}
+@keyframes gira {
+  to {
+    transform: rotate(360deg);
+  }
+}
+/* Il numero al centro: HTML sopra l'SVG (sempre ≥ 12px). */
+.centro {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 100%;
+  max-width: 86px;
+  aspect-ratio: 1;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.numero {
+  font-family: var(--font-terminale);
+  font-size: 26px;
+  line-height: 0.9;
+  color: var(--tono);
+  text-shadow: 0 0 8px var(--tono);
+}
+.nomeQuadrante {
+  font-family: var(--font-terminale);
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  color: var(--c-fosforo-tenue);
+}
+.fascia {
+  font-family: var(--font-terminale);
+  font-size: 14px;
+  line-height: 1;
+  letter-spacing: 0.12em;
+  color: var(--tono);
+}
+
+/* --- INDICATORI ------------------------------------------------------------------- */
+.indicatore {
+  min-width: 0;
+}
+.contenutoIndicatore {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.indicatore svg {
+  width: 100%;
+  max-width: 58px;
+  aspect-ratio: 1;
+  display: block;
+  margin-bottom: -6px; /* l'apertura in basso della scala ospita il testo */
+}
+.lancetta {
+  stroke: var(--tono);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  transform-box: view-box;
+  transform-origin: 30px 30px;
+  transform: rotate(var(--angolo));
+  /* La lancetta "rimbalza" un poco quando cambia valore (curva con overshoot). */
+  transition: transform 0.9s cubic-bezier(0.3, 1.5, 0.5, 1);
+  /* All'accensione del pannello parte da zero e sale al valore. */
+  animation: accendi 1.4s cubic-bezier(0.3, 1.3, 0.5, 1) backwards;
+  filter: drop-shadow(0 0 2px var(--tono));
+}
+@keyframes accendi {
+  from {
+    transform: rotate(-135deg);
+  }
+}
+.perno {
+  fill: var(--c-pannello);
+  stroke: var(--tono);
+  stroke-width: 1.2;
+}
+.sigla {
+  font-family: var(--font-terminale);
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  color: var(--c-testo);
+  white-space: nowrap;
+}
+.valoreIndicatore {
+  font-family: var(--font-terminale);
+  font-size: 16px;
+  line-height: 1;
+  color: var(--tono);
+}
+.avviso {
+  font-size: 13px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fascio,
+  .lancetta {
+    animation: none;
+  }
+  .lancetta,
+  .arco {
+    transition: none;
+  }
+}
+
+/* Desktop a tre colonne: quadrante più piccolo (vedi PannelloNave.module.css). */
+@media (min-width: 1100px) and (max-width: 1599px) {
+  .quadrante svg,
+  .centro {
+    max-width: 70px;
+  }
+  .numero {
+    font-size: 21px;
+  }
+  .nomeQuadrante {
+    display: none;
+  }
+  .indicatore svg {
+    max-width: 50px;
+  }
+}

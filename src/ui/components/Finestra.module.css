@@ -46,6 +46,12 @@
   padding: var(--sp-3) var(--sp-4);
 }
 
+/* Corpo a filo dei bordi (v3.7.1): la Plancia disegna fino al margine. */
+.corpo.pieno {
+  padding: 0;
+  overflow: hidden;
+}
+
 /* --- SISTEMA --------------------------------------------------------------- */
 .sistema {
   border: 2px solid var(--c-fosforo);

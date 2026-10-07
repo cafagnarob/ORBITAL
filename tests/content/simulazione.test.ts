@@ -91,19 +91,22 @@ function partita(seed: string, giorni: number, n: number): StatoMissione {
 }
 
 describe("simulazione con il contenuto vero", () => {
-  const finali = Array.from({ length: 30 }, (_, i) => partita(`BOT-${i}`, 6, i));
+  // 7 giorni: tre di viaggio e tutta l'orbita fino alla finestra di rientro (v3.7).
+  const finali = Array.from({ length: 30 }, (_, i) => partita(`BOT-${i}`, 7, i));
 
-  it("30 partite da 6 giorni si giocano senza errori (o finiscono prima con un finale)", () => {
+  it("30 partite da 7 giorni si giocano senza errori (o finiscono prima con un finale)", () => {
     expect(finali).toHaveLength(30);
     for (const s of finali) {
       if (s.statoGioco === "CONCLUSA") expect(s.esito).not.toBeNull();
-      else expect(scomponiTempo(s.tempo).giorno).toBeGreaterThanOrEqual(6);
+      else expect(scomponiTempo(s.tempo).giorno).toBeGreaterThanOrEqual(7);
     }
   });
 
   it("il segnale viene rilevato nella maggior parte delle partite", () => {
     const conSegnale = finali.filter((s) => s.conoscenza.scoperte.includes("SEGNALE_RILEVATO")).length;
-    expect(conSegnale).toBeGreaterThan(20);
+    // v3.7.1: il segnale arriva solo in orbita (giorni 4–7) e una scelta su tre
+    // è IGNORA: "maggior parte" = più di metà delle partite.
+    expect(conSegnale).toBeGreaterThan(finali.length / 2);
   });
 
   it("la catena del segnale è completabile: la sorgente viene localizzata", () => {

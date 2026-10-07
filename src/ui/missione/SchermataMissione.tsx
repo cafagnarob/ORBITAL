@@ -6,8 +6,9 @@
  * LAYOUT RESPONSIVE
  *   Desktop (≥ 1100px): tre colonne a tutta altezza, ogni pannello scorre
  *     al suo interno, come la console del prototipo.
- *       sinistra: Equipaggio, Risorse · centro: V.A.L.E., Scoperte
- *       destra: Pianifica, Nave, Pianeta
+ *       ≥ 1600px: Equipaggio+Risorse · V.A.L.E. · Plancia+Nave · Missione+Pianifica
+ *       1100–1599px: tre colonne, Plancia e Nave sopra e sotto V.A.L.E.
+ *     v3.7.1: la scheda del pianeta è diventata la Plancia (plancia/).
  *   Tablet e mobile (< 1100px): una colonna sola con SCHEDE in alto
  *     (Crew · V.A.L.E. · Task · Nave). Si vede una scheda alla volta e la
  *     barra dei comandi resta sempre in fondo allo schermo.
@@ -38,7 +39,8 @@ import { useState } from "react";
 import { minutoDelGiorno, ORARIO_RISVEGLIO, scomponiTempo } from "../../engine/clock";
 import { useAccensione } from "../cornice/useAccensione";
 import { suona } from "../audio";
-import type { Preparazione } from "../../engine/types";
+import { faseViaggio } from "../../engine/storia/viaggio";
+import type { FaseViaggio, Preparazione } from "../../engine/types";
 import type { RazioniSerali } from "../../engine/crew/razioni";
 import { Monitor } from "../cornice/Monitor";
 import { PannelloFrontale } from "../cornice/PannelloFrontale";
@@ -53,12 +55,19 @@ import { SchermataEpilogo } from "./SchermataEpilogo";
 import { Intestazione } from "./Intestazione";
 import { PannelloCrew } from "./PannelloCrew";
 import { PannelloNave } from "./PannelloNave";
-import { PannelloPianeta } from "./PannelloPianeta";
 import { PannelloMissione } from "./PannelloMissione";
 import { PannelloPianifica } from "./PannelloPianifica";
 import { PannelloRisorse } from "./PannelloRisorse";
 import { PannelloScoperte } from "./PannelloScoperte";
+import { Plancia } from "./plancia/Plancia";
 import stili from "./SchermataMissione.module.css";
+
+/** La scritta di quando il monitor si riaccende, secondo la fase (v3.7.1). */
+const LUOGO_DIDASCALIA: Record<FaseViaggio, string> = {
+  ANDATA: "IN VIAGGIO VERSO E-17",
+  ORBITA: "ORBITA E-17",
+  RIENTRO: "RIENTRO VERSO LA TERRA",
+};
 
 const SCHEDE = [
   { id: "crew", nome: "Crew" },
@@ -108,7 +117,7 @@ export function SchermataMissione({ seed, preparazione, onNuovaPartita }: Props)
   const didascalia =
     minutoDelGiorno(stato.tempo) === ORARIO_RISVEGLIO
       ? `GIORNO ${String(giorno).padStart(2, "0")} · 06:00 · BUONGIORNO, CAPITANO`
-      : `ORBITA E-17 · GIORNO ${String(giorno).padStart(2, "0")}`;
+      : `${LUOGO_DIDASCALIA[faseViaggio(stato)]} · GIORNO ${String(giorno).padStart(2, "0")}`;
 
   /** Classe per un blocco: nascosto su mobile se non è della scheda attiva. */
   const blocco = (di: IdScheda, extra = "") => `${stili.blocco} ${extra} ${di === scheda ? "" : stili.nascostoMobile}`;
@@ -143,8 +152,19 @@ export function SchermataMissione({ seed, preparazione, onNuovaPartita }: Props)
           ))}
         </nav>
 
+        {/*
+          DISPOSIZIONE (v3.7.1) — quattro gruppi di pannelli:
+            equipaggio  Equipaggio · Risorse
+            centro      Canale di V.A.L.E.
+            strumenti   Plancia (animata) · Nave e sistemi
+            lavoro      Missione · Pianifica · Registro scoperte (scorre)
+          ≥ 1600px: quattro colonne. 1100–1599px: tre colonne, con Plancia e
+          Nave sopra e sotto V.A.L.E. (vedi il CSS). Su mobile le colonne
+          spariscono (display: contents) e ogni blocco appartiene a una
+          scheda: crew, vale, task, nave.
+        */}
         <main className={stili.griglia}>
-          <div className={stili.colonna}>
+          <div className={`${stili.colonna} ${stili.equipaggio}`}>
             <div className={blocco("crew", stili.cresce)}>
               <PannelloCrew stato={stato} dispatch={dispatch} />
             </div>
@@ -153,31 +173,32 @@ export function SchermataMissione({ seed, preparazione, onNuovaPartita }: Props)
             </div>
           </div>
 
-          <div className={stili.colonna}>
+          <div className={`${stili.colonna} ${stili.centro}`}>
             <div className={blocco("vale", stili.cresce)}>
               <CanaleVale stato={stato} dispatch={dispatch} />
             </div>
-            <div className={blocco("vale")}>
-              <PannelloScoperte stato={stato} />
+          </div>
+
+          <div className={`${stili.colonna} ${stili.strumenti}`}>
+            <div className={blocco("task", stili.inAlto)}>
+              <Plancia stato={stato} />
+            </div>
+            <div className={blocco("nave", stili.inBasso)}>
+              <PannelloNave stato={stato} />
             </div>
           </div>
 
-          {/* Terza colonna: con il pannello MISSIONE (v3.7) è più alta dello
-              schermo, quindi su desktop scorre al suo interno (classe .scorre)
+          {/* Il gruppo di lavoro scorre al suo interno su desktop (.scorre)
               invece di finire sotto la barra dei comandi. */}
-          <div className={`${stili.colonna} ${stili.scorre}`}>
-            {/* La super-missione (v3.7): fasi, scaletta, obiettivi. */}
+          <div className={`${stili.colonna} ${stili.lavoro} ${stili.scorre}`}>
             <div className={blocco("task")}>
               <PannelloMissione stato={stato} />
             </div>
             <div className={blocco("task")}>
               <PannelloPianifica stato={stato} dispatch={dispatch} />
             </div>
-            <div className={blocco("nave", stili.cresce)}>
-              <PannelloNave stato={stato} />
-            </div>
-            <div className={blocco("nave")}>
-              <PannelloPianeta seedPartita={stato.seed} />
+            <div className={blocco("vale")}>
+              <PannelloScoperte stato={stato} />
             </div>
           </div>
         </main>

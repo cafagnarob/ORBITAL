@@ -11,7 +11,7 @@
   - Lingua: tutto ciò che vede il giocatore è in italiano. Gli identificatori nel codice possono essere in inglese.
 -->
 
-# ORBITAL — DESIGN v3.7
+# ORBITAL — DESIGN v3.7.1
 
 > **Prepara con cura. Non fidarti mai del tutto.**
 > Domanda centrale: **di cosa mi posso fidare?**
@@ -704,6 +704,9 @@ Una missione = **tre fasi** derivate da giorno e `partenza` (`engine/storia/viag
 - **Obiettivi** (`content/missione.ts`, `engine/storia/obiettivi.ts`): PRINCIPALI P1 Raggiungi E-17 · P2 Acquisisci l'area d'interesse · P3 Riporta a casa tutta la crew. DI CONTORNO (obiettivi secondari durante la missione, con ricompensa una sola volta): recupero SR-9 (energia, comunicazioni), mappatura (codice VL-D7-X), cometa (scienza), Calliope (fiducia), contatti con la Terra (cibo e acqua).
 - **Finale MISSIONE_COMPIUTA** (★★★): rientro + area acquisita + crew integra.
 - UI: pannello MISSIONE (fasi, scaletta con ✓ valido fino a… / ✗ scaduto, finestra, obiettivi di contorno), intestazione con la fase.
+- **Eventi e fasi** (v3.7.1): un evento che descrive il pianeta da vicino (superficie, emisfero, «sfiora E-17») richiede la fase ORBITA (E01 segnale, V09 cometa), o segue un task possibile solo in orbita. Lo controlla un test sul catalogo.
+- **Plancia** (v3.7.1, `ui/missione/plancia/`): schermo di navigazione animato, solo CSS (niente timer JS). ANDATA/RIENTRO → griglia in prospettiva che scorre, pianeta di destinazione che cresce col progresso (`trattaInCorso`), conto alla rovescia, etichetta del bersaglio. ORBITA → globo wireframe che ruota (meridiani con scaleX), schede dei dati collegate da linee, orbita tratteggiata; durante una scansione del cratere anelli e mirino AMBRA con «ACQUISIZIONE IN CORSO»; poi «AREA D'INTERESSE ACQUISITA». Banco di prova: `?prova=plancia`.
+- **Strumenti di bordo** (v3.7.1): Nave · Sistemi = quadrante radar per lo scafo + 8 indicatori a lancetta (transizione CSS al cambio di valore). Layout: ≥1600px quattro colonne (Equipaggio+Risorse · V.A.L.E. · Plancia+Nave · Missione+Pianifica); 1100–1599px tre colonne con Plancia e Nave sopra e sotto V.A.L.E.; mobile a schede (Plancia nella scheda Task).
 - **Quante missioni**: per ora una sola (E-17). La campagna su altri pianeti (K-22, S-08…) userà lo stesso schema ed è da progettare.
 
 ---
@@ -871,6 +874,7 @@ Tutto generato nel codice (`src/ui/audio/`): nessun file audio.
 | v2.2 | Reducer della missione: regole provvisorie di esecuzione (niente lavoro notturno, costi all'avvio, rischio salvato all'avvio, aiutante occupato → si procede da soli), consumi al rapporto serale, recupero notturno |
 | v2.3 | Adottata l'**Integrità dei dati** (§4.6). Adottato il design system VALE-OS (§16.5), con la UI allineata al DESIGN (scorte unificate, E-17 arido). Crew di riferimento: Mara, Adrian, Nadia, Sarah. Niente testo libero verso V.A.L.E. |
 | v2.4 | Sistema di eventi data-driven (§10.1): condizioni, effetti, scelte, stato DECISIONE, un evento per momento, output dei task come eventi, scoperte che sbloccano task. Catena del Segnale di E-17 implementata |
+| v3.7.1 | Eventi del pianeta solo in orbita (E01, V09) + test. **Plancia** animata (griglia di viaggio, globo e acquisizione), **strumenti** a lancetta per la nave, layout a 4/3 colonne; scheda del pianeta assorbita dalla Plancia |
 | v3.7 | **Super-missione E-17** (§14.6): andata 3 g · orbita 4 g · rientro 3 g; scaletta con prerequisiti che scadono e finestra della scansione; obiettivi principali e di contorno; eventi di viaggio; finale Missione compiuta. **Nave vuota** + «Carica l'indispensabile» (§11.6) |
 | v3.6 | **Minigiochi** (§9.2): 8 meccaniche, uno per ogni task; compaiono all'avvio (sempre se il rischio è alto) e riducono il rischio fino a −20. La lista dei task mostra solo quelli disponibili |
 | v3.5 | Giornata da **5 minuti**; pulsante **⏭ Salta** al prossimo momento importante (§8.1) |

@@ -587,7 +587,8 @@ export const EVENTI_TURNO: DefinizioneEvento[] = [
     unaVolta: true,
     probabilita: 0.05,
     peso: 2,
-    condizioni: [TURNO, dalGiorno(3)],
+    // v3.7.1: la cometa «sfiora E-17» → succede solo quando siamo in orbita.
+    condizioni: [TURNO, { tipo: "FASE", fasi: ["ORBITA"] }],
     fonte: "VALE",
     testo: "Capitano. Una piccola cometa sfiora E-17. La coda è ghiaccio d'acqua: resterà raggiungibile per dieci ore.",
     codici: [],

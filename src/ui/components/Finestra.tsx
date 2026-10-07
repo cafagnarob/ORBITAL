@@ -10,6 +10,9 @@
  *   cornice  → riquadro sottile con crocini agli angoli.
  *              Per dati secondari e annotazioni (scheda del pianeta).
  *
+ * `pieno` (v3.7.1) toglie il margine interno: per i pannelli "a schermo"
+ * come la Plancia, dove l'animazione deve toccare i bordi.
+ *
  * `useId` genera un ID unico per collegare la sezione al suo titolo
  * (aria-labelledby): chi usa uno screen reader sente "Equipaggio, sezione".
  * ============================================================================
@@ -24,10 +27,12 @@ interface FinestraProps {
   /** Contenuto extra a destra del titolo (contatori, stato...). */
   destra?: ReactNode;
   className?: string;
+  /** Corpo senza margine interno (contenuto a filo dei bordi). */
+  pieno?: boolean;
   children: ReactNode;
 }
 
-export function Finestra({ titolo, variante = "sistema", destra, className = "", children }: FinestraProps) {
+export function Finestra({ titolo, variante = "sistema", destra, className = "", pieno = false, children }: FinestraProps) {
   const idTitolo = useId();
   return (
     <section className={`${stili.finestra} ${stili[variante]} ${className}`} aria-labelledby={idTitolo}>
@@ -38,7 +43,7 @@ export function Finestra({ titolo, variante = "sistema", destra, className = "",
         </h2>
         {destra !== undefined && <span className={stili.destra}>{destra}</span>}
       </header>
-      <div className={stili.corpo}>{children}</div>
+      <div className={`${stili.corpo} ${pieno ? stili.pieno : ""}`}>{children}</div>
     </section>
   );
 }
