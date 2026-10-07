@@ -41,6 +41,8 @@ export type Fazione = (typeof FAZIONI)[number];
  */
 export interface SelettoreMembro {
   fazione?: Fazione;
+  /** true = solo chi ha fame o sete (carico ≥ 2, v3.4): la paranoia. */
+  affamato?: boolean;
   ruolo?: Ruolo;
   personalita?: Partial<Personalita>;
   preferisci?: "CASUALE" | "PIU_FIDUCIOSO" | "MENO_FIDUCIOSO";
@@ -152,4 +154,25 @@ export interface ContenutiStoria {
   diarioVuoto: readonly string[];
   /** Righe d'epilogo per ogni membro, secondo come è finito ({N} = nome). */
   epiloghiCrew: Readonly<Record<Fazione | "MORTO", readonly string[]>>;
+  /** Le risposte della crew ai discorsi del Capitano (v3.4). */
+  colloqui: TestiColloqui;
+}
+
+// ----------------------------------------------------------------------------
+// COLLOQUI DEL CAPITANO (v3.4)
+// ----------------------------------------------------------------------------
+
+export const DISCORSI = ["DIFENDI_VALE", "DUBITA_VALE", "INCORAGGIA"] as const;
+export type Discorso = (typeof DISCORSI)[number];
+export type EsitoColloquio = "CONVINTO" | "RESPINTO";
+
+/** Per ogni discorso e ogni esito, le frasi possibili della persona. */
+export type TestiColloqui = Readonly<Record<Discorso, Readonly<Record<EsitoColloquio, readonly string[]>>>>;
+
+/** Traccia di un colloquio nello stato: serve al limite di uno al giorno. */
+export interface RegistroColloquio {
+  membro: IdMembro;
+  tempo: Minuti;
+  discorso: Discorso;
+  esito: EsitoColloquio;
 }

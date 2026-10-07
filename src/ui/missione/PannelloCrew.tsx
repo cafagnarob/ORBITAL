@@ -7,7 +7,9 @@
  *   - nome, ruolo e condizione (SANO, FERITO...);
  *   - fatica con la sua fascia;
  *   - cosa sta facendo ora (task in corso, aiuto a un collega, o libero);
- *   - la sua CODA di task, con la possibilità di rimuovere quelli non avviati.
+ *   - la sua CODA di task, con la possibilità di rimuovere quelli non avviati;
+ *   - fame, sete e task ancora possibili oggi (v3.4);
+ *   - PARLA CON…: i discorsi del Capitano (ColloquioMembro, v3.4).
  *
  * Tutto è ricavato dallo stato: per sapere se Nadia sta aiutando qualcuno
  * cerchiamo un task IN_CORSO con supporto === "nadia".
@@ -21,6 +23,9 @@ import { BarraSegmentata } from "../components/BarraSegmentata";
 import { Finestra } from "../components/Finestra";
 import { Pulsante } from "../components/Pulsante";
 import { fazioneDi } from "../../engine/storia/fazioni";
+import { CONTESTO_GIOCO } from "../../content/contesto";
+import { capacitaGiornaliera, livelloBisogno, NOMI_FAME, NOMI_SETE, taskDiOggi } from "../../engine/crew/razioni";
+import { ColloquioMembro } from "./ColloquioMembro";
 import { etichetta, formattaOra, NOMI_FAZIONE, tonoFatica, tonoFazione, tonoStatoMembro } from "../format";
 import type { Dispatch } from "../useMissione";
 import stili from "./PannelloCrew.module.css";
@@ -28,6 +33,11 @@ import stili from "./PannelloCrew.module.css";
 interface Props {
   stato: StatoMissione;
   dispatch: Dispatch;
+}
+
+/** Livello di fame o sete 0–3 → tono del testo. */
+function tonoBisogno(livello: number): "normale" | "attenzione" | "critico" {
+  return livello >= 3 ? "critico" : livello >= 2 ? "attenzione" : "normale";
 }
 
 /** Nome leggibile di un'istanza di task. */
@@ -87,6 +97,14 @@ export function PannelloCrew({ stato, dispatch }: Props) {
                 </span>
               </p>
 
+              {/* Fame e sete (v3.4): pesano sui task possibili oggi. */}
+              <p className={stili.bisogni}>
+                <span className={stili[tonoBisogno(livelloBisogno(m.fame))]}>{NOMI_FAME[livelloBisogno(m.fame)]}</span>
+                {" · "}
+                <span className={stili[tonoBisogno(livelloBisogno(m.sete))]}>{NOMI_SETE[livelloBisogno(m.sete)]}</span>
+                {" · "}TASK OGGI {taskDiOggi(stato, CONTESTO_GIOCO, m.id)}/{capacitaGiornaliera(m)}
+              </p>
+
               <p className={stili.attivita}>
                 <span className={stili.posizione}>{etichetta(m.posizione)}</span> ▸ {attivitaAttuale(stato, m)}
               </p>
@@ -112,6 +130,8 @@ export function PannelloCrew({ stato, dispatch }: Props) {
                   ))}
                 </ol>
               )}
+
+              <ColloquioMembro stato={stato} membro={m} dispatch={dispatch} />
             </li>
           );
         })}

@@ -48,6 +48,15 @@ export function suoniMissione(prima: StatoMissione, dopo: StatoMissione, azione:
     case "AVVIA_OPERAZIONI":
       suoni.push("AVVIO");
       break;
+    case "AVANZA_FINO": {
+      // Il tempo reale arriva ogni secondo: niente clic. Si sente solo un
+      // task che si conclude (conferma) o che fallisce (errore).
+      const conclusi = (s: StatoMissione) => Object.values(s.tasks).filter((t) => t.esito !== null);
+      const nuovi = conclusi(dopo).filter((t) => prima.tasks[t.id]?.esito === null);
+      if (nuovi.some((t) => t.stato === "FALLITO")) suoni.push("ERRORE");
+      else if (nuovi.length > 0) suoni.push("CONFERMA");
+      break;
+    }
     case "INSERISCI_CODICE":
       suoni.push(dopo.terminale.livello > prima.terminale.livello ? "ACCESSO" : "ERRORE");
       break;

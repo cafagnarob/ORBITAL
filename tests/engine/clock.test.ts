@@ -94,12 +94,17 @@ describe("prossimaOccorrenza", () => {
 
 // ----------------------------------------------------------------------------
 describe("prossimoMomento", () => {
-  it("senza task in corso, alle 06:00 il prossimo momento è il rapporto delle 22:00", () => {
+  it("senza task in corso, alle 06:00 il prossimo momento è il cambio turno delle 10:00", () => {
     const stato = creaMissioneDiProva(); // tempo 360, task-1 solo IN_CODA
     expect(prossimoMomento(stato)).toEqual({
-      tempo: 1320,
-      motivi: [{ tipo: "RAPPORTO_SERALE" }],
+      tempo: 600,
+      motivi: [{ tipo: "TURNO" }],
     });
+  });
+
+  it("dopo l'ultimo turno (19:00) il prossimo momento è il rapporto delle 22:00", () => {
+    const stato = avanzaTempo(creaMissioneDiProva(), 19 * 60);
+    expect(prossimoMomento(stato)).toEqual({ tempo: 1320, motivi: [{ tipo: "RAPPORTO_SERALE" }] });
   });
 
   it("un task che finisce prima del rapporto viene prima", () => {
@@ -119,7 +124,7 @@ describe("prossimoMomento", () => {
   });
 
   it("pareggio: task e rapporto alle 22:00 vengono restituiti insieme, task prima", () => {
-    const stato = conTaskInCorso(creaMissioneDiProva(), "task-2", 1320);
+    const stato = conTaskInCorso(avanzaTempo(creaMissioneDiProva(), 19 * 60), "task-2", 1320);
     expect(prossimoMomento(stato)).toEqual({
       tempo: 1320,
       motivi: [{ tipo: "FINE_TASK", idTask: "task-2" }, { tipo: "RAPPORTO_SERALE" }],
@@ -128,8 +133,8 @@ describe("prossimoMomento", () => {
 
   it("pareggio tra task: ordine per ID, indipendente dall'ordine di inserimento", () => {
     let stato = creaMissioneDiProva();
-    stato = conTaskInCorso(stato, "task-b", 700);
-    stato = conTaskInCorso(stato, "task-a", 700);
+    stato = conTaskInCorso(stato, "task-b", 590);
+    stato = conTaskInCorso(stato, "task-a", 590);
     expect(prossimoMomento(stato).motivi).toEqual([
       { tipo: "FINE_TASK", idTask: "task-a" },
       { tipo: "FINE_TASK", idTask: "task-b" },
@@ -177,14 +182,14 @@ describe("avanzaTempo", () => {
   });
 
   it("simula una giornata saltando di momento in momento", () => {
-    // Dalle 06:00 del giorno 1, tre salti: rapporto, risveglio, rapporto.
+    // Dalle 06:00 del giorno 1: quattro cambi turno, rapporto, risveglio, il primo turno del giorno 2.
     let stato = creaMissioneDiProva();
     const visitati: number[] = [];
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 7; i++) {
       const { tempo } = prossimoMomento(stato);
       stato = avanzaTempo(stato, tempo);
       visitati.push(tempo);
     }
-    expect(visitati).toEqual([1320, 1800, 2760]);
+    expect(visitati).toEqual([600, 780, 960, 1140, 1320, 1800, 2040]);
   });
 });

@@ -10,14 +10,13 @@
  *   06:00  risveglio        → recupero della fatica, nuova pianificazione
  *
  * REGOLE [PROVVISORIO]
- * - Consumi di cibo, acqua, ossigeno ed energia applicati una volta al
- *   giorno, al rapporto. L'ossigeno prima si consuma, poi il Supporto
- *   Vitale ne rigenera una parte (proporzionale alla sua integrità), senza
- *   superare la capienza dei serbatoi.
- * - Chi resta senza cibo, acqua o ossigeno perde salute ogni sera (come in
- *   60 Seconds: le scorte finite non sono un "game over" immediato, ma una
- *   discesa che lascia il tempo di reagire… o di disperarsi).
- * - Il sonno toglie una quantità fissa di fatica a chi è a bordo.
+ * - Ossigeno ed energia si consumano al rapporto. L'ossigeno prima si
+ *   consuma, poi il Supporto Vitale ne rigenera una parte (proporzionale
+ *   alla sua integrità), senza superare la capienza dei serbatoi.
+ * - Cibo e acqua (v3.4) li distribuisce il Capitano chiudendo il rapporto:
+ *   razioni piene, mezze o niente per ognuno (engine/crew/razioni.ts).
+ * - Senza ossigeno si perde salute ogni sera; fame e sete pesano a parte.
+ * - Il sonno toglie fatica a chi è a bordo, meno a chi ha fame o sete.
  * - I numeri (energia, scorte per membro, recupero) sono quelli della nave
  *   CON i suoi moduli: parametriNave() somma base + moduli installati.
  * ============================================================================
@@ -33,6 +32,7 @@ import { modificaSalute } from "../crew/salute";
 import { diarioSerale, scriviDiario } from "../storia/diario";
 import { BALANCE } from "../../content/balance";
 import { scriviLog } from "./log";
+import { caricoBisogni } from "../crew/razioni";
 
 /** Fine della pianificazione: si passa alle 07:00 e partono i task. */
 export function avviaOperazioni(bozza: StatoMissione, contesto: ContestoMissione): void {
@@ -53,11 +53,8 @@ export function rapportoSerale(bozza: StatoMissione, contesto: ContestoMissione)
   const aBordo = membri.length;
   const r = bozza.risorse;
 
-  // Chi resta senza: lo sappiamo PRIMA di sottrarre (servono le quantità intere).
-  const senzaCibo = r.cibo < aBordo * p.ciboPerMembro;
-  const senzaAcqua = r.acqua < aBordo * p.acquaPerMembro;
-  r.cibo = Math.max(0, r.cibo - aBordo * p.ciboPerMembro);
-  r.acqua = Math.max(0, r.acqua - aBordo * p.acquaPerMembro);
+  // Cibo e acqua NON si consumano qui: li distribuisce il Capitano
+  // chiudendo il rapporto (razioni, engine/crew/razioni.ts — v3.4).
 
   // Ossigeno: consumo, poi rigenerazione del Supporto Vitale fino alla capienza.
   const senzaOssigeno = r.ossigeno < aBordo * g.ossigenoPerMembro;
@@ -68,12 +65,10 @@ export function rapportoSerale(bozza: StatoMissione, contesto: ContestoMissione)
   const bilancioEnergia = p.generazioneEnergia - p.consumoEnergia;
   r.energia = Math.min(p.capacitaBatteria, Math.max(0, r.energia + bilancioEnergia));
 
-  // Le privazioni pesano sulla salute di tutti quelli a bordo.
-  const danno =
-    (senzaCibo ? g.dannoSenzaCibo : 0) + (senzaAcqua ? g.dannoSenzaAcqua : 0) + (senzaOssigeno ? g.dannoSenzaOssigeno : 0);
-  if (danno > 0) {
+  // L'aria che manca pesa sulla salute di tutti quelli a bordo.
+  if (senzaOssigeno) {
     for (const m of membri) {
-      if (modificaSalute(m, -danno)) {
+      if (modificaSalute(m, -g.dannoSenzaOssigeno)) {
         scriviLog(bozza, "SISTEMA", `${m.nome.toUpperCase()} · SEGNI VITALI ASSENTI`);
         scriviDiario(bozza, `Abbiamo perso ${m.nome}.`);
       }
@@ -87,8 +82,7 @@ export function rapportoSerale(bozza: StatoMissione, contesto: ContestoMissione)
     "VALE",
     `Rapporto serale, giorno ${giorno}. Cibo ${r.cibo} · Acqua ${r.acqua} · Ossigeno ${r.ossigeno} · Energia ${r.energia} · Carburante ${r.carburante}.`,
   );
-  if (senzaCibo) scriviLog(bozza, "VALE", "Capitano. Il cibo è esaurito.");
-  if (senzaAcqua) scriviLog(bozza, "VALE", "Capitano. L'acqua è esaurita.");
+  scriviLog(bozza, "VALE", "Capitano. Attendo le razioni della sera per l'equipaggio.");
   if (senzaOssigeno) scriviLog(bozza, "VALE", "Capitano. Riserva d'ossigeno insufficiente.");
 
   // Il giornale di bordo: il bilancio della giornata (v3.0).
@@ -99,7 +93,9 @@ export function rapportoSerale(bozza: StatoMissione, contesto: ContestoMissione)
 export function risveglio(bozza: StatoMissione, contesto: ContestoMissione): void {
   const { recuperoFatica } = parametriNave(bozza.nave.moduli, contesto.catalogoModuli);
   for (const membro of membriABordo(bozza)) {
-    membro.fatica = Math.max(0, membro.fatica - recuperoFatica);
+    // Chi ha fame o sete dorme male: recupera meno (v3.4).
+    const recupero = Math.max(0, recuperoFatica - caricoBisogni(membro) * BALANCE.razioni.recuperoPerso);
+    membro.fatica = Math.max(0, membro.fatica - recupero);
   }
   bozza.statoGioco = "PIANIFICAZIONE";
   const { giorno } = scomponiTempo(bozza.tempo);

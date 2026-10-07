@@ -12,8 +12,9 @@
 }
 
 .pagina {
-  width: min(620px, 100%);
+  width: min(760px, 100%);
   max-height: 100%;
+  overflow-y: auto; /* diario + razioni: su schermi bassi si scorre */
   display: flex;
   flex-direction: column;
   background: var(--c-pannello);
@@ -40,6 +41,7 @@
 }
 
 .righe {
+  flex: none;
   margin: 0;
   padding: var(--sp-4) var(--sp-5) var(--sp-4) calc(var(--sp-5) + var(--sp-4));
   overflow-y: auto;
@@ -69,9 +71,20 @@
 }
 
 .piede {
+  position: sticky; /* il pulsante resta visibile mentre si scorre la pagina */
+  bottom: 0;
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: flex-end;
+  gap: var(--sp-3);
   padding: var(--sp-3) var(--sp-4);
+  background: var(--c-pannello);
+  border-top: 1px solid var(--c-griglia);
+}
+.avviso {
+  font-size: var(--fs-piccolo);
+  color: var(--c-critico);
 }
 
 @keyframes comparsa {

@@ -29,7 +29,7 @@ import type { MembroCrew } from "./crew";
 import type { RegistroEvento } from "./eventi";
 import type { StatoTerminale } from "./terminale";
 import type { StatoVale } from "./vale";
-import type { EsitoMissione, VoceDiario } from "./storia";
+import type { EsitoMissione, RegistroColloquio, VoceDiario } from "./storia";
 import type { VoceLog } from "./log";
 import type { Nave } from "./nave";
 import type { Risorse } from "./risorse";
@@ -115,6 +115,8 @@ export interface StatoMissione {
   imprevisto: string | null;
   /** Com'è finita la missione: null finché è in corso (statoGioco ≠ CONCLUSA). */
   esito: EsitoMissione | null;
+  /** I colloqui del Capitano con la crew (v3.4): uno al giorno per persona. */
+  colloqui: RegistroColloquio[];
 
   /**
    * Contatore per creare nuovi ID ("task-1", "task-2"...).

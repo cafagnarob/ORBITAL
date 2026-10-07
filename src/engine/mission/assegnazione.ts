@@ -19,8 +19,10 @@
 
 import type { DefinizioneTask, IdDefinizioneTask, IdIstanzaTask, IdMembro, IdScoperta, StatoMissione } from "../types";
 import type { ContestoMissione } from "./contesto";
-import { contestazioneAperta, TAG_VERIFICA } from "../vale/contestazioni";
+import { formattaTempo } from "../clock";
+import { disponibilitaTask } from "../tasks/disponibilita";
 import { puoLavorare } from "./disponibilita";
+import { capacitaGiornaliera, consumaCapacita, taskDiOggi } from "../crew/razioni";
 import { luogoBloccato } from "../storia/iniziative";
 
 // ----------------------------------------------------------------------------
@@ -48,12 +50,42 @@ export function verificaAssegnazione(
   if (!def) return `Task sconosciuto: ${idDefinizione}`;
 
   if (scoperteMancanti(stato, def).length > 0) return `${def.nome}: informazioni insufficienti`;
-  // Una verifica ha senso solo se c'è un'affermazione di V.A.L.E. contestata.
-  if (def.tag.includes(TAG_VERIFICA) && !contestazioneAperta(stato)) return "Nessuna affermazione contestata da verificare";
+
+  // Progressione (v3.3): sbloccato? già in mano a qualcuno? in ricarica?
+  const disp = disponibilitaTask(stato, contesto, def);
+  switch (disp.tipo) {
+    case "NASCOSTO": {
+      // Il motivo più utile, se è uno di quelli "materiali".
+      const equip = def.equipaggiamentoRichiesto.find((e) => !stato.nave.equipaggiamento.includes(e));
+      if (equip !== undefined) return `Equipaggiamento mancante: ${equip}`;
+      const modulo = def.moduliRichiesti.find((m) => !stato.nave.moduli.includes(m));
+      if (modulo !== undefined) return `Modulo mancante: ${modulo}`;
+      // Una verifica ha senso solo se c'è un'affermazione di V.A.L.E. contestata.
+      if (def.tag.includes("VERIFICA")) return "Nessuna affermazione contestata da verificare";
+      return `${def.nome}: non ancora disponibile`;
+    }
+    case "ESAURITO":
+      return `${def.nome}: già completato, non si ripete`;
+    case "IN_CORSO":
+      return `${def.nome}: già assegnato a ${stato.crew[disp.chi]?.nome ?? disp.chi}`;
+    case "IN_RICARICA":
+      return `${def.nome}: di nuovo disponibile da ${formattaTempo(disp.finoA)}`;
+    case "DISPONIBILE":
+      break;
+  }
 
   const responsabile = stato.crew[idResponsabile];
   if (!responsabile) return `Membro sconosciuto: ${idResponsabile}`;
   if (!puoLavorare(responsabile)) return `${responsabile.nome} non è in grado di lavorare`;
+
+  // Fame e sete (v3.4): ognuno può fare un numero limitato di task al giorno.
+  if (consumaCapacita(contesto, idDefinizione)) {
+    const capacita = capacitaGiornaliera(responsabile);
+    if (capacita === 0) return `${responsabile.nome} è troppo debole per lavorare (fame o sete)`;
+    if (taskDiOggi(stato, contesto, idResponsabile) >= capacita) {
+      return `${responsabile.nome} oggi può fare al massimo ${capacita} task`;
+    }
+  }
 
   if (idSupporto !== null) {
     if (!def.supportoAmmesso) return `${def.nome} si svolge da soli`;
@@ -62,14 +94,6 @@ export function verificaAssegnazione(
     if (!supporto) return `Membro sconosciuto: ${idSupporto}`;
     if (!puoLavorare(supporto)) return `${supporto.nome} non è in grado di aiutare`;
   }
-
-  // Tutto l'equipaggiamento richiesto deve essere a bordo.
-  const mancante = def.equipaggiamentoRichiesto.find((e) => !stato.nave.equipaggiamento.includes(e));
-  if (mancante !== undefined) return `Equipaggiamento mancante: ${mancante}`;
-
-  // …e tutti i moduli richiesti installati (scelti nella Preparazione).
-  const moduloMancante = def.moduliRichiesti.find((m) => !stato.nave.moduli.includes(m));
-  if (moduloMancante !== undefined) return `Modulo mancante: ${moduloMancante}`;
 
   // V.A.L.E. può aver chiuso il compartimento (v3.0).
   if (luogoBloccato(stato, def.luogo)) return `Accesso a ${def.luogo.replaceAll("_", " ")} bloccato da V.A.L.E.`;

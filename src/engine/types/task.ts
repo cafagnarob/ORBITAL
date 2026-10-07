@@ -38,8 +38,9 @@ import type {
   Tag,
 } from "./comuni";
 import type { AbilitaTecnica } from "./crew";
-import type { Luogo } from "./nave";
-import type { CostoRisorse } from "./risorse";
+import type { Condizione } from "./eventi";
+import type { Luogo, SistemaCore } from "./nave";
+import type { CostoRisorse, Risorse } from "./risorse";
 
 // ----------------------------------------------------------------------------
 // VALORI POSSIBILI
@@ -114,9 +115,50 @@ export interface DefinizioneTask {
    */
   scoperteRichieste: IdScoperta[];
   costoRisorse: CostoRisorse;
-  /** Fatica aggiunta al responsabile (e in parte all'aiutante). */
+  /**
+   * Fatica aggiunta al responsabile (e in parte all'aiutante).
+   * Negativa = il task RIPOSA (es. la pausa in habitat).
+   */
   costoFatica: number;
   tag: Tag[];
+
+  // --- Progressione dei task (v3.3) ----------------------------------------
+  /**
+   * Condizioni di SBLOCCO: devono essere tutte vere perché il task compaia.
+   * Si usa lo stesso linguaggio degli eventi: GIORNO_ALMENO (per giorno),
+   * TASK_COMPLETATO (a catena), EVENTO_RECENTE (task temporanei aperti da
+   * un evento), SCOPERTA, MODULO... [] = disponibile dal primo giorno.
+   */
+  sblocco: Condizione[];
+  /**
+   * RICARICA: ore di gioco dopo un completamento prima che il task torni
+   * disponibile (a chiunque: il lavoro è fatto, non ha senso rifarlo).
+   * null = si fa UNA VOLTA SOLA per missione. Un task fallito si può
+   * ritentare subito: non c'è niente da "ricaricare".
+   */
+  ricaricaOre: number | null;
+  /**
+   * RESA: ciò che il task produce se riesce. Si moltiplica per l'esito:
+   * perfetto ×1,5 · successo ×1 · parziale ×0,5 · fallimento ×0.
+   */
+  resa?: ResaTask;
+  /**
+   * BONUS: un'opportunità in più offerta da un modulo o da un'attrezzatura
+   * (o da un evento). Se il loadout non la permette non è un problema, e la
+   * Preparazione non lo segnala come "task impossibile".
+   */
+  bonus?: boolean;
+}
+
+/** Ciò che un task riuscito restituisce alla nave e alla crew. */
+export interface ResaTask {
+  risorse?: Partial<Risorse>;
+  /** Punti di integrità recuperati da un sistema (max 100). */
+  sistema?: { id: SistemaCore; delta: number };
+  /** Punti di integrità recuperati dallo scafo (max 100). */
+  scafo?: number;
+  /** Salute recuperata da ogni membro ferito a bordo. */
+  cure?: number;
 }
 
 // ----------------------------------------------------------------------------

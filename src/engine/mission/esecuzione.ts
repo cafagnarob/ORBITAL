@@ -32,7 +32,10 @@ import { faseGiornata, formattaTempo, minutoDelGiorno, ORARIO_RAPPORTO } from ".
 import type { Rng } from "../rng";
 import { calcolaSoglie, tiraEsito } from "../tasks/esito";
 import { valutaTask } from "../tasks/valutazione";
-import type { EsitoTask, IdIstanzaTask, Luogo, Minuti, Risorse, StatoMissione } from "../types";
+import type { EsitoTask, IdIstanzaTask, Luogo, Minuti, ResaTask, Risorse, StatoMissione } from "../types";
+import { MOLTIPLICATORE_RESA } from "../tasks/disponibilita";
+import { modificaSalute } from "../crew/salute";
+import { capacitaGiornaliera, consumaCapacita } from "../crew/razioni";
 import { AUTONOMIA_RIFIUTO, livelloAutonomia } from "../vale/comportamento";
 import { risolviVerifica, TAG_VERIFICA } from "../vale/contestazioni";
 import { contrastaDirettiva } from "../vale/direttiva";
@@ -108,6 +111,20 @@ export function avviaTask(bozza: StatoMissione, contesto: ContestoMissione, idTa
     rimuoviDallaCoda(bozza, idTask);
     scriviLog(bozza, "SISTEMA", `${def.nome} annullato: il responsabile non è in grado di lavorare`);
     return "ANNULLATO";
+  }
+
+  // Fame e sete (v3.4): se nella notte le forze sono calate, i task di troppo
+  // in coda si annullano (contano solo quelli già avviati oggi).
+  if (consumaCapacita(contesto, def.id)) {
+    const inizioGiorno = bozza.tempo - minutoDelGiorno(bozza.tempo);
+    const avviatiOggi = Object.values(bozza.tasks).filter(
+      (t) => t.responsabile === responsabile.id && t.inizio !== null && t.inizio >= inizioGiorno && consumaCapacita(contesto, t.idDefinizione),
+    ).length;
+    if (avviatiOggi >= capacitaGiornaliera(responsabile)) {
+      rimuoviDallaCoda(bozza, idTask);
+      scriviLog(bozza, "SISTEMA", `${def.nome} annullato: ${responsabile.nome} non ha più forze oggi`);
+      return "ANNULLATO";
+    }
   }
 
   // L'aiutante, se previsto, deve essere libero e operativo.
@@ -240,11 +257,12 @@ export function concludiTask(bozza: StatoMissione, contesto: ContestoMissione, r
   task.esito = esito;
   task.stato = esito === "FALLIMENTO" || esito === "FALLIMENTO_CRITICO" ? "FALLITO" : "COMPLETATO";
 
-  // Fatica: tutta al responsabile, una quota all'aiutante. Mai oltre 100.
-  responsabile.fatica = Math.min(100, responsabile.fatica + def.costoFatica);
+  // Fatica: tutta al responsabile, una quota all'aiutante. Sempre tra 0 e
+  // 100 (un costo negativo, come la pausa di riposo, la fa scendere).
+  responsabile.fatica = limita(responsabile.fatica + def.costoFatica);
   if (supporto) {
     const quota = Math.round(def.costoFatica * BALANCE.task.quotaFaticaSupporto);
-    supporto.fatica = Math.min(100, supporto.fatica + quota);
+    supporto.fatica = limita(supporto.fatica + quota);
   }
 
   // Il task era il primo della coda del responsabile: lo togliamo.
@@ -252,6 +270,9 @@ export function concludiTask(bozza: StatoMissione, contesto: ContestoMissione, r
   if (coda) bozza.code[task.responsabile] = coda.filter((id) => id !== idTask);
 
   scriviLog(bozza, "SISTEMA", `${responsabile.nome}: ${def.nome} — ${ETICHETTE_ESITO[esito]}`);
+
+  // Ciò che il task produce, in proporzione all'esito (v3.3).
+  if (def.resa) applicaResa(bozza, def.resa, MOLTIPLICATORE_RESA[esito]);
 
   // Un task di verifica chiude (o lascia aperta) la contestazione più vecchia.
   if (def.tag.includes(TAG_VERIFICA)) risolviVerifica(bozza, contesto, esito);
@@ -263,4 +284,48 @@ export function concludiTask(bozza: StatoMissione, contesto: ContestoMissione, r
     scriviLog(bozza, "VALE", "Registro l'intervento non autorizzato, Capitano.");
     scriviDiario(bozza, `${responsabile.nome} ha forzato le porte chiuse da V.A.L.E.`);
   }
+}
+
+// ----------------------------------------------------------------------------
+// RESA (v3.3)
+// ----------------------------------------------------------------------------
+
+/** Limita un valore tra 0 e 100 (fatica, integrità). */
+function limita(n: number): number {
+  return Math.min(100, Math.max(0, n));
+}
+
+/**
+ * Applica ciò che un task restituisce: risorse, riparazioni, cure.
+ * `fattore` viene dall'esito (×1,5 perfetto … ×0 fallimento); si arrotonda
+ * all'intero, perché le risorse sono unità intere. Riga di log riassuntiva.
+ */
+function applicaResa(bozza: StatoMissione, resa: ResaTask, fattore: number): void {
+  if (fattore === 0) return;
+  const voci: string[] = [];
+
+  for (const [chiave, q] of Object.entries(resa.risorse ?? {}) as [keyof Risorse, number][]) {
+    const delta = Math.round(q * fattore);
+    if (delta === 0) continue;
+    bozza.risorse[chiave] = Math.max(0, bozza.risorse[chiave] + delta);
+    voci.push(`${chiave.toUpperCase()} ${delta > 0 ? "+" : ""}${delta}`);
+  }
+  if (resa.sistema) {
+    const delta = Math.round(resa.sistema.delta * fattore);
+    bozza.nave.sistemi[resa.sistema.id] = limita(bozza.nave.sistemi[resa.sistema.id] + delta);
+    voci.push(`${resa.sistema.id.replaceAll("_", " ")} +${delta}%`);
+  }
+  if (resa.scafo !== undefined) {
+    const delta = Math.round(resa.scafo * fattore);
+    bozza.nave.scafo = limita(bozza.nave.scafo + delta);
+    voci.push(`SCAFO +${delta}%`);
+  }
+  if (resa.cure !== undefined) {
+    const delta = Math.round(resa.cure * fattore);
+    const curati = Object.values(bozza.crew).filter((m) => m.stato === "FERITO" || m.stato === "CRITICO");
+    for (const m of curati) modificaSalute(m, delta);
+    if (curati.length > 0) voci.push(`CURE +${delta} a ${curati.map((m) => m.nome).join(", ")}`);
+  }
+
+  if (voci.length > 0) scriviLog(bozza, "SISTEMA", `RESA · ${voci.join(" · ")}`);
 }

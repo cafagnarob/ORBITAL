@@ -19,6 +19,7 @@ import { CONTESTO_GIOCO } from "../../src/content/contesto";
 import { CATALOGO_EVENTI } from "../../src/content/eventi";
 import { creaMissioneIniziale } from "../../src/content/missioneIniziale";
 import { EVENTI_STORIA, LISTA_IMPREVISTI } from "../../src/content/storia";
+import { EVENTI_TURNO } from "../../src/content/eventiTurno";
 import { TASK_DISPONIBILI } from "../../src/content/tasks";
 import { scomponiTempo } from "../../src/engine/clock";
 import { applicaAzione, verificaAssegnazione, verificaScelta, type Azione } from "../../src/engine/mission";
@@ -33,9 +34,10 @@ function pianifica(stato: StatoMissione, n: number): StatoMissione {
   let s = stato;
   const giorno = scomponiTempo(s.tempo).giorno;
   for (const [i, id] of Object.keys(s.crew).sort().entries()) {
-    const k = (giorno + i + n) % TASK_DISPONIBILI.length;
-    const ordine = [...TASK_DISPONIBILI.slice(k), ...TASK_DISPONIBILI.slice(0, k)];
-    const t = ordine.find((d) => verificaAssegnazione(s, CONTESTO_GIOCO, d.id, id, null) === null);
+    // Ruota tra i task POSSIBILI in questo momento (v3.3: molti sono nascosti
+    // o in ricarica), così il bot prova un po' di tutto come un giocatore.
+    const possibili = TASK_DISPONIBILI.filter((d) => verificaAssegnazione(s, CONTESTO_GIOCO, d.id, id, null) === null);
+    const t = possibili[(giorno * 3 + i * 7 + n) % Math.max(1, possibili.length)];
     if (t) s = gioca(s, { tipo: "ASSEGNA_TASK", idDefinizione: t.id, responsabile: id, supporto: null });
   }
   return s;
@@ -100,6 +102,21 @@ describe("storia emergente: varietà tra partite", () => {
     const narrativi = new Set(EVENTI_STORIA.map((e) => e.id));
     const usciti = new Set(partite.flatMap((s) => s.eventi.accaduti.map((r) => r.id)).filter((id) => narrativi.has(id)));
     expect(usciti.size).toBeGreaterThanOrEqual(12);
+  });
+
+  it("escono almeno 12 eventi dei turni diversi, e in media uno ogni giorno o due", () => {
+    const deiTurni = new Set(EVENTI_TURNO.map((e) => e.id));
+    const usciti = partite.flatMap((s) => s.eventi.accaduti.map((r) => r.id)).filter((id) => deiTurni.has(id));
+    expect(new Set(usciti).size).toBeGreaterThanOrEqual(12);
+    const giorni = partite.reduce((tot, s) => tot + scomponiTempo(s.tempo).giorno, 0);
+    const perGiorno = usciti.length / giorni;
+    expect(perGiorno).toBeGreaterThan(0.3);
+    expect(perGiorno).toBeLessThan(1.5);
+  });
+
+  it("i task cambiano durante la partita: compaiono task sbloccati a catena e per giorno", () => {
+    const svolti = new Set(partite.flatMap((s) => Object.values(s.tasks).map((t) => t.idDefinizione)));
+    for (const id of ["T-RICOGNIZIONE-DRONE", "T-ELETTROLISI", "T-COLTURA", "T-RIPARAZIONE-SCAFO"]) expect(svolti).toContain(id);
   });
 
   it("gli eventi con protagonista sono vissuti da persone diverse", () => {

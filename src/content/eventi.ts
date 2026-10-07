@@ -36,6 +36,7 @@
  * ============================================================================
  */
 
+import { EVENTI_TURNO } from "./eventiTurno";
 import { EVENTI_STORIA } from "./storia/eventi";
 import type { DefinizioneEvento, IdEvento } from "../engine/types";
 
@@ -383,7 +384,10 @@ const LISTA_EVENTI: DefinizioneEvento[] = [
   },
 ];
 
-/** Eventi della vertical slice + mazzo narrativo della storia emergente (v3.0). */
+/**
+ * Tutti gli eventi del gioco: vertical slice + mazzo narrativo della storia
+ * emergente (v3.0) + eventi dei turni (v3.3: viaggiatori, occasioni, guai).
+ */
 export const CATALOGO_EVENTI: Readonly<Record<IdEvento, DefinizioneEvento>> = Object.fromEntries(
-  [...LISTA_EVENTI, ...EVENTI_STORIA].map((e) => [e.id, e]),
+  [...LISTA_EVENTI, ...EVENTI_STORIA, ...EVENTI_TURNO].map((e) => [e.id, e]),
 );

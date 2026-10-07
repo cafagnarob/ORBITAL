@@ -22,9 +22,15 @@ describe("rapporto serale", () => {
     expect(stato.statoGioco).toBe("RAPPORTO");
   });
 
-  it("consuma cibo e acqua per ogni membro a bordo", () => {
-    const g = BALANCE.giornata;
+  it("al rapporto cibo e acqua NON si consumano: si aspettano le razioni del Capitano", () => {
     const { risorse } = finoAlRapporto();
+    expect(risorse.cibo).toBe(120);
+    expect(risorse.acqua).toBe(120);
+  });
+
+  it("chiuso il rapporto (razioni predefinite: piene) consuma cibo e acqua per ogni membro", () => {
+    const g = BALANCE.giornata;
+    const { risorse } = esegui(finoAlRapporto(), [{ tipo: "CHIUDI_RAPPORTO" }]);
     expect(risorse.cibo).toBe(120 - 4 * g.ciboPerMembro);
     expect(risorse.acqua).toBe(120 - 4 * g.acquaPerMembro);
   });
@@ -32,7 +38,7 @@ describe("rapporto serale", () => {
   it("un membro morto non consuma", () => {
     const iniziale = creaMissioneDiProva();
     iniziale.crew.sarah!.stato = "MORTO";
-    const stato = avanzaFinoAPausa(esegui(iniziale, [{ tipo: "AVVIA_OPERAZIONI" }]));
+    const stato = esegui(avanzaFinoAPausa(esegui(iniziale, [{ tipo: "AVVIA_OPERAZIONI" }])), [{ tipo: "CHIUDI_RAPPORTO" }]);
     expect(stato.risorse.cibo).toBe(120 - 3 * BALANCE.giornata.ciboPerMembro);
   });
 
@@ -46,14 +52,6 @@ describe("rapporto serale", () => {
     iniziale.nave.sistemi.SUPPORTO_VITALE = 25; // rigenera solo 2
     const stato = avanzaFinoAPausa(esegui(iniziale, [{ tipo: "AVVIA_OPERAZIONI" }]));
     expect(stato.risorse.ossigeno).toBe(60 - 8 + 2);
-  });
-
-  it("senz'acqua la crew perde salute ogni sera", () => {
-    const iniziale = creaMissioneDiProva();
-    iniziale.risorse.acqua = 0;
-    const stato = avanzaFinoAPausa(esegui(iniziale, [{ tipo: "AVVIA_OPERAZIONI" }]));
-    expect(stato.crew.mara!.salute).toBe(100 - BALANCE.giornata.dannoSenzaAcqua);
-    expect(stato.log.some((r) => r.testo.includes("L'acqua è esaurita"))).toBe(true);
   });
 
   it("la batteria si ricarica ma non supera la capacità massima", () => {

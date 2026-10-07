@@ -148,6 +148,7 @@ export function prossimaOccorrenza(t: Minuti, orario: Minuti): Minuti {
 export type MotivoSosta =
   | { tipo: "FINE_TASK"; idTask: IdIstanzaTask }
   | { tipo: "RISVEGLIO" }
+  | { tipo: "TURNO" }
   | { tipo: "RAPPORTO_SERALE" };
 
 /** Il prossimo istante importante e TUTTI i motivi che vi accadono. */
@@ -156,9 +157,18 @@ export interface ProssimoMomento {
   motivi: MotivoSosta[];
 }
 
+/**
+ * I CAMBI TURNO (v3.3): quattro momenti fissi della giornata operativa in
+ * cui può accadere un evento "esterno" (una nave di passaggio, un
+ * meteorite...). Senza, gli eventi arriverebbero solo alla fine dei task,
+ * al rapporto e al risveglio: con il tempo reale la giornata sembrerebbe vuota.
+ */
+export const ORARI_TURNO: readonly Minuti[] = [10, 13, 16, 19].map((h) => h * MINUTI_PER_ORA);
+
 /** Gli appuntamenti fissi di ogni giorno. */
 const MOMENTI_PROGRAMMATI: readonly { orario: Minuti; motivo: MotivoSosta }[] = [
   { orario: ORARIO_RISVEGLIO, motivo: { tipo: "RISVEGLIO" } },
+  ...ORARI_TURNO.map((orario) => ({ orario, motivo: { tipo: "TURNO" } as const })),
   { orario: ORARIO_RAPPORTO, motivo: { tipo: "RAPPORTO_SERALE" } },
 ];
 

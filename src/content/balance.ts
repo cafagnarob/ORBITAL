@@ -88,9 +88,7 @@ export const BALANCE = {
     produzioneOssigeno: 8,
     /** Capienza dei serbatoi: la rigenerazione non va oltre (le bombole sì). */
     capacitaOssigeno: 60,
-    /** Salute persa ogni sera da chi resta senza… */
-    dannoSenzaCibo: 10,
-    dannoSenzaAcqua: 20,
+    /** Salute persa ogni sera da tutti quando l'ossigeno non basta (fame e sete: vedi razioni). */
     dannoSenzaOssigeno: 35,
     /** Energia generata al giorno (DESIGN §6.2, senza moduli). */
     generazioneEnergia: 12,
@@ -170,5 +168,70 @@ export const BALANCE = {
     tensioneSblocco: 2,
     /** Dopo questo giorno la finestra di rientro si chiude: la missione finisce. */
     durataMissione: 10,
+  },
+
+  // --------------------------------------------------------------------------
+  // RAZIONI, FAME E SETE (DESIGN §6.4 — v3.4)
+  // --------------------------------------------------------------------------
+  razioni: {
+    /**
+     * Punti di fame/sete (0–6) aggiunti o tolti a ogni razione serale.
+     * La sete è più dura della fame: senz'acqua si peggiora più in fretta.
+     */
+    fame: { PIENA: -2, MEZZA: 1, NIENTE: 2 },
+    sete: { PIENA: -3, MEZZA: 1, NIENTE: 3 },
+    puntiMassimi: 6,
+    /** Task al giorno di un membro sazio e idratato; ogni livello di fame o sete ne toglie uno. */
+    taskMassimi: 4,
+    /** Fatica in meno recuperata di notte per ogni livello di fame o sete. */
+    recuperoPerso: 10,
+    /** Salute persa ogni notte per ogni livello OLTRE il primo (fame / sete). */
+    dannoFame: 8,
+    dannoSete: 12,
+    /**
+     * PARANOIA: da questo carico (livello fame + livello sete) chi è affamato
+     * si chiude nelle sue idee. Chi diffida di V.A.L.E. diffida di più; chi
+     * le crede si fida di lei più che dei compagni.
+     */
+    caricoParanoia: 2,
+    paranoiaPerLivello: 3,
+  },
+
+  // --------------------------------------------------------------------------
+  // COLLOQUI DEL CAPITANO (DESIGN §7.8 — v3.4)
+  // --------------------------------------------------------------------------
+  colloqui: {
+    /** Probabilità base che un discorso convinca. */
+    probabilitaBase: 0.55,
+    /** Bonus se il membro è INDECISO (è disposto ad ascoltare). */
+    bonusIndeciso: 0.15,
+    /** Malus se il discorso va contro un'opinione forte (fiducia ≥ 80 o ≤ 20). */
+    malusOpinioneForte: 0.2,
+    /** Malus per ogni livello di carico (fame + sete) oltre il primo: la paranoia non ascolta. */
+    malusParanoia: 0.1,
+    /** Fiducia spostata da un discorso riuscito / fallito. */
+    convinto: 10,
+    controproducente: -4,
+    /** Fatica tolta da un discorso di incoraggiamento riuscito. */
+    sollievo: 12,
+  },
+
+  // --------------------------------------------------------------------------
+  // TEMPO REALE (DESIGN §8.1 — v3.3)
+  // --------------------------------------------------------------------------
+  tempoReale: {
+    /**
+     * Millisecondi reali per un minuto di gioco. Le operazioni (07:00–22:00)
+     * sono 900 minuti di gioco e devono durare 5 minuti reali (300 000 ms).
+     */
+    msPerMinuto: 300_000 / 900, // ≈ 333 ms: 1 secondo reale = 3 minuti di gioco
+    /** Ogni quanto l'orologio controlla il tempo trascorso (ms). */
+    intervalloControllo: 250,
+    /**
+     * Il salto massimo accettato in un solo controllo (ms). Se il browser
+     * congela la pagina (computer in sospensione), al risveglio il gioco
+     * non deve "recuperare" ore di tempo tutte insieme.
+     */
+    saltoMassimo: 1000,
   },
 } as const;

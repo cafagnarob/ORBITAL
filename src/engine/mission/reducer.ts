@@ -29,7 +29,7 @@
  * ============================================================================
  */
 
-import { avanzaTempo, prossimoMomento } from "../clock";
+import { avanzaTempo, prossimoMomento, type ProssimoMomento } from "../clock";
 import { controllaEventi, risolviEvento, verificaScelta } from "../eventi/attivazione";
 import type { MomentoEventi } from "../eventi/condizioni";
 import { inserisciCodice, segnalaVoce, verificaSegnalazione } from "../terminale/terminale";
@@ -37,7 +37,9 @@ import { contesta, verificaContestazione } from "../vale/contestazioni";
 import { interrogaVale, scriviAVale } from "../vale/domande";
 import { controllaFine, ordinaRientro, verificaRientro } from "../storia/fine";
 import { iniziativeMattino } from "../storia/iniziative";
-import { createRng } from "../rng";
+import { distribuisciRazioni, razioniPredefinite, verificaRazioni } from "../crew/razioni";
+import { parla, verificaColloquio } from "../storia/colloqui";
+import { createRng, type Rng } from "../rng";
 import type { StatoGioco, StatoMissione } from "../types";
 import { assegnaTask, rimuoviDallaCoda, verificaAssegnazione, verificaRimozione } from "./assegnazione";
 import type { Azione } from "./azioni";
@@ -94,50 +96,36 @@ export function applicaAzione(stato: StatoMissione, azione: Azione, contesto: Co
 
     case "AVANZA": {
       richiediStato(bozza, ["IN_ESECUZIONE"], azione);
-      const momento = prossimoMomento(bozza);
-      // avanzaTempo controlla che il tempo non torni indietro; ne prendiamo
-      // solo il nuovo valore, perché stiamo lavorando sulla bozza.
-      bozza.tempo = avanzaTempo(bozza, momento.tempo).tempo;
+      eseguiMomento(bozza, contesto, rng, prossimoMomento(bozza));
+      break;
+    }
 
-      // Raccogliamo cosa succede in questo passo: servirà agli eventi.
-      const perEventi: MomentoEventi = { rapportoSerale: false, risveglio: false, tasksConclusi: [] };
-
-      // I motivi arrivano già in ordine: prima le fine dei task, poi gli
-      // appuntamenti fissi (vedi clock.ts).
-      for (const motivo of momento.motivi) {
-        switch (motivo.tipo) {
-          case "FINE_TASK":
-            concludiTask(bozza, contesto, rng, motivo.idTask);
-            perEventi.tasksConclusi.push(motivo.idTask);
-            break;
-          case "RAPPORTO_SERALE":
-            rapportoSerale(bozza, contesto);
-            perEventi.rapportoSerale = true;
-            break;
-          case "RISVEGLIO":
-            risveglio(bozza, contesto);
-            perEventi.risveglio = true;
-            break;
+    case "AVANZA_FINO": {
+      // Il tempo reale (v3.3): l'interfaccia chiede "porta l'orologio a X".
+      // Si attraversano, in ordine, tutti i momenti importanti fino a X; ci
+      // si ferma prima se uno di essi chiede il Capitano (decisione, rapporto).
+      richiediStato(bozza, ["IN_ESECUZIONE"], azione);
+      if (azione.tempo < bozza.tempo) throw new Error(`AVANZA_FINO: il tempo non torna indietro (${bozza.tempo} → ${azione.tempo})`);
+      while (statoAttuale(bozza) === "IN_ESECUZIONE") {
+        const momento = prossimoMomento(bozza);
+        if (momento.tempo > azione.tempo) {
+          bozza.tempo = azione.tempo; // niente di importante prima di X
+          break;
         }
+        eseguiMomento(bozza, contesto, rng, momento);
       }
-
-      // Al mattino la crew può prendere iniziative da sola (v3.0).
-      if (perEventi.risveglio) iniziativeMattino(bozza, contesto, rng);
-
-      // Può accadere un evento; se chiede una decisione, il gioco si ferma
-      // in DECISIONE e i task in coda partiranno dopo la scelta.
-      controllaEventi(bozza, contesto, rng, perEventi);
-
-      // Tutti morti, o finestra di rientro chiusa: la missione finisce.
-      controllaFine(bozza, contesto, perEventi.risveglio);
-
-      // Chi si è liberato inizia il task successivo (se siamo ancora operativi).
-      if (bozza.statoGioco === "IN_ESECUZIONE") avviaTaskPronti(bozza, contesto);
       break;
     }
 
     case "CHIUDI_RAPPORTO": {
       richiediStato(bozza, ["RAPPORTO"], azione);
+      // Le razioni della sera (v3.4): quelle scelte, o le predefinite.
+      const razioni = azione.razioni ?? razioniPredefinite(bozza, contesto);
+      const erroreRazioni = verificaRazioni(bozza, contesto, razioni);
+      if (erroreRazioni !== null) throw new Error(erroreRazioni);
+      distribuisciRazioni(bozza, contesto, razioni);
+      controllaFine(bozza, contesto, false);
+      if (statoAttuale(bozza) === "CONCLUSA") break;
       bozza.statoGioco = "IN_ESECUZIONE"; // la notte scorre fino al risveglio
       break;
     }
@@ -162,6 +150,15 @@ export function applicaAzione(stato: StatoMissione, azione: Azione, contesto: Co
 
     case "INSERISCI_CODICE": {
       inserisciCodice(bozza, contesto, azione.codice);
+      break;
+    }
+
+    // Il Capitano parla con un membro della crew (v3.4): non fa scorrere il tempo.
+    case "PARLA": {
+      richiediStato(bozza, ["PIANIFICAZIONE", "IN_ESECUZIONE", "RAPPORTO"], azione);
+      const errore = verificaColloquio(bozza, azione.membro);
+      if (errore !== null) throw new Error(errore);
+      parla(bozza, contesto, rng, azione.membro, azione.discorso);
       break;
     }
 
@@ -196,4 +193,61 @@ export function applicaAzione(stato: StatoMissione, azione: Azione, contesto: Co
 
   bozza.rngState = rng.getState();
   return bozza;
+}
+
+/**
+ * Lo stato di gioco letto da una funzione: dentro il ciclo di AVANZA_FINO
+ * TypeScript "crede" che non possa cambiare, ma eseguiMomento lo cambia.
+ */
+function statoAttuale(stato: StatoMissione): StatoGioco {
+  return stato.statoGioco;
+}
+
+/**
+ * Un passo dell'orologio: sposta il tempo al momento indicato e gestisce
+ * tutto ciò che vi accade. È il cuore sia di AVANZA (un passo) sia di
+ * AVANZA_FINO (tanti passi fino a un minuto preciso).
+ */
+function eseguiMomento(bozza: StatoMissione, contesto: ContestoMissione, rng: Rng, momento: ProssimoMomento): void {
+  // avanzaTempo controlla che il tempo non torni indietro; ne prendiamo
+  // solo il nuovo valore, perché stiamo lavorando sulla bozza.
+  bozza.tempo = avanzaTempo(bozza, momento.tempo).tempo;
+
+  // Raccogliamo cosa succede in questo passo: servirà agli eventi.
+  const perEventi: MomentoEventi = { rapportoSerale: false, risveglio: false, turno: false, tasksConclusi: [] };
+
+  // I motivi arrivano già in ordine: prima le fine dei task, poi gli
+  // appuntamenti fissi (vedi clock.ts).
+  for (const motivo of momento.motivi) {
+    switch (motivo.tipo) {
+      case "FINE_TASK":
+        concludiTask(bozza, contesto, rng, motivo.idTask);
+        perEventi.tasksConclusi.push(motivo.idTask);
+        break;
+      case "TURNO":
+        perEventi.turno = true;
+        break;
+      case "RAPPORTO_SERALE":
+        rapportoSerale(bozza, contesto);
+        perEventi.rapportoSerale = true;
+        break;
+      case "RISVEGLIO":
+        risveglio(bozza, contesto);
+        perEventi.risveglio = true;
+        break;
+    }
+  }
+
+  // Al mattino la crew può prendere iniziative da sola (v3.0).
+  if (perEventi.risveglio) iniziativeMattino(bozza, contesto, rng);
+
+  // Può accadere un evento; se chiede una decisione, il gioco si ferma
+  // in DECISIONE e i task in coda partiranno dopo la scelta.
+  controllaEventi(bozza, contesto, rng, perEventi);
+
+  // Tutti morti, o finestra di rientro chiusa: la missione finisce.
+  controllaFine(bozza, contesto, perEventi.risveglio);
+
+  // Chi si è liberato inizia il task successivo (se siamo ancora operativi).
+  if (bozza.statoGioco === "IN_ESECUZIONE") avviaTaskPronti(bozza, contesto);
 }

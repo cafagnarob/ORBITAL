@@ -106,3 +106,11 @@
   font-size: 10px;
   letter-spacing: 0.1em;
 }
+
+/* Fame, sete e task di oggi (v3.4). */
+.bisogni {
+  margin: 0;
+  font-size: var(--fs-piccolo);
+  letter-spacing: 0.06em;
+  color: var(--c-fosforo-tenue);
+}

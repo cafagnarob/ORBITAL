@@ -11,7 +11,7 @@
   - Lingua: tutto ciò che vede il giocatore è in italiano. Gli identificatori nel codice possono essere in inglese.
 -->
 
-# ORBITAL — DESIGN v3.2
+# ORBITAL — DESIGN v3.5
 
 > **Prepara con cura. Non fidarti mai del tutto.**
 > Domanda centrale: **di cosa mi posso fidare?**
@@ -262,7 +262,7 @@ Scafo e sistemi sono **due misure separate**.
 | **Carburante** | vedi §6.3 | per manovra |
 | **Scafo** | integrità, §5.1 | — |
 
-**v3.0 — risorse separate** (dal mockup): con il Supporto Vitale integro l'ossigeno resta stabile; se si guasta diventa il problema più urgente. Chi resta senza perde salute ogni sera (cibo −10, acqua −20, ossigeno −35): come in 60 Seconds non è un game over immediato, ma una discesa. La salute aggiorna lo stato (SANO > 60 · FERITO · CRITICO ≤ 30 · MORTO 0).
+**v3.0 — risorse separate** (dal mockup): con il Supporto Vitale integro l'ossigeno resta stabile; se si guasta diventa il problema più urgente (senza ossigeno: salute −35 a testa ogni sera). Cibo e acqua dalla v3.4 si distribuiscono a mano (§6.4). La salute aggiorna lo stato (SANO > 60 · FERITO · CRITICO ≤ 30 · MORTO 0).
 
 ### 6.2 Potenza  [BLOCCATO concetto · PROVVISORIO numeri]
 Tre valori: **generazione 12/giorno · consumo base 8/giorno · batteria 150**.
@@ -280,6 +280,13 @@ Carburante operativo = Carburante attuale − Riserva di rientro stimata
 Esempio: 26 − 18 = 8
 ```
 La domanda è sempre: **posso permettermi questa manovra?** Prima di accettare una missione si valuta: carburante attuale + consumo previsto + riserva.
+
+### 6.4 Razioni, fame e sete  [PROVVISORIO numeri — v3.4]
+Come in **60 Seconds**, al rapporto serale il Capitano decide per ognuno cibo e acqua: **PIENA** (2) · **MEZZA** (1) · **NIENTE** (0). Non si può dare più di quanto c'è; «Tutti piena / Tutti ½» per fare in fretta. Senza scelta (test) valgono le razioni predefinite: piena a tutti se basta, poi mezza, poi a chi arriva.
+- **Fame e sete** in punti 0–6 per membro (salvati), livello 0–3 calcolato (SAZIO · APPETITO · FAME · DENUTRITO / IDRATATO · SETE · DISIDRATATO · DISIDRATAZIONE GRAVE). Piena −2 / mezza +1 / niente +2 (acqua: −3 / +1 / +3, la sete è più dura).
+- **Carico** = livello fame + livello sete. Effetti: **task al giorno = 4 − carico** (a zero non lavora; la pausa in habitat non conta) · di notte **−10 di recupero fatica** per livello · **salute** −8 per livello di fame oltre il primo, −12 per la sete.
+- **Paranoia** (carico ≥ 2): ogni notte chi è CONTRO V.A.L.E. perde fiducia, chi è CON ne guadagna (3 × (carico − 1)): la fame spacca la crew. Eventi dedicati: S26 «Una voce nella notte» (CONTRO e affamato), S27 «Il sorvegliante» (CON e affamato: vuole che V.A.L.E. spii un compagno).
+- Il pannello mostra, prima di confermare, come starà ognuno **domani** (fame, sete, task possibili, salute persa).
 
 ---
 
@@ -330,6 +337,13 @@ Movimento manuale solo in emergenze specifiche.
 ### 7.7 Micro-obiettivi
 Ogni membro può generare obiettivi personali (es. Ingegnere: «Ripristinare l'efficienza del reattore»). Non tutti noti all'inizio.
 
+### 7.8 Colloqui del Capitano  [PROVVISORIO — v3.4]
+«PARLA CON…» dal pannello Equipaggio: **un colloquio al giorno per persona**, non fa scorrere il tempo.
+- **«Fidati di V.A.L.E.»** (fiducia +10 se convince, −4 se irrita) · **«Non fidarti di V.A.L.E.»** (−10 / +4; con V.A.L.E. almeno PERSISTENTE e senza override: tensione +1, «gli altoparlanti sono sempre accesi») · **«Tieni duro»** (fatica −12).
+- Probabilità mostrata prima di scegliere: base 55% · +15% INDECISO · −20% contro un'opinione forte (≥ 80 / ≤ 20) · −10% per livello di carico oltre il primo · ±10% LEALE / INDIPENDENTE (+10% EMPATICO per l'incoraggiamento). Limitata a 10–90%.
+- Risposte nel log, al neutro (`content/storia/colloqui.ts`). Un cambio di fazione si dice con le battute (§10.2).
+- Nuovi eventi d'opinione (v3.4): S23 Discussione a cena (CON contro CONTRO: dai ragione a uno) · S24 Il salvataggio silenzioso · S25 Righe mancanti · S26 · S27 · S28 Il racconto · S29 La lista delle contraddizioni.
+
 ---
 
 ## 8. Tempo  [BLOCCATO]
@@ -345,6 +359,15 @@ Non real-time: **event-driven**. Il gioco salta al prossimo momento importante (
 ```
 
 Stati di gioco: PIANIFICAZIONE · IN ESECUZIONE · DECISIONE · RAPPORTO.
+
+### 8.1 Tempo reale  [PROVVISORIO — v3.3]
+Il motore resta event-driven (salta di momento in momento), ma **l'interfaccia fa scorrere il tempo da sola**: non c'è più il pulsante AVANZA.
+- Le operazioni 07:00–22:00 durano **5 minuti reali** (v3.5; prima 15, poi 10): 3 minuti di gioco al secondo (`balance.tempoReale.msPerMinuto` ≈ 333 ms).
+- **⏭ Salta** (v3.5): accanto a PAUSA, porta subito al prossimo momento importante (fine di un task, cambio turno, rapporto serale) con l'azione AVANZA del motore. Il pulsante mostra l'ora d'arrivo; il motivo è nel testo della barra.
+- Pianificazione (06:00) **in pausa** finché il Capitano non preme «Avvia operazioni». La notte passa durante lo spegnimento e la riaccensione del monitor (§16.5.1).
+- **Pause**: automatica sulle decisioni e al rapporto serale (le decide il motore); pulsante **PAUSA / RIPRENDI**; pausa quando la scheda del browser è nascosta.
+- **Cambi turno** alle 10:00, 13:00, 16:00, 19:00: momenti fissi in cui possono accadere gli eventi dei turni (§10.3). La **linea del giorno** nella barra comandi mostra l'ora e le tacche dei turni.
+- Tecnica: azione **AVANZA_FINO(minuto)** — attraversa i momenti fino a quel minuto e si ferma prima se serve il Capitano. L'orologio reale (`ui/tempo/orologioReale.ts`) misura il tempo con `performance.now()` e si collega a React con `useSyncExternalStore` (niente useEffect). Per collaudare: `?velocita=20` nell'indirizzo.
 
 ---
 
@@ -380,6 +403,16 @@ durata     = durata base × fatica (1 / 1.1 / 1.25 / 1.5) × (1 − (velocità �
 
 **Esito**: un tiro 1–100. I primi `rischio` numeri sono fallimenti (¼ critici); dei successi, ¼ parziali e una quota perfetta (10% + 2% per punto di precisione del responsabile). Le probabilità mostrate al giocatore derivano dalle stesse soglie.
 
+### 9.1 Progressione dei task  [PROVVISORIO — v3.3]
+I task non sono tutti disponibili subito e **un lavoro fatto non si rifà subito**. Tutto è **derivato** dalla storia della partita (`engine/tasks/disponibilita.ts`), niente liste salvate.
+- **Sblocco** (`sblocco`, stesso linguaggio delle condizioni degli eventi): per **giorno** (GIORNO_ALMENO), **a catena** (TASK_COMPLETATO: lo scan sblocca il drone, l'ispezione la riparazione…), da **evento recente** (EVENTO_RECENTE: task temporanei), da **scoperta**, da **modulo/equipaggiamento**. Un task non sbloccato non si vede.
+- **Ricarica** (`ricaricaOre`): dopo un completamento il task torna disponibile dopo N ore (diagnostica 24, correzione d'orbita 12, riparazione scafo 48…); `null` = **una volta sola**; `0` = **routine** (la pausa in habitat). Un task **fallito** si può ritentare subito.
+- **Già assegnato**: se qualcuno ha il task in coda o lo sta facendo, non si può dare a un altro.
+- **Resa** (`resa`): ciò che un task riuscito produce (risorse, integrità di un sistema o dello scafo, cure), × 1,5 perfetto · × 1 successo · × 0,5 parziale · × 0 fallimento.
+- **Bonus**: i task offerti da un modulo o da un evento non generano l'avviso «task impossibili» nella Preparazione.
+- Catalogo: **34 task** (10 dal primo giorno, 15 a catena, per giorno o da un modulo, 7 aperti da eventi, 2 legati a V.A.L.E.). Elenco completo nel foglio «ORBITAL · Eventi e task».
+- La pianificazione mostra **Disponibili** e **Non ora** (con il motivo: «assegnato a Mara», «di nuovo da G3 · 09:00»), più resa, ripetibilità e **scadenza** dei temporanei (⏳).
+
 ---
 
 ## 10. Eventi  [BLOCCATO]
@@ -408,7 +441,7 @@ Filosofia: 20 eventi ben interconnessi > 500 eventi isolati.
 - **Gli eventi sono dati** (`content/eventi.ts`): condizioni, effetti e scelte descritti come oggetti; il motore li interpreta.
 - **Condizioni**: task concluso ora (tag + esito minimo/massimo) · rapporto serale / risveglio · scoperta presente/assente · evento già accaduto (anche con una scelta precisa) · equipaggiamento a bordo · `UNO_TRA` (oppure).
 - **Effetti**: scoperta · risorsa · integrità di un sistema · scafo · fatica (responsabile del task d'origine o tutti) · voce di log con codici. Sempre limitati (risorse ≥ 0, integrità e fatica 0–100).
-- **Quando**: gli eventi si controllano dopo ogni AVANZA. **Al massimo un evento per momento**; vince la priorità più alta, poi il peso.
+- **Quando**: gli eventi si controllano a ogni momento importante (AVANZA o AVANZA_FINO). **Al massimo un evento per momento**; vince la priorità più alta, poi il peso.
 - **Decisioni**: un evento con scelte porta in **DECISIONE**; il Capitano seleziona e conferma; poi si torna allo stato precedente (anche RAPPORTO). I task in coda partono dopo la decisione.
 - **Output dei task = eventi** che reagiscono a tag ed esito (es. R01 dopo l'Analisi del segnale; O01–O04 dopo i fallimenti critici). Un solo meccanismo per tutte le conseguenze.
 - **Scoperte = conoscenza**: sbloccano task (`scoperteRichieste`) e condizioni di altri eventi. La UI mostra solo i task sbloccati e non anticipa le scoperte di una scelta.
@@ -425,6 +458,14 @@ Modello: **60 Seconds**. Nessuna trama fissa: un **mazzo di eventi narrativi** (
 - **Giornale di bordo**: eventi, scelte ed esiti scrivono righe; ogni sera il motore aggiunge il bilancio (risorse che finiscono, feriti, fazioni quando cambiano, riempitivo se la giornata è vuota). Si legge al rapporto serale.
 - **Imprevisto di partenza** (8, `content/storia/imprevisti.ts`): estratto dal seed, cambia l'inizio (cassa rotta, antenna colpita, mal di spazio, nessun problema…).
 - **Testo libero verso V.A.L.E.**: parole chiave → domanda (STATO, PERCHÉ, DANNI, EQUIPAGGIO, TRACCE BIO, DIRETTIVA, più ACCUSA, MINACCIA, SALUTO che fanno salire la tensione o cambiano tono). Le risposte usano i dati veri ({DANNI}, {CREW}). Sostituisce l'esclusione v2.3 «niente testo libero».
+
+### 10.3 Eventi dei turni  [PROVVISORIO contenuti — v3.3]
+Eventi «esterni» ai cambi turno (`content/eventiTurno.ts`, V01–V18 + esiti R…): in media **circa uno al giorno**, diversi in ogni partita. Spostano le risorse in base alla scelta e spesso con un esito casuale.
+- **Viaggiatori**: mercantile (scambio, a volte truffa), richiesta di soccorso (aiuto a bordo → task; rifornimento → la nave ricambia giorni dopo), predoni (cedere, resistere, far ingannare i sensori da V.A.L.E.; possono tornare: la blindatura dei boccaporti li ferma), contrabbandieri (dati di E-17 in cambio di carburante: V.A.L.E. non gradisce), pilota solitario (grato, ladro o informatore su MEM-12), razioni sparite (furto interno).
+- **Occasioni a tempo** che aprono un task temporaneo: meteorite (18 h), relitto (24 h, può appartenere a KESTREL-4), cometa (10 h), capsula di rifornimento dell'agenzia (che V.A.L.E. può deviare se la direttiva è in conflitto).
+- **Guai di bordo** con il task per rimediare: muffa nella dispensa, perdita dal serbatoio, sciame di micrometeoriti, tempesta solare, filtri CO₂.
+- **Esiti dei task temporanei**: più eventi con le stesse condizioni → il motore ne estrae uno per peso (il meteorite contiene metalli, ghiaccio o cristalli).
+- Il carburante non si vende sotto la riserva di rientro.
 
 ---
 
@@ -740,6 +781,15 @@ Flusso del gioco: **Ingresso → Preparazione → Missione → Epilogo → Ingre
 - Atmosfera audio INGRESSO: ronzio basso e tre deboli impulsi a 1420 Hz, in eco al Segnale di E-17.
 - Desktop: registro · logo · menu in tre colonne. Mobile: logo, menu, registro (INIZIA sempre raggiungibile).
 
+### 16.5.3 Briefing di missione  [PROVVISORIO — v3.4]
+Flusso: **Ingresso → Briefing → Preparazione → Missione → Epilogo → Ingresso**. Il briefing è l'**ordine di missione** (§14.4) letto prima di scegliere crew e carico (`ui/briefing/`, testi in `content/briefing.ts`):
+- **Scheda**: tipo, pianeta, posizione, durata (10 giorni), equipaggio, nave, rischio.
+- **Contesto**: la sonda SR-9 ha registrato anomalie sopra il Cratere Settentrionale, poi ha smesso di trasmettere.
+- **Obiettivi**: principali (indagare e localizzare l'origine; riportare a casa la crew entro il giorno 10 senza intaccare la riserva), secondario (nave e crew in efficienza), **riservato** in rosso: «Direttiva interna di V.A.L.E. · ACCESSO NEGATO».
+- **Obiettivo finale** e scala degli esiti, coerente con i finali: ★★★ rientro con le prove · ★★ con i dubbi · ★ a mani vuote · ✕ missione perduta.
+- **Come si gioca** in quattro righe (giornata, razioni, V.A.L.E., colloqui).
+- Desktop: fascicolo a sinistra, esiti e regole a destra (colonne che scorrono). Mobile: una colonna, pulsante «Accetta e prepara» sempre visibile.
+
 ### 16.6 Audio  [BLOCCATO regole · PROVVISORIO suoni — v2.8]
 Tutto generato nel codice (`src/ui/audio/`): nessun file audio.
 - **Ambiente** (Web Audio API): ronzio, ventilazione, eventi casuali. Cinque atmosfere: INGRESSO (titolo), PREPARAZIONE (hangar), MISSIONE, ALLERTA (decisione in attesa, impulso grave), NOTTE (rapporto serale).
@@ -780,6 +830,9 @@ Tutto generato nel codice (`src/ui/audio/`): nessun file audio.
 | v2.2 | Reducer della missione: regole provvisorie di esecuzione (niente lavoro notturno, costi all'avvio, rischio salvato all'avvio, aiutante occupato → si procede da soli), consumi al rapporto serale, recupero notturno |
 | v2.3 | Adottata l'**Integrità dei dati** (§4.6). Adottato il design system VALE-OS (§16.5), con la UI allineata al DESIGN (scorte unificate, E-17 arido). Crew di riferimento: Mara, Adrian, Nadia, Sarah. Niente testo libero verso V.A.L.E. |
 | v2.4 | Sistema di eventi data-driven (§10.1): condizioni, effetti, scelte, stato DECISIONE, un evento per momento, output dei task come eventi, scoperte che sbloccano task. Catena del Segnale di E-17 implementata |
+| v3.5 | Giornata da **5 minuti**; pulsante **⏭ Salta** al prossimo momento importante (§8.1) |
+| v3.4 | **Razioni alla 60 Seconds** (§6.4): piena / mezza / niente per ognuno; fame e sete tolgono task, fatica e salute e rendono paranoici. **Colloqui del Capitano** (§7.8) e 7 eventi d'opinione (S23–S29). **Briefing di missione** (§16.5.3). Giornata da **10 minuti** |
+| v3.3 | **Tempo reale** (§8.1): 1 s = 1 min, giornata di 15 minuti, pausa, cambi turno. **Progressione dei task** (§9.1): sblocco, ricarica, resa, task temporanei; catalogo da 9 a 34 task. **Eventi dei turni** (§10.3): viaggiatori, furti, occasioni, guai di bordo |
 | v3.2 | **Schermata d'ingresso** (§16.5.2): logo, globo di E-17, registro di avvio, seed modificabile, interruttore audio; «Nuova missione» riporta qui |
 | v3.1 | Accensione e spegnimento del monitor a tubo catodico (§16.5.1): all'avvio, al lancio, alla buonanotte e al buongiorno |
 | v3.0 | **Storia emergente alla 60 Seconds** (§10.2): mazzo di eventi narrativi con protagonista ed esiti casuali, fazioni, crew che agisce da sola, V.A.L.E. che chiude porte e rifiuta il rientro, il Confronto, giornale di bordo, imprevisti di partenza, **finali di missione con epilogo** (§15). **Cibo, acqua e ossigeno separati** (§6.1). **Testo libero verso V.A.L.E.** con parole chiave. Adottati dal mockup anche finestre ridimensionabili ed eventi trascinabili (Tappa 2) |

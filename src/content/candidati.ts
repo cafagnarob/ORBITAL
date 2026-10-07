@@ -26,7 +26,7 @@ import type { IdMembro, MembroCrew } from "../engine/types";
 function membro(
   dati: Pick<MembroCrew, "id" | "nome" | "ruolo" | "peso" | "abilita" | "tratto" | "personalita" | "fiduciaVale" | "posizione">,
 ): MembroCrew {
-  return { salute: 100, fatica: 0, stato: "SANO", ...dati };
+  return { salute: 100, fatica: 0, fame: 0, sete: 0, stato: "SANO", ...dati };
 }
 
 export const LISTA_CANDIDATI: readonly MembroCrew[] = [

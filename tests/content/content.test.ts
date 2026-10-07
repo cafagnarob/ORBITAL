@@ -39,12 +39,16 @@ function appiattisci(condizioni: readonly Condizione[]): Condizione[] {
 }
 
 const EVENTI = Object.values(CATALOGO_EVENTI);
-const TUTTE_LE_CONDIZIONI = EVENTI.flatMap((e) =>
-  appiattisci([
-    ...e.condizioni,
-    ...e.scelte.flatMap((s) => [...s.requisiti, ...(s.esiti ?? []).flatMap((es) => es.requisiti)]),
-  ]),
-);
+const TUTTE_LE_CONDIZIONI = [
+  ...EVENTI.flatMap((e) =>
+    appiattisci([
+      ...e.condizioni,
+      ...e.scelte.flatMap((s) => [...s.requisiti, ...(s.esiti ?? []).flatMap((es) => es.requisiti)]),
+    ]),
+  ),
+  // Anche le condizioni di sblocco dei task (v3.3) usano lo stesso linguaggio.
+  ...TASK_DISPONIBILI.flatMap((t) => appiattisci(t.sblocco)),
+];
 const CODICI = Object.values(CATALOGO_CODICI);
 const FILTRI = EVENTI.flatMap((e) => e.filtri ?? []);
 const TUTTI_GLI_EFFETTI: Effetto[] = [
@@ -70,9 +74,9 @@ describe("catalogo dei task", () => {
     }
   });
 
-  it("ogni task è eseguibile con il loadout iniziale", () => {
+  it("ogni task (tranne i bonus dei moduli) è eseguibile con il loadout iniziale", () => {
     const { nave } = creaMissioneIniziale();
-    for (const t of TASK_DISPONIBILI) {
+    for (const t of TASK_DISPONIBILI.filter((x) => !x.bonus)) {
       for (const e of t.equipaggiamentoRichiesto) expect(nave.equipaggiamento).toContain(e);
       for (const m of t.moduliRichiesti) expect(nave.moduli).toContain(m);
     }
@@ -106,7 +110,30 @@ describe("catalogo degli eventi", () => {
         if (c.scelta !== undefined) expect(evento?.scelte.map((s) => s.id)).toContain(c.scelta);
       }
       if (c.tipo === "TASK_CONCLUSO_ORA") expect(tagEsistenti).toContain(c.tag);
+      if (c.tipo === "TASK_COMPLETATO") expect(TASK_DISPONIBILI.map((t) => t.id)).toContain(c.task);
+      if (c.tipo === "MODULO") expect(CATALOGO_MODULI).toHaveProperty(c.id);
+      if (c.tipo === "EQUIPAGGIAMENTO") expect(CATALOGO_EQUIPAGGIAMENTO).toHaveProperty(c.id);
+      if (c.tipo === "EVENTO_RECENTE") {
+        const evento = CATALOGO_EVENTI[c.id];
+        expect(evento).toBeDefined();
+        if (c.scelta !== undefined) expect(evento?.scelte.map((s) => s.id)).toContain(c.scelta);
+      }
     }
+  });
+
+  it("ogni task temporaneo è aperto da un evento che lo annuncia ai cambi turno", () => {
+    for (const t of TASK_DISPONIBILI) {
+      for (const c of appiattisci(t.sblocco)) {
+        if (c.tipo !== "EVENTO_RECENTE") continue;
+        const evento = CATALOGO_EVENTI[c.id]!;
+        expect(JSON.stringify(evento.condizioni)).toContain('"TURNO"');
+      }
+    }
+  });
+
+  it("ogni tag ascoltato dagli esiti dei task temporanei appartiene a un task", () => {
+    const tag = new Set(TASK_DISPONIBILI.flatMap((t) => t.tag));
+    for (const id of ["METEORITE", "RELITTO", "SOCCORSO"]) expect(tag).toContain(id);
   });
 
   it("gli effetti scoprono solo scoperte esistenti", () => {

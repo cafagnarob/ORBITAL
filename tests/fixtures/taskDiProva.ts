@@ -33,6 +33,8 @@ export const DIAGNOSTICA: DefinizioneTask = {
   costoRisorse: { energia: 2 },
   costoFatica: 10,
   tag: ["DIAGNOSTICA"],
+  sblocco: [],
+  ricaricaOre: 0, // routine: i test assegnano lo stesso task più volte
 };
 
 export const MANOVRA_ORBITALE: DefinizioneTask = {
@@ -51,6 +53,8 @@ export const MANOVRA_ORBITALE: DefinizioneTask = {
   costoRisorse: { carburante: 2 },
   costoFatica: 8,
   tag: ["MANOVRA"],
+  sblocco: [],
+  ricaricaOre: 0, // routine: i test assegnano lo stesso task più volte
 };
 
 export const ISPEZIONE_ESTERNA: DefinizioneTask = {
@@ -69,6 +73,8 @@ export const ISPEZIONE_ESTERNA: DefinizioneTask = {
   costoRisorse: { energia: 3 },
   costoFatica: 20,
   tag: ["EVA", "SCAFO"],
+  sblocco: [],
+  ricaricaOre: 0, // routine: i test assegnano lo stesso task più volte
 };
 
 /** Un task che richiede equipaggiamento NON presente a bordo. */

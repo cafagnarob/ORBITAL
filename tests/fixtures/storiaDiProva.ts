@@ -40,4 +40,9 @@ export const STORIA_DI_PROVA: ContenutiStoria = {
   battute: BATTUTE_DI_PROVA,
   diarioVuoto: ["VUOTO"],
   epiloghiCrew: { CON_VALE: ["{N}-CON"], INDECISO: ["{N}-INDECISO"], CONTRO_VALE: ["{N}-CONTRO"], MORTO: ["{N}-MORTO"] },
+  colloqui: {
+    DIFENDI_VALE: { CONVINTO: ["Va bene."], RESPINTO: ["No."] },
+    DUBITA_VALE: { CONVINTO: ["Hai ragione."], RESPINTO: ["Paranoia."] },
+    INCORAGGIA: { CONVINTO: ["Grazie."], RESPINTO: ["Lo so."] },
+  },
 };

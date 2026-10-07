@@ -14,6 +14,8 @@
 import type { Rng } from "../rng";
 import type { Attori, MembroCrew, SelettoreMembro, StatoMissione } from "../types";
 import { fazioneDi, membriAttivi } from "./fazioni";
+import { caricoBisogni } from "../crew/razioni";
+import { BALANCE } from "../../content/balance";
 
 /** I membri che rispettano il selettore (vivi, a bordo, tutti i filtri). */
 export function candidati(stato: StatoMissione, sel: SelettoreMembro, escluso: string | null = null): MembroCrew[] {
@@ -21,6 +23,8 @@ export function candidati(stato: StatoMissione, sel: SelettoreMembro, escluso: s
     if (m.id === escluso) return false;
     if (sel.fazione && fazioneDi(m) !== sel.fazione) return false;
     if (sel.ruolo && m.ruolo !== sel.ruolo) return false;
+    // La paranoia della fame (v3.4): solo chi ha fame o sete.
+    if (sel.affamato && caricoBisogni(m) < BALANCE.razioni.caricoParanoia) return false;
     if (sel.personalita) {
       for (const [asse, valore] of Object.entries(sel.personalita)) {
         if (m.personalita[asse as keyof typeof m.personalita] !== valore) return false;

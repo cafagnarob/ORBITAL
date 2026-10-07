@@ -1,0 +1,117 @@
+/* PannelloRazioni.module.css — righe della crew con gli interruttori cibo/acqua.
+ * Mobile: nome sopra, i due gruppi sotto. Da 700px: tutto su una riga. */
+
+.pannello {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4);
+  border-top: 1px dashed var(--c-griglia);
+}
+
+.testa {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+.testa h3 {
+  margin: 0;
+  font-family: var(--font-terminale);
+  font-size: 20px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  color: var(--c-fosforo);
+}
+.rapide {
+  display: flex;
+  gap: var(--sp-2);
+}
+.rapide button,
+.gruppo button {
+  min-height: 32px;
+  min-width: 44px;
+  padding: 0 var(--sp-2);
+  border: 1.5px solid var(--c-fosforo-tenue);
+  background: transparent;
+  color: var(--c-fosforo);
+  font-family: var(--font-terminale);
+  font-size: 18px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+.rapide button:hover,
+.gruppo button:hover {
+  border-color: var(--c-fosforo);
+}
+.gruppo button[aria-pressed="true"] {
+  background: var(--c-fosforo);
+  border-color: var(--c-fosforo);
+  color: var(--c-vuoto);
+}
+
+.conto {
+  margin: 0;
+  display: flex;
+  gap: var(--sp-4);
+  font-size: var(--fs-piccolo);
+  letter-spacing: 0.08em;
+  color: var(--c-fosforo-tenue);
+}
+
+.elenco {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+.riga {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--sp-1) var(--sp-3);
+  padding-bottom: var(--sp-2);
+  border-bottom: 1px solid var(--c-griglia);
+}
+.chi {
+  display: flex;
+  flex-direction: column;
+}
+.chi strong {
+  font-family: var(--font-terminale);
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  color: var(--c-fosforo-alto);
+}
+.previsione {
+  font-size: var(--fs-piccolo);
+  color: var(--c-fosforo-tenue);
+}
+.gruppo {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.risorsa {
+  min-width: 52px;
+  font-size: var(--fs-piccolo);
+  letter-spacing: 0.1em;
+  color: var(--c-fosforo-tenue);
+}
+
+.attenzione {
+  color: var(--c-attenzione);
+}
+.critico {
+  color: var(--c-critico);
+}
+
+@media (min-width: 700px) {
+  .riga {
+    grid-template-columns: minmax(0, 1.4fr) auto auto;
+    align-items: center;
+  }
+}

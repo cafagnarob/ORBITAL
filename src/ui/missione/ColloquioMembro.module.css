@@ -1,0 +1,66 @@
+/* ColloquioMembro.module.css — il pulsante PARLA e i tre discorsi. */
+
+.colloquio {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+.apri {
+  align-self: flex-start;
+  min-height: 32px;
+  padding: 0 var(--sp-2);
+  border: 1.5px solid var(--c-vale);
+  background: transparent;
+  color: var(--c-vale);
+  font-family: var(--font-terminale);
+  font-size: 17px;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+}
+.apri[aria-expanded="true"],
+.apri:hover {
+  background: rgba(92, 239, 216, 0.12);
+}
+
+.discorsi {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.discorsi button {
+  width: 100%;
+  min-height: 40px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2px var(--sp-2);
+  padding: 4px var(--sp-2);
+  border: 1px solid var(--c-griglia);
+  background: var(--c-vuoto);
+  color: var(--c-fosforo-alto);
+  font-family: var(--font-terminale);
+  font-size: 18px;
+  text-align: left;
+  cursor: pointer;
+}
+.discorsi button:hover,
+.discorsi button:focus-visible {
+  border-color: var(--c-fosforo);
+  outline: none;
+}
+.dettaglio {
+  font-family: var(--font-testo);
+  font-size: var(--fs-piccolo);
+  color: var(--c-fosforo-tenue);
+}
+
+.fatto {
+  margin: 0;
+  font-size: var(--fs-piccolo);
+  color: var(--c-fosforo-tenue);
+}

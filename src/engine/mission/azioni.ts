@@ -17,7 +17,13 @@
  *   RIMUOVI_TASK      → in PIANIFICAZIONE o IN_ESECUZIONE (solo task in coda)
  *   AVVIA_OPERAZIONI  → in PIANIFICAZIONE (porta l'orologio alle 07:00)
  *   AVANZA            → in IN_ESECUZIONE (salta al prossimo momento importante)
- *   CHIUDI_RAPPORTO   → in RAPPORTO (si passa alla notte)
+ *   AVANZA_FINO       → in IN_ESECUZIONE (tempo reale, v3.3: porta l'orologio
+ *                       fino al minuto indicato, gestendo i momenti incontrati;
+ *                       si ferma prima se serve il Capitano)
+ *   CHIUDI_RAPPORTO   → in RAPPORTO: si distribuiscono le razioni (v3.4; se
+ *                       mancano, quelle predefinite) e si passa alla notte
+ *   PARLA             → il Capitano parla con un membro (v3.4): una volta al
+ *                       giorno per persona, non fa scorrere il tempo
  *   RISOLVI_EVENTO    → in DECISIONE (il Capitano sceglie un'opzione)
  *   SEGNALA_VOCE      → sempre (segna una riga del log nel Terminale SVC-07)
  *   INSERISCI_CODICE  → sempre (prova un codice nel Terminale SVC-07)
@@ -26,7 +32,9 @@
  * ============================================================================
  */
 
-import type { DomandaVale, IdDefinizioneTask, IdIstanzaTask, IdMembro } from "../types";
+import type { RazioniSerali } from "../crew/razioni";
+import type { Discorso } from "../storia/colloqui";
+import type { DomandaVale, IdDefinizioneTask, IdIstanzaTask, IdMembro, Minuti } from "../types";
 
 export type Azione =
   | {
@@ -38,7 +46,9 @@ export type Azione =
   | { tipo: "RIMUOVI_TASK"; idTask: IdIstanzaTask }
   | { tipo: "AVVIA_OPERAZIONI" }
   | { tipo: "AVANZA" }
-  | { tipo: "CHIUDI_RAPPORTO" }
+  | { tipo: "AVANZA_FINO"; tempo: Minuti }
+  | { tipo: "CHIUDI_RAPPORTO"; razioni?: RazioniSerali }
+  | { tipo: "PARLA"; membro: IdMembro; discorso: Discorso }
   | { tipo: "RISOLVI_EVENTO"; idScelta: string }
   | { tipo: "SEGNALA_VOCE"; indice: number }
   | { tipo: "INSERISCI_CODICE"; codice: string }

@@ -1,0 +1,230 @@
+/*
+ * SchermataBriefing.module.css — il fascicolo dell'ordine di missione.
+ * Mobile: una colonna che scorre, pulsante sempre visibile in fondo.
+ * Desktop: fascicolo a sinistra, esiti e regole a destra.
+ */
+
+/* ===== MOBILE (base) ======================================================= */
+.schermo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  min-height: 100%;
+  padding: var(--sp-3) var(--sp-4) 0;
+}
+
+.intestazione {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--sp-1) var(--sp-4);
+  padding-bottom: var(--sp-2);
+  border-bottom: 1px solid var(--c-griglia);
+  font-family: var(--font-terminale);
+  font-size: 16px;
+  letter-spacing: 0.1em;
+  color: var(--c-fosforo-tenue);
+}
+.protocollo {
+  color: var(--c-fosforo);
+}
+
+.griglia {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sp-5);
+}
+
+.fascicolo,
+.laterale {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  min-width: 0;
+}
+
+.titolo {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(20px, 5vw, 34px);
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  color: var(--c-fosforo);
+  text-shadow: var(--glow-testo);
+}
+
+/* La scheda: etichetta a sinistra, valore a destra, come un modulo d'archivio. */
+.scheda {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--c-griglia);
+}
+.scheda div {
+  display: grid;
+  grid-template-columns: minmax(110px, 0.6fr) 1fr;
+  gap: var(--sp-3);
+  padding: var(--sp-1) var(--sp-3);
+  border-bottom: 1px solid var(--c-griglia);
+}
+.scheda div:last-child {
+  border-bottom: none;
+}
+.scheda dt {
+  font-family: var(--font-terminale);
+  font-size: 17px;
+  letter-spacing: 0.1em;
+  color: var(--c-fosforo-tenue);
+}
+.scheda dd {
+  margin: 0;
+  color: var(--c-testo);
+}
+
+.sezione {
+  margin: 0 0 var(--sp-2);
+  font-family: var(--font-terminale);
+  font-size: 20px;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  color: var(--c-fosforo);
+}
+.paragrafo {
+  margin: 0 0 var(--sp-2);
+  line-height: 1.55;
+  color: var(--c-testo);
+}
+
+.obiettivi {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+.obiettivi li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-left: var(--sp-3);
+  border-left: 2px solid var(--c-fosforo);
+  color: var(--c-testo);
+}
+.tipo {
+  font-size: var(--fs-piccolo);
+  letter-spacing: 0.14em;
+  color: var(--c-fosforo-tenue);
+}
+/* L'obiettivo riservato: rosso, barrato a metà, come un timbro. */
+.obiettivi li.riservato {
+  border-left-color: var(--c-critico);
+  color: var(--c-critico);
+}
+.riservato .tipo {
+  color: var(--c-critico);
+}
+
+.finale {
+  padding: var(--sp-3) var(--sp-4);
+  border: 2px solid var(--c-fosforo);
+  box-shadow: var(--glow-bordo);
+}
+.obiettivoFinale {
+  margin: 0 0 var(--sp-3);
+  font-family: var(--font-terminale);
+  font-size: 22px;
+  line-height: 1.25;
+  color: var(--c-fosforo-alto);
+}
+.esiti,
+.regole {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  color: var(--c-testo);
+}
+.esiti li {
+  display: grid;
+  grid-template-columns: 3.4em 1fr;
+  gap: var(--sp-2);
+}
+.stelle {
+  color: var(--c-attenzione);
+  letter-spacing: 0.05em;
+}
+.perduta,
+.perduta .stelle {
+  color: var(--c-critico);
+}
+.regole li {
+  padding-left: var(--sp-3);
+  border-left: 2px solid var(--c-griglia);
+  line-height: 1.5;
+}
+
+/* Il piede resta in fondo allo schermo mentre si legge (mobile). */
+.piede {
+  position: sticky;
+  bottom: var(--altezza-frontale, 0px);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2) var(--sp-4);
+  padding: var(--sp-3) 0;
+  border-top: 1px solid var(--c-griglia);
+  background: var(--c-vuoto);
+}
+.domanda {
+  font-family: var(--font-terminale);
+  font-size: 22px;
+  letter-spacing: 0.08em;
+  color: var(--c-vale);
+  text-shadow: var(--glow-vale);
+}
+.accetta {
+  flex: 1 1 260px;
+  min-height: 52px;
+  border: 2px solid var(--c-fosforo);
+  background: var(--c-fosforo);
+  color: var(--c-vuoto);
+  font-family: var(--font-terminale);
+  font-size: 24px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 0 24px rgba(125, 245, 165, 0.35);
+}
+.accetta:hover,
+.accetta:focus-visible {
+  background: var(--c-fosforo-alto);
+  outline: none;
+}
+
+/* ===== DESKTOP ============================================================== */
+@media (min-width: 1100px) {
+  .schermo {
+    height: 100%;
+    padding: var(--sp-5) var(--sp-5) 0;
+  }
+  .griglia {
+    min-height: 0;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    gap: var(--sp-5);
+  }
+  /* Le due colonne scorrono al loro interno: il pulsante resta fermo. */
+  .fascicolo,
+  .laterale {
+    overflow-y: auto;
+    padding-right: var(--sp-2);
+  }
+  .accetta {
+    flex: none;
+    min-width: 360px;
+  }
+}

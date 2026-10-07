@@ -24,12 +24,14 @@ import { ESITI_TASK, type Condizione, type EsitoTask, type IdIstanzaTask, type S
 export interface MomentoEventi {
   rapportoSerale: boolean;
   risveglio: boolean;
+  /** Un cambio turno (10, 13, 16, 19): il momento degli eventi esterni (v3.3). */
+  turno: boolean;
   /** Task conclusi in questo passo, in ordine. */
   tasksConclusi: IdIstanzaTask[];
 }
 
 /** Un momento "vuoto": usato per i requisiti delle scelte. */
-export const MOMENTO_VUOTO: MomentoEventi = { rapportoSerale: false, risveglio: false, tasksConclusi: [] };
+export const MOMENTO_VUOTO: MomentoEventi = { rapportoSerale: false, risveglio: false, turno: false, tasksConclusi: [] };
 
 /**
  * Posizione di un esito nella scala, 0 = SUCCESSO_PERFETTO (il migliore).
@@ -65,7 +67,15 @@ export function verificaCondizione(
     case "TASK_CONCLUSO_ORA":
       return momento.tasksConclusi.some((id) => taskCorrisponde(stato, contesto, id, c));
     case "MOMENTO":
-      return c.momento === "RAPPORTO_SERALE" ? momento.rapportoSerale : momento.risveglio;
+      switch (c.momento) {
+        case "RAPPORTO_SERALE":
+          return momento.rapportoSerale;
+        case "RISVEGLIO":
+          return momento.risveglio;
+        case "TURNO":
+          return momento.turno;
+      }
+      break;
     case "SCOPERTA":
       return stato.conoscenza.scoperte.includes(c.id);
     case "NON_SCOPERTA":
@@ -108,7 +118,25 @@ export function verificaCondizione(
       return stato.imprevisto === c.id;
     case "COMPARTIMENTO_BLOCCATO":
       return Object.values(stato.nave.accessi).includes("BLOCCATO");
+
+    // --- Progressione dei task (v3.3) -------------------------------------
+    case "TASK_COMPLETATO":
+      return contaCompletati(stato, c.task) >= (c.volte ?? 1);
+    case "MODULO":
+      return stato.nave.moduli.includes(c.id);
+    case "EVENTO_RECENTE":
+      return stato.eventi.accaduti.some(
+        (r) =>
+          r.id === c.id &&
+          (c.scelta === undefined || r.scelta === c.scelta) &&
+          stato.tempo - r.tempo < c.ore * 60,
+      );
   }
+}
+
+/** Quante volte un task è stato COMPLETATO (i fallimenti non contano). */
+export function contaCompletati(stato: StatoMissione, idDefinizione: string): number {
+  return Object.values(stato.tasks).filter((t) => t.idDefinizione === idDefinizione && t.stato === "COMPLETATO").length;
 }
 
 /** Tutte le condizioni sono vere? (Una lista vuota è sempre vera.) */

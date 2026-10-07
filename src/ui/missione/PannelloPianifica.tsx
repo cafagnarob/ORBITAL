@@ -21,22 +21,27 @@
  * valutaTask), ma il rischio mostrato passa da stimaRischio: con bassa
  * integrità dei dati può differire da quello vero (DESIGN §4.6).
  * Il rischio vero viene fissato all'avvio del task.
+ *
+ * QUALI TASK SI VEDONO (v3.3)
+ * La lista si DERIVA a ogni render da disponibilitaTask():
+ *   - DISPONIBILI: si possono scegliere;
+ *   - NON ORA: già assegnati a qualcuno o in ricarica, visibili ma
+ *     disabilitati, con il motivo («in ricarica fino a G2 · 09:00»);
+ *   - i task non ancora sbloccati o già esauriti non compaiono.
+ * Il task scelto è "effettivo": se nel frattempo diventa indisponibile
+ * (lo ha preso un altro, è scaduto) si passa al primo disponibile.
  * ============================================================================
  */
 
 import { useState, type FormEvent } from "react";
 import { CONTESTO_GIOCO } from "../../content/contesto";
 import { CATALOGO_TASK, TASK_DISPONIBILI } from "../../content/tasks";
-import {
-  contestazioneAperta,
-  puoLavorare,
-  scoperteMancanti,
-  stimaRischio,
-  verificaAssegnazione,
-} from "../../engine/mission";
+import { puoLavorare, stimaRischio, verificaAssegnazione } from "../../engine/mission";
+import { disponibilitaTask, scadenzaTask, type Disponibilita } from "../../engine/tasks/disponibilita";
 import { calcolaSoglie, probabilitaEsiti } from "../../engine/tasks/esito";
+import { formattaTempo } from "../../engine/clock";
 import { valutaTask } from "../../engine/tasks/valutazione";
-import type { StatoMissione } from "../../engine/types";
+import type { DefinizioneTask, ResaTask, StatoMissione } from "../../engine/types";
 import { Finestra } from "../components/Finestra";
 import { Pulsante } from "../components/Pulsante";
 import { etichetta, formattaDurata, tonoRischio } from "../format";
@@ -51,15 +56,39 @@ interface Props {
 /** Valore della select "aiutante" che significa "nessuno". */
 const NESSUNO = "";
 
+/** Perché un task è visibile ma non selezionabile adesso. */
+function motivoNonOra(stato: StatoMissione, disp: Disponibilita): string {
+  if (disp.tipo === "IN_CORSO") return `assegnato a ${stato.crew[disp.chi]?.nome ?? disp.chi}`;
+  if (disp.tipo === "IN_RICARICA") return `di nuovo da ${formattaTempo(disp.finoA)}`;
+  return "";
+}
+
+/** «Ogni 24 h», «Una volta sola», «Sempre». */
+function descriviRicarica(def: DefinizioneTask): string {
+  if (def.ricaricaOre === null) return "una volta sola";
+  if (def.ricaricaOre === 0) return "sempre";
+  return `ogni ${def.ricaricaOre} h`;
+}
+
+/** «ACQUA +6 · SCAFO +15%» (valori per un successo normale). */
+function descriviResa(resa: ResaTask | undefined): string {
+  if (!resa) return "—";
+  const voci = Object.entries(resa.risorse ?? {}).map(([r, q]) => `${etichetta(r).toUpperCase()} +${q}`);
+  if (resa.sistema) voci.push(`${etichetta(resa.sistema.id).toUpperCase()} +${resa.sistema.delta}%`);
+  if (resa.scafo !== undefined) voci.push(`SCAFO +${resa.scafo}%`);
+  if (resa.cure !== undefined) voci.push(`CURE +${resa.cure}`);
+  return voci.join(" · ") || "—";
+}
+
 export function PannelloPianifica({ stato, dispatch }: Props) {
   const membri = Object.values(stato.crew);
-  // Solo i task che la crew "sa" di poter fare: quelli bloccati da scoperte
-  // non ancora fatte non compaiono (comparirebbero come spoiler).
-  // Lo stesso vale per la Verifica dei dati, che ha senso solo dopo una contestazione.
-  const disponibili = TASK_DISPONIBILI.filter(
-    (t) => scoperteMancanti(stato, t).length === 0 && (!t.tag.includes("VERIFICA") || contestazioneAperta(stato)),
-  );
-  const [idTask, setIdTask] = useState(TASK_DISPONIBILI[0]?.id ?? "");
+  // La lista dei task, divisa in "si può fare" e "non ora" (vedi intestazione).
+  const elenco = TASK_DISPONIBILI.map((def) => ({ def, disp: disponibilitaTask(stato, CONTESTO_GIOCO, def) }));
+  const pronti = elenco.filter((x) => x.disp.tipo === "DISPONIBILE");
+  const nonOra = elenco.filter((x) => x.disp.tipo === "IN_CORSO" || x.disp.tipo === "IN_RICARICA");
+  const [idScelto, setIdTask] = useState(TASK_DISPONIBILI[0]?.id ?? "");
+  // Il task "effettivo": quello scelto, se si può ancora fare; altrimenti il primo disponibile.
+  const idTask = pronti.some((x) => x.def.id === idScelto) ? idScelto : (pronti[0]?.def.id ?? "");
   const [idResponsabile, setIdResponsabile] = useState(membri[0]?.id ?? "");
   const [idSupporto, setIdSupporto] = useState(NESSUNO);
 
@@ -73,7 +102,9 @@ export function PannelloPianifica({ stato, dispatch }: Props) {
     ammetteSupporto && idSupporto !== NESSUNO && idSupporto !== idResponsabile ? idSupporto : null;
 
   const faseValida = stato.statoGioco === "PIANIFICAZIONE" || stato.statoGioco === "IN_ESECUZIONE";
-  const motivo = faseValida
+  const motivo = !def
+    ? "Nessun task disponibile in questo momento"
+    : faseValida
     ? verificaAssegnazione(stato, CONTESTO_GIOCO, idTask, idResponsabile, supportoEffettivo)
     : stato.statoGioco === "DECISIONE"
       ? "Prima serve una decisione del Capitano"
@@ -114,11 +145,23 @@ export function PannelloPianifica({ stato, dispatch }: Props) {
         <label className={stili.campo}>
           <span>TASK</span>
           <select value={idTask} onChange={(e) => setIdTask(e.target.value)}>
-            {disponibili.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.nome}
-              </option>
-            ))}
+            <optgroup label={`Disponibili (${pronti.length})`}>
+              {pronti.map(({ def: t }) => (
+                <option key={t.id} value={t.id}>
+                  {t.nome}
+                  {scadenzaTask(stato, t) !== null ? " ⏳" : ""}
+                </option>
+              ))}
+            </optgroup>
+            {nonOra.length > 0 && (
+              <optgroup label="Non ora">
+                {nonOra.map(({ def: t, disp }) => (
+                  <option key={t.id} value={t.id} disabled>
+                    {t.nome} — {motivoNonOra(stato, disp)}
+                  </option>
+                ))}
+              </optgroup>
+            )}
           </select>
         </label>
 
@@ -174,6 +217,20 @@ export function PannelloPianifica({ stato, dispatch }: Props) {
                   .join(" · ") || "—"}
               </dd>
             </div>
+            <div>
+              <dt>RESA</dt>
+              <dd>{descriviResa(def.resa)}</dd>
+            </div>
+            <div>
+              <dt>RIPETIBILE</dt>
+              <dd>{descriviRicarica(def)}</dd>
+            </div>
+            {scadenzaTask(stato, def) !== null && (
+              <div className={stili.scade}>
+                <dt>SCADE</dt>
+                <dd>{formattaTempo(scadenzaTask(stato, def) ?? 0)}</dd>
+              </div>
+            )}
             {def.equipaggiamentoRichiesto.length + def.moduliRichiesti.length > 0 && (
               <div>
                 <dt>RICHIEDE</dt>

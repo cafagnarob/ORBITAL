@@ -115,7 +115,15 @@ function spiegaCondizione(c: Condizione): string | null {
       return parti.length > 0 ? parti.join(" O ") : null;
     }
     case "NON":
-      return c.condizione.tipo === "AUTONOMIA_ALMENO" ? "V.A.L.E. NON LO IMPEDISCA" : null;
+      if (c.condizione.tipo === "AUTONOMIA_ALMENO") return "V.A.L.E. NON LO IMPEDISCA";
+      // «NON meno di X» = «almeno X» (es. carburante da vendere, cibo da dare).
+      if (c.condizione.tipo === "RISORSA_SOTTO") return `ALMENO ${c.condizione.valore} DI ${c.condizione.risorsa.toUpperCase()}`;
+      if (c.condizione.tipo === "OVERRIDE") return "V.A.L.E. ATTIVA";
+      return null;
+    case "NON_SCOPERTA":
+      return c.id === "VALE_SPENTA" ? "V.A.L.E. ATTIVA" : null;
+    case "TASK_COMPLETATO":
+      return `«${etichetta(c.task.replace(/^T-/, ""))}» COMPLETATO`;
     default:
       return null;
   }

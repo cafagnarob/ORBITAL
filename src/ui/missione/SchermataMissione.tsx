@@ -39,6 +39,7 @@ import { minutoDelGiorno, ORARIO_RISVEGLIO, scomponiTempo } from "../../engine/c
 import { useAccensione } from "../cornice/useAccensione";
 import { suona } from "../audio";
 import type { Preparazione } from "../../engine/types";
+import type { RazioniSerali } from "../../engine/crew/razioni";
 import { Monitor } from "../cornice/Monitor";
 import { PannelloFrontale } from "../cornice/PannelloFrontale";
 import { TerminaleSvc } from "../terminale/TerminaleSvc";
@@ -74,7 +75,7 @@ interface Props {
 }
 
 export function SchermataMissione({ seed, preparazione, onNuovaPartita }: Props) {
-  const { stato, dispatch } = useMissione(seed, preparazione);
+  const { stato, dispatch, tempo } = useMissione(seed, preparazione);
   const [scheda, setScheda] = useState<IdScheda>("vale");
   // Apertura del Terminale SVC-07: stato dell'interfaccia, non della partita.
   const [terminaleAperto, setTerminaleAperto] = useState(false);
@@ -87,10 +88,11 @@ export function SchermataMissione({ seed, preparazione, onNuovaPartita }: Props)
    * notte scorre fino al risveglio (06:00); poi il monitor si riaccende sul
    * nuovo giorno. Il giocatore non vede il "salto" di otto ore: lo vive.
    */
-  function buonanotte() {
+  function buonanotte(razioni?: RazioniSerali) {
     tubo.spegni(() => {
-      dispatch({ tipo: "CHIUDI_RAPPORTO" });
-      dispatch({ tipo: "AVANZA" });
+      const dopo = dispatch({ tipo: "CHIUDI_RAPPORTO", razioni });
+      // Le razioni possono aver chiuso la missione (nessuno sopravvive).
+      if (dopo.statoGioco === "IN_ESECUZIONE") dispatch({ tipo: "AVANZA" });
     }, true);
   }
 
@@ -171,7 +173,7 @@ export function SchermataMissione({ seed, preparazione, onNuovaPartita }: Props)
           </div>
         </main>
 
-        <BarraComandi stato={stato} dispatch={dispatch} onChiudiRapporto={buonanotte} />
+        <BarraComandi stato={stato} dispatch={dispatch} onChiudiRapporto={buonanotte} tempo={tempo} />
 
         {/* Compare solo quando c'è una decisione in attesa (stato DECISIONE). */}
         <FinestraEvento stato={stato} dispatch={dispatch} />

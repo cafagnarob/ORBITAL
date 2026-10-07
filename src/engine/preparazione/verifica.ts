@@ -34,8 +34,9 @@ import { riepilogoPreparazione } from "./riepilogo";
 export function taskNonDisponibili(prep: Preparazione, cat: CataloghiPreparazione): DefinizioneTask[] {
   return Object.values(cat.task).filter(
     (t) =>
-      t.equipaggiamentoRichiesto.some((e) => !prep.equipaggiamento.includes(e)) ||
-      t.moduliRichiesti.some((m) => !prep.moduli.includes(m)),
+      !t.bonus &&
+      (t.equipaggiamentoRichiesto.some((e) => !prep.equipaggiamento.includes(e)) ||
+        t.moduliRichiesti.some((m) => !prep.moduli.includes(m))),
   );
 }
 

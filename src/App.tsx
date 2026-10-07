@@ -5,6 +5,7 @@
  *
  * FLUSSO
  *   INGRESSO      la schermata del titolo: logo, seed, audio, INIZIA MISSIONE
+ *   BRIEFING      l'ordine di missione: cosa si va a fare, obiettivo finale (v3.4)
  *   PREPARAZIONE  crew e loadout
  *   MISSIONE      in orbita attorno a E-17, fino all'epilogo
  * Dall'epilogo "Nuova missione" riporta all'INGRESSO con un seed nuovo.
@@ -26,12 +27,13 @@
 import { useState } from "react";
 import type { Preparazione } from "./engine/types";
 import { impostaAtmosfera } from "./ui/audio";
+import { SchermataBriefing } from "./ui/briefing/SchermataBriefing";
 import { SchermataIngresso } from "./ui/ingresso/SchermataIngresso";
 import { SchermataMissione } from "./ui/missione/SchermataMissione";
 import { SchermataPreparazione } from "./ui/preparazione/SchermataPreparazione";
 import { seedCasuale, seedIniziale } from "./ui/seed";
 
-type Fase = "INGRESSO" | "PREPARAZIONE" | "MISSIONE";
+type Fase = "INGRESSO" | "BRIEFING" | "PREPARAZIONE" | "MISSIONE";
 
 export default function App() {
   const [fase, setFase] = useState<Fase>("INGRESSO");
@@ -41,7 +43,7 @@ export default function App() {
 
   function inizia(seedScelto: string) {
     setSeed(seedScelto);
-    setFase("PREPARAZIONE");
+    setFase("BRIEFING");
   }
 
   function avvia(prep: Preparazione) {
@@ -61,6 +63,8 @@ export default function App() {
   switch (fase) {
     case "INGRESSO":
       return <SchermataIngresso key={partite} seed={seed} onInizia={inizia} daSpento={partite > 0} />;
+    case "BRIEFING":
+      return <SchermataBriefing key={`${partite}-${seed}`} seed={seed} onAccetta={() => setFase("PREPARAZIONE")} />;
     case "PREPARAZIONE":
       return <SchermataPreparazione key={`${partite}-${seed}`} seed={seed} onAvvia={avvia} daSpento />;
     case "MISSIONE":

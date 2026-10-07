@@ -47,6 +47,8 @@ function candidato(id: string, ruolo: MembroCrew["ruolo"], peso = 70): MembroCre
     personalita: { approccio: "CAUTO", socialita: "LEALE", mentalita: "CALMO" },
     salute: 100,
     fatica: 0,
+    fame: 0,
+    sete: 0,
     fiduciaVale: 50,
     posizione: "HABITAT",
     stato: "SANO",

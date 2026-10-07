@@ -28,6 +28,8 @@ function membro(dati: Pick<MembroCrew, "id" | "nome" | "ruolo" | "abilita" | "tr
     peso: 75,
     salute: 100,
     fatica: 0,
+    fame: 0,
+    sete: 0,
     fiduciaVale: 50,
     posizione: "HABITAT",
     stato: "SANO",
@@ -151,5 +153,6 @@ export function creaMissioneDiProva(seed = "E17-73A9"): StatoMissione {
     diario: [],
     imprevisto: null,
     esito: null,
+    colloqui: [],
   };
 }

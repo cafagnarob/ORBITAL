@@ -58,6 +58,11 @@
   margin: 0;
   text-align: right;
 }
+/* Un'occasione a tempo (meteorite, relitto...): la scadenza si nota. */
+.scade dt,
+.scade dd {
+  color: var(--c-attenzione);
+}
 
 .stima {
   display: flex;

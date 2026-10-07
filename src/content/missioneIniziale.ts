@@ -137,6 +137,7 @@ export function creaMissioneIniziale(
     diario: [],
     imprevisto: null,
     esito: null,
+    colloqui: [],
   };
 
   applicaImprevisto(stato);

@@ -21,7 +21,7 @@
  * ============================================================================
  */
 
-import type { IdDefinizioneTask, IdEquipaggiamento, IdEvento, IdMembro, IdScoperta, Minuti, Tag } from "./comuni";
+import type { IdDefinizioneTask, IdEquipaggiamento, IdEvento, IdMembro, IdModulo, IdScoperta, Minuti, Tag } from "./comuni";
 import type { Ruolo, StatoMembro } from "./crew";
 import type { FonteLog } from "./log";
 import type { Compartimento, SistemaCore, StatoAccesso } from "./nave";
@@ -57,8 +57,11 @@ export type Condizione =
    * esitoAlPiu:  "FALLIMENTO" vale per FALLIMENTO e FALLIMENTO_CRITICO.
    */
   | { tipo: "TASK_CONCLUSO_ORA"; tag: Tag; esitoAlmeno?: EsitoTask; esitoAlPiu?: EsitoTask }
-  /** Siamo al rapporto serale o al risveglio. */
-  | { tipo: "MOMENTO"; momento: "RAPPORTO_SERALE" | "RISVEGLIO" }
+  /**
+   * Siamo al rapporto serale, al risveglio o a un CAMBIO TURNO
+   * (10:00, 13:00, 16:00, 19:00: gli eventi "durante la giornata", v3.3).
+   */
+  | { tipo: "MOMENTO"; momento: "RAPPORTO_SERALE" | "RISVEGLIO" | "TURNO" }
   /** La crew sa / non sa ancora una certa cosa. */
   | { tipo: "SCOPERTA"; id: IdScoperta }
   | { tipo: "NON_SCOPERTA"; id: IdScoperta }
@@ -94,7 +97,18 @@ export type Condizione =
   /** L'imprevisto di partenza di questa partita. */
   | { tipo: "IMPREVISTO"; id: string }
   /** V.A.L.E. ha bloccato almeno un compartimento. */
-  | { tipo: "COMPARTIMENTO_BLOCCATO" };
+  | { tipo: "COMPARTIMENTO_BLOCCATO" }
+
+  // --- Progressione dei task (v3.3) ---------------------------------------
+  /** Un task è stato completato (con successo, anche parziale) almeno N volte. */
+  | { tipo: "TASK_COMPLETATO"; task: IdDefinizioneTask; volte?: number }
+  /** Un modulo è installato sulla nave. */
+  | { tipo: "MODULO"; id: IdModulo }
+  /**
+   * Un evento è accaduto da MENO di `ore` ore (eventualmente con una certa
+   * scelta). Serve ai task temporanei: «il meteorite resta a portata per 18 ore».
+   */
+  | { tipo: "EVENTO_RECENTE"; id: IdEvento; scelta?: string; ore: number };
 
 // ----------------------------------------------------------------------------
 // EFFETTI: "cosa cambia?"

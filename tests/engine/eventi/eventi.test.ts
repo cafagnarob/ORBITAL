@@ -28,7 +28,7 @@ function finoAllaDecisione(): StatoMissione {
 
 // ----------------------------------------------------------------------------
 describe("condizioni", () => {
-  const vuoto: MomentoEventi = { rapportoSerale: false, risveglio: false, tasksConclusi: [] };
+  const vuoto: MomentoEventi = { rapportoSerale: false, risveglio: false, turno: false, tasksConclusi: [] };
 
   it("SCOPERTA / NON_SCOPERTA leggono la conoscenza", () => {
     const s = creaMissioneDiProva();

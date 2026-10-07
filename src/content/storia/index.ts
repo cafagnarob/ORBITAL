@@ -14,12 +14,14 @@ import type { ContenutiStoria } from "../../engine/types";
 import { BATTUTE } from "./battute";
 import { DIARIO_VUOTO, EPILOGHI_CREW } from "./diario";
 import { CATALOGO_FINALI } from "./finali";
+import { TESTI_COLLOQUI } from "./colloqui";
 
 export const CONTENUTI_STORIA: ContenutiStoria = {
   finali: CATALOGO_FINALI,
   battute: BATTUTE,
   diarioVuoto: DIARIO_VUOTO,
   epiloghiCrew: EPILOGHI_CREW,
+  colloqui: TESTI_COLLOQUI,
 };
 
 export { EVENTI_STORIA } from "./eventi";

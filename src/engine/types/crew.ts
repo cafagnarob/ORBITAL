@@ -94,6 +94,13 @@ export interface MembroCrew {
   fatica: Percentuale;
   /** Fiducia personale in V.A.L.E., 0–100, iniziale 50 (DESIGN §7.5). */
   fiduciaVale: Percentuale;
+  /**
+   * FAME e SETE (v3.4), in punti 0–6: salgono con le razioni negate e
+   * scendono con quelle piene. Il LIVELLO (0–3) si calcola, non si salva
+   * (engine/crew/razioni.ts).
+   */
+  fame: number;
+  sete: number;
   /** Dove si trova ora. */
   posizione: Luogo;
   stato: StatoMembro;
