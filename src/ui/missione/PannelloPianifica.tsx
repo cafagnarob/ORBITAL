@@ -44,6 +44,7 @@ import { Finestra } from "../components/Finestra";
 import { Pulsante } from "../components/Pulsante";
 import { etichetta, formattaDurata, tonoRischio } from "../format";
 import type { Dispatch } from "../useMissione";
+import { ConIcone } from "../components/icone/ConIcone";
 import stili from "./PannelloPianifica.module.css";
 
 interface Props {
@@ -191,14 +192,20 @@ export function PannelloPianifica({ stato, dispatch }: Props) {
             <div>
               <dt>COSTO</dt>
               <dd>
-                {Object.entries(def.costoRisorse)
-                  .map(([r, q]) => `${etichetta(r).toUpperCase()} −${q}`)
-                  .join(" · ") || "—"}
+                <ConIcone
+                  testo={
+                    Object.entries(def.costoRisorse)
+                      .map(([r, q]) => `${etichetta(r).toUpperCase()} −${q}`)
+                      .join(" · ") || "—"
+                  }
+                />
               </dd>
             </div>
             <div>
               <dt>RESA</dt>
-              <dd>{descriviResa(def.resa)}</dd>
+              <dd>
+                <ConIcone testo={descriviResa(def.resa)} />
+              </dd>
             </div>
             <div>
               <dt>RIPETIBILE</dt>

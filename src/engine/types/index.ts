@@ -26,3 +26,4 @@ export * from "./missione";
 export * from "./loadout";
 export * from "./preparazione";
 export * from "./storia";
+export * from "./supermissione";

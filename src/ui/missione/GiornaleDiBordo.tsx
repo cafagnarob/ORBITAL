@@ -31,6 +31,7 @@ import { paginaDiario } from "../../engine/storia/diario";
 import { scomponiTempo } from "../../engine/clock";
 import type { StatoMissione } from "../../engine/types";
 import { Pulsante } from "../components/Pulsante";
+import { ConIcone } from "../components/icone/ConIcone";
 import stili from "./GiornaleDiBordo.module.css";
 import { PannelloRazioni } from "./PannelloRazioni";
 
@@ -76,7 +77,9 @@ function RapportoSerale({ stato, onBuonanotte }: Props) {
         </ol>
 
         <p className={stili.bilancio}>
-          CIBO {r.cibo} · ACQUA {r.acqua} · O₂ {r.ossigeno} · ENERGIA {r.energia} · CARBURANTE {r.carburante}
+          <ConIcone
+            testo={`CIBO ${r.cibo} · ACQUA ${r.acqua} · O₂ ${r.ossigeno} · ENERGIA ${r.energia} · CARBURANTE ${r.carburante}`}
+          />
         </p>
 
         <PannelloRazioni stato={stato} razioni={razioni} onCambia={setRazioni} />

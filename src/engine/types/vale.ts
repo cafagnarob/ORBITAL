@@ -15,7 +15,7 @@
  * ============================================================================
  */
 
-import type { IdDirettiva, IdEvento, Minuti, Tag } from "./comuni";
+import type { IdDirettiva, IdEvento, IdScoperta, Minuti, Tag } from "./comuni";
 import type { Effetto } from "./eventi";
 import type { TagLoadout } from "./loadout";
 
@@ -81,19 +81,32 @@ export interface Contestazione {
   stato: EsitoContestazione;
 }
 
+/**
+ * I TONI del Capitano (v3.9): COME parla a V.A.L.E. Cambiano le sue
+ * battute, il modo in cui V.A.L.E. risponde e (balance.vale.toni) la
+ * tensione, la fiducia della crew e ciò che V.A.L.E. lascia trapelare.
+ */
+export const TONI_CAPITANO = ["CALMO", "AMICHEVOLE", "FERMO", "ARRABBIATO", "SOSPETTOSO"] as const;
+export type TonoCapitano = (typeof TONI_CAPITANO)[number];
+
 export interface StatoVale {
   direttiva: IdDirettiva;
   tensione: number;
+  /** Il tono scelto dal Capitano (v3.9): resta finché non lo cambia. */
+  tono: TonoCapitano;
+  /** Quando il Capitano si è scusato l'ultima volta (v3.9): le scuse valgono una volta al giorno. */
+  ultimaScusa: Minuti | null;
   /** Attivato dal codice ORD-01: l'autonomia di V.A.L.E. resta al minimo. */
   override: boolean;
   affermazioni: AffermazioneFiltrata[];
   contestazioni: Contestazione[];
 }
 
-/** Le domande dirette a V.A.L.E. (pulsanti-domanda, DESIGN §16.5). */
 /**
- * Le domande a V.A.L.E. I primi sei sono anche pulsanti (mockup della
- * Missione); ACCUSA, MINACCIA e SALUTO si raggiungono solo scrivendo.
+ * Le domande a V.A.L.E. (DESIGN §16.5). Quelle in PULSANTI_DOMANDA
+ * (ui/missione/CanaleVale) hanno un pulsante; ACCUSA, MINACCIA, SALUTO,
+ * PASSATO, SCUSA e GRAZIE si raggiungono solo scrivendo.
+ * v3.9: aggiunte RISORSE, CONSIGLIO, MISSIONE, SEGNALE, PASSATO, SCUSA, GRAZIE.
  */
 export const DOMANDE_VALE = [
   "STATO",
@@ -102,11 +115,25 @@ export const DOMANDE_VALE = [
   "EQUIPAGGIO",
   "TRACCE_BIO",
   "DIRETTIVA",
+  "RISORSE",
+  "CONSIGLIO",
+  "MISSIONE",
+  "SEGNALE",
+  "PASSATO",
   "ACCUSA",
   "MINACCIA",
   "SALUTO",
+  "SCUSA",
+  "GRAZIE",
 ] as const;
 export type DomandaVale = (typeof DOMANDE_VALE)[number];
+
+/**
+ * Le domande "di fatto" (v3.9): con il tono FERMO V.A.L.E. risponde con i
+ * dati veri anche quando è in tensione. Le altre riguardano LEI: chiederle
+ * con fermezza la irrita.
+ */
+export const DOMANDE_DI_FATTO: readonly DomandaVale[] = ["STATO", "DANNI", "EQUIPAGGIO", "RISORSE", "MISSIONE", "CONSIGLIO"];
 
 /** Una risposta possibile: vale dal livello di comportamento indicato in su. */
 export interface RispostaVale {
@@ -114,6 +141,23 @@ export interface RispostaVale {
   testo: string;
   /** Riga di sistema aggiuntiva (spesso con un codice nascosto). */
   log?: { testo: string; codici: string[] };
+  /** v3.9: vale solo se la scoperta è nel registro (es. il segnale già rilevato)… */
+  seScoperta?: IdScoperta;
+  /** …o solo se NON lo è. */
+  senzaScoperta?: IdScoperta;
+}
+
+/** I testi di un tono (v3.9). */
+export interface TestiTono {
+  nome: string;
+  /** Cosa cambia, in una riga: la mostra l'interfaccia. */
+  descrizione: string;
+  /**
+   * Come V.A.L.E. apre la risposta a questo tono: `disponibile` quando è
+   * collaborativa (comportamento 0–2), `fredda` quando è in tensione (3–5).
+   * Vuote = nessuna apertura.
+   */
+  cornice: { disponibile: string[]; fredda: string[] };
 }
 
 /** Testi di V.A.L.E. che il motore usa ma che appartengono al contenuto. */
@@ -124,7 +168,29 @@ export interface TestiVale {
    * Nelle risposte si possono usare {DANNI}, {CREW}, {OSSIGENO}: il motore
    * li sostituisce con i dati veri.
    */
-  domande: Record<DomandaVale, { etichetta: string; risposte: RispostaVale[]; tensione?: number }>;
+  domande: Record<
+    DomandaVale,
+    {
+      etichetta: string;
+      risposte: RispostaVale[];
+      tensione?: number;
+      /** Come il Capitano pone la domanda in ogni tono (v3.9). Manca → l'etichetta. */
+      capitano?: Partial<Record<TonoCapitano, string>>;
+    }
+  >;
+  /** I cinque toni del Capitano (v3.9). */
+  toni: Record<TonoCapitano, TestiTono>;
+  /** Le scuse del Capitano (v3.9): accettate, inutili (niente tensione), troppo presto. */
+  scusa: { accettata: string; inutile: string; troppoPresto: string };
+  /**
+   * Righe di sistema in cui compare un codice CASUALE (v3.9): {CODICE} è
+   * il codice, {HEX} un numero esadecimale di riempimento.
+   */
+  codiceCasuale: string[];
+  /** Con il tono ARRABBIATO V.A.L.E. a volte "si incrina": riga con un codice. */
+  crepa: string;
+  /** Con il tono SOSPETTOSO: riga di verifica incrociata ({N} = concordanza %). */
+  verificaIncrociata: string;
   /** Parole che fanno riconoscere una domanda scritta a mano (minuscole, senza accenti). */
   paroleChiave: Record<DomandaVale, string[]>;
   /** Quando V.A.L.E. non riconosce il testo libero. */

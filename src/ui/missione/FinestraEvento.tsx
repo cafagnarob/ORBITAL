@@ -35,6 +35,7 @@ import type { DefinizioneEvento, StatoMissione } from "../../engine/types";
 import { Pulsante } from "../components/Pulsante";
 import { descriviCosto, descriviRequisiti, etichetta } from "../format";
 import type { Dispatch } from "../useMissione";
+import { ConIcone } from "../components/icone/ConIcone";
 import stili from "./FinestraEvento.module.css";
 
 interface Props {
@@ -102,7 +103,9 @@ function SchedaEvento({ evento, stato, dispatch }: Props & { evento: Definizione
                       {attiva ? "▶" : ""}
                     </span>
                     <span className={stili.etichetta}>{etichetta(nomi(scelta.etichetta))}</span>
-                    <span className={stili.nota}>{nota}</span>
+                    <span className={stili.nota}>
+                      <ConIcone testo={nota} />
+                    </span>
                   </button>
                 </li>
               );

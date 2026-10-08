@@ -59,6 +59,11 @@
   display: none;
 }
 
+/* v3.9: la copia della finestrella dei log per le tre colonne (vedi sotto). */
+.terminaleDestra {
+  display: none;
+}
+
 /* ===== DESKTOP ============================================================ */
 @media (min-width: 1100px) {
   .schermo {
@@ -129,6 +134,14 @@
   .centro {
     grid-column: 2;
     grid-row: 2;
+  }
+  /* v3.9: con tre colonne la finestrella dei log sta in cima alla colonna
+     di destra (che scorre), non sotto il dialogo che resterebbe schiacciato. */
+  .terminaleCentro {
+    display: none;
+  }
+  .terminaleDestra {
+    display: flex;
   }
   .strumenti {
     display: contents;

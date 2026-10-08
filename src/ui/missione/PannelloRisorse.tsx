@@ -25,6 +25,8 @@ import { parametriNave } from "../../engine/nave/parametri";
 import type { StatoMissione } from "../../engine/types";
 import { BarraSegmentata } from "../components/BarraSegmentata";
 import { Finestra } from "../components/Finestra";
+import { Icona } from "../components/icone/Icona";
+import type { TipoIcona } from "../components/icone/disegni";
 import { conSegno, type Tono } from "../format";
 import stili from "./PannelloRisorse.module.css";
 
@@ -40,6 +42,8 @@ function tonoGiorni(giorni: number): Tono {
 
 interface Riga {
   nome: string;
+  /** L'icona della risorsa, la stessa di tutto il gioco (v3.7.5). */
+  icona: TipoIcona;
   valore: number;
   massimo: number;
   delta: number;
@@ -64,6 +68,7 @@ export function PannelloRisorse({ stato }: { stato: StatoMissione }) {
   const righe: Riga[] = [
     {
       nome: "CIBO",
+      icona: "cibo",
       valore: r.cibo,
       massimo: 120,
       delta: -consumoCibo,
@@ -72,6 +77,7 @@ export function PannelloRisorse({ stato }: { stato: StatoMissione }) {
     },
     {
       nome: "ACQUA",
+      icona: "acqua",
       valore: r.acqua,
       massimo: 120,
       delta: -consumoAcqua,
@@ -80,6 +86,7 @@ export function PannelloRisorse({ stato }: { stato: StatoMissione }) {
     },
     {
       nome: "OSSIGENO",
+      icona: "ossigeno",
       valore: r.ossigeno,
       massimo: g.capacitaOssigeno,
       delta: deltaOssigeno,
@@ -88,6 +95,7 @@ export function PannelloRisorse({ stato }: { stato: StatoMissione }) {
     },
     {
       nome: "ENERGIA",
+      icona: "energia",
       valore: r.energia,
       massimo: p.capacitaBatteria,
       delta: p.generazioneEnergia - p.consumoEnergia,
@@ -96,6 +104,7 @@ export function PannelloRisorse({ stato }: { stato: StatoMissione }) {
     },
     {
       nome: "CARBURANTE",
+      icona: "carburante",
       valore: r.carburante,
       massimo: BALANCE.preparazione.serbatoio + 24,
       delta: 0,
@@ -109,7 +118,9 @@ export function PannelloRisorse({ stato }: { stato: StatoMissione }) {
       <dl className={stili.lista}>
         {righe.map((riga) => (
           <div key={riga.nome} className={stili.voce}>
-            <dt>{riga.nome}</dt>
+            <dt>
+              <Icona tipo={riga.icona} /> {riga.nome}
+            </dt>
             <dd>
               {riga.valore}{" "}
               <span className={riga.delta < 0 ? stili.calo : stili.nota}>

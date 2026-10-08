@@ -15,12 +15,12 @@ import type { StatoMissione } from "../../src/engine/types";
 import { contoAllaRovescia, distanzaUA, modoOrbita, numeriDalSeed, raggioDestinazione } from "../../src/ui/missione/plancia/derivati";
 import { angoloLancetta, circonferenza, trattoArco } from "../../src/ui/missione/strumenti/geometria";
 
-const tratta = (progresso: number) => ({ destinazione: "E-17" as const, da: 0, a: 100, progresso, minutiAllArrivo: 0 });
+const tratta = (progresso: number) => ({ destinazione: "BERSAGLIO" as const, da: 0, a: 100, progresso, minutiAllArrivo: 0 });
 
 describe("Plancia · derivati", () => {
   const base = creaMissioneIniziale("PLANCIA-1");
 
-  it("in orbita si osserva; con una scansione del cratere in corso si acquisisce; poi l'area è acquisita", () => {
+  it("in orbita si osserva; con una scansione del cratere in corso si acquisisce; poi l'obiettivo è conseguito", () => {
     expect(modoOrbita(base)).toBe("OSSERVAZIONE");
     const inCorso: StatoMissione = {
       ...base,
@@ -29,7 +29,7 @@ describe("Plancia · derivati", () => {
       },
     };
     expect(modoOrbita(inCorso)).toBe("ACQUISIZIONE");
-    const fatta: StatoMissione = { ...base, conoscenza: { ...base.conoscenza, scoperte: ["AREA_ACQUISITA"] } };
+    const fatta: StatoMissione = { ...base, conoscenza: { ...base.conoscenza, scoperte: ["OBIETTIVO_PRIMARIO"] } };
     expect(modoOrbita(fatta)).toBe("ACQUISITA");
   });
 

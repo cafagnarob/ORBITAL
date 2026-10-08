@@ -74,9 +74,12 @@ describe("catalogo dei task", () => {
     }
   });
 
-  it("ogni task (tranne i bonus dei moduli) è eseguibile con il loadout iniziale", () => {
+  it("ogni task comune (tranne i bonus dei moduli) è eseguibile con il loadout iniziale", () => {
     const { nave } = creaMissioneIniziale();
-    for (const t of TASK_DISPONIBILI.filter((x) => !x.bonus)) {
+    // v3.8: i task delle supermissioni (sblocco con MISSIONE) hanno la loro
+    // attrezzatura "indispensabile": li controlla tests/content/missioni.test.ts.
+    const comuni = TASK_DISPONIBILI.filter((x) => !x.bonus && !x.sblocco.some((c) => c.tipo === "MISSIONE"));
+    for (const t of comuni) {
       for (const e of t.equipaggiamentoRichiesto) expect(nave.equipaggiamento).toContain(e);
       for (const m of t.moduliRichiesti) expect(nave.moduli).toContain(m);
     }
@@ -279,11 +282,12 @@ describe("preparazione di riferimento (DESIGN §13.8)", () => {
     expect(fattibilita(problemi)).toBe("POSSIBILE");
   });
 
-  it("riproduce i numeri del DESIGN: 15 giorni di cibo e acqua, 26 di carburante, consumo 8, generazione 12", () => {
+  it("riproduce i numeri del DESIGN (v3.9): 8 giorni di cibo e acqua, 26 di carburante, consumo 10, generazione 12", () => {
     const r = riepilogoPreparazione(PREPARAZIONE_DI_RIFERIMENTO, CATALOGHI_PREPARAZIONE);
-    expect(r.risorse).toEqual({ cibo: 120, acqua: 120, ossigeno: 60, energia: 150, carburante: 26 });
+    expect(r.risorse).toEqual({ cibo: 100, acqua: 96, ossigeno: 60, energia: 150, carburante: 26 });
+    expect(r.giorniScorte).toBe(8);
     const p = parametriNave(PREPARAZIONE_DI_RIFERIMENTO.moduli, CATALOGO_MODULI);
-    expect(p.consumoEnergia).toBe(8);
+    expect(p.consumoEnergia).toBe(10);
     expect(p.generazioneEnergia).toBe(12);
   });
 

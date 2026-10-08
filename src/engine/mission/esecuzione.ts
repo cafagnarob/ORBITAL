@@ -48,6 +48,7 @@ import { rimuoviDallaCoda } from "./assegnazione";
 import type { ContestoMissione } from "./contesto";
 import { idCrewOrdinati, membroOccupato, puoLavorare } from "./disponibilita";
 import { scriviLog } from "./log";
+import { parametriNave } from "../nave/parametri";
 
 /** Il tag dei task di sblocco manuale (v3.0). */
 export const TAG_SBLOCCO = "SBLOCCO";
@@ -291,7 +292,7 @@ export function concludiTask(bozza: StatoMissione, contesto: ContestoMissione, r
   scriviLog(bozza, "SISTEMA", `${responsabile.nome}: ${def.nome} — ${ETICHETTE_ESITO[esito]}`);
 
   // Ciò che il task produce, in proporzione all'esito (v3.3).
-  if (def.resa) applicaResa(bozza, def.resa, MOLTIPLICATORE_RESA[esito]);
+  if (def.resa) applicaResa(bozza, def.resa, MOLTIPLICATORE_RESA[esito], parametriNave(bozza.nave.moduli, contesto.catalogoModuli).capacitaBatteria);
 
   // Un task di verifica chiude (o lascia aperta) la contestazione più vecchia.
   if (def.tag.includes(TAG_VERIFICA)) risolviVerifica(bozza, contesto, esito);
@@ -319,7 +320,7 @@ function limita(n: number): number {
  * `fattore` viene dall'esito (×1,5 perfetto … ×0 fallimento); si arrotonda
  * all'intero, perché le risorse sono unità intere. Riga di log riassuntiva.
  */
-function applicaResa(bozza: StatoMissione, resa: ResaTask, fattore: number): void {
+function applicaResa(bozza: StatoMissione, resa: ResaTask, fattore: number, capacitaBatteria: number): void {
   if (fattore === 0) return;
   const voci: string[] = [];
 
@@ -327,6 +328,8 @@ function applicaResa(bozza: StatoMissione, resa: ResaTask, fattore: number): voi
     const delta = Math.round(q * fattore);
     if (delta === 0) continue;
     bozza.risorse[chiave] = Math.max(0, bozza.risorse[chiave] + delta);
+    // v3.9: la batteria ha una capienza (prima i pannelli la "sfondavano").
+    if (chiave === "energia") bozza.risorse.energia = Math.min(bozza.risorse.energia, capacitaBatteria);
     voci.push(`${chiave.toUpperCase()} ${delta > 0 ? "+" : ""}${delta}`);
   }
   if (resa.sistema) {

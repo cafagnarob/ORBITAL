@@ -30,12 +30,12 @@ const tutti = (cibo: "PIENA" | "MEZZA" | "NIENTE", acqua: "PIENA" | "MEZZA" | "N
 const chiudi = (s: StatoMissione, razioni: RazioniSerali) => esegui(s, [{ tipo: "CHIUDI_RAPPORTO", razioni }]);
 
 describe("razioni serali", () => {
-  it("piena costa 2, mezza 1, niente 0 (per cibo e acqua)", () => {
+  it("piena costa 3, mezza 2, niente 0 (per cibo e acqua)", () => {
     const s = rapporto();
     const razioni: RazioniSerali = { ...tutti("PIENA", "PIENA"), nadia: { cibo: "MEZZA", acqua: "NIENTE" } };
     const dopo = chiudi(s, razioni);
-    expect(dopo.risorse.cibo).toBe(120 - (2 + 2 + 1 + 2));
-    expect(dopo.risorse.acqua).toBe(120 - (2 + 2 + 0 + 2));
+    expect(dopo.risorse.cibo).toBe(120 - (3 + 3 + 2 + 3));
+    expect(dopo.risorse.acqua).toBe(120 - (3 + 3 + 0 + 3));
   });
 
   it("non si può distribuire più di quanto c'è", () => {
@@ -47,9 +47,9 @@ describe("razioni serali", () => {
   it("le razioni predefinite si adattano alle scorte: piena, poi mezza, poi a chi arriva", () => {
     const s = rapporto();
     expect(razioniPredefinite(s, CONTESTO_DI_PROVA).mara).toEqual({ cibo: "PIENA", acqua: "PIENA" });
-    s.risorse.cibo = 5; // non basta per tutti piena (8), basta per tutti mezza (4)
+    s.risorse.cibo = 9; // non basta per tutti piena (12), basta per tutti mezza (8)
     expect(razioniPredefinite(s, CONTESTO_DI_PROVA).mara?.cibo).toBe("MEZZA");
-    s.risorse.cibo = 2; // solo due mezze razioni
+    s.risorse.cibo = 4; // solo due mezze razioni (2 + 2)
     const r = razioniPredefinite(s, CONTESTO_DI_PROVA);
     expect(Object.values(r).filter((x) => x.cibo === "MEZZA")).toHaveLength(2);
   });

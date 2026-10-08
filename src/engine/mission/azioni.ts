@@ -30,13 +30,14 @@
  *   SEGNALA_VOCE      → sempre (segna una riga del log nel Terminale SVC-07)
  *   INSERISCI_CODICE  → sempre (prova un codice nel Terminale SVC-07)
  *   CONTESTA          → sempre (contesta un'affermazione di V.A.L.E.)
- *   INTERROGA_VALE    → sempre (pulsanti-domanda: STATO · PERCHÉ? · DIRETTIVA?)
+ *   INTERROGA_VALE    → sempre (pulsanti-domanda: STATO · PERCHÉ? · DIRETTIVA?…)
+ *   IMPOSTA_TONO      → sempre (v3.9: il tono con cui il Capitano parla a V.A.L.E.)
  * ============================================================================
  */
 
 import type { RazioniSerali } from "../crew/razioni";
 import type { Discorso } from "../storia/colloqui";
-import type { DomandaVale, IdDefinizioneTask, IdIstanzaTask, IdMembro, Minuti } from "../types";
+import type { DomandaVale, IdDefinizioneTask, IdIstanzaTask, IdMembro, Minuti, TonoCapitano } from "../types";
 
 export type Azione =
   | {
@@ -59,5 +60,7 @@ export type Azione =
   | { tipo: "INTERROGA_VALE"; domanda: DomandaVale }
   /** Testo libero verso V.A.L.E. (v3.0): riconosce parole chiave. */
   | { tipo: "SCRIVI_VALE"; testo: string }
+  /** Il tono del Capitano (v3.9): cambia come parla e come V.A.L.E. risponde. */
+  | { tipo: "IMPOSTA_TONO"; tono: TonoCapitano }
   /** Il Capitano ordina il rientro sulla Terra (v3.0): può chiudere la missione. */
   | { tipo: "RIENTRA" };

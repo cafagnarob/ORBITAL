@@ -1,22 +1,24 @@
 /**
  * ============================================================================
- * CanaleVale.tsx — Il registro della missione e la voce di V.A.L.E.
+ * CanaleVale.tsx — Il dialogo tra il Capitano e V.A.L.E.
  * ============================================================================
  *
- * Mostra tutte le voci di log in ordine cronologico. Le voci di V.A.L.E.
- * sono in ciano (l'unico posto in cui il ciano compare); i log di sistema
- * sono righe tecniche; le voci della crew sono marcate CREW.
+ * v3.9: il canale è SOLO la conversazione. Le battute del Capitano (a
+ * destra, con il tono) e quelle di V.A.L.E. (in ciano, l'unico posto in cui
+ * il ciano compare). Tutti i log tecnici, con i codici, stanno nella
+ * finestra del terminale (TerminaleLog.tsx).
  *
- * TRE MODI DI "DUBITARE" (Fase 3)
- *   ◇ SEGNALA   → su ogni riga: annotazione del Capitano; i codici nascosti
- *                 finiscono tra i frammenti del Terminale SVC-07.
- *   CONTESTA    → solo sulle frasi di V.A.L.E.: apre una contestazione che
- *                 si risolve con il task "Verifica dei dati grezzi".
- *                 Lo stato (contestata / confermata / smentita) resta visibile.
- *   DOMANDE     → in fondo: STATO · PERCHÉ? · DIRETTIVA? (niente testo libero).
- * REGOLA DEL DESIGN: i codici non sono mai evidenziati e TUTTE le righe si
- * segnalano allo stesso modo; tutte le frasi di V.A.L.E. si possono contestare.
- * L'interfaccia non tradisce mai quali righe "contano".
+ * IL TONO (v3.9)
+ * In alto cinque pulsanti: CALMO · AMICHEVOLE · FERMO · ARRABBIATO ·
+ * SOSPETTOSO. Il tono resta finché non lo cambi (stato.vale.tono, azione
+ * IMPOSTA_TONO) e cambia le tue frasi, le risposte di V.A.L.E. e alcuni
+ * numeri (engine/vale/domande.ts). La descrizione del tono attivo è sotto.
+ *
+ * DUE MODI DI "DUBITARE" sulle frasi di V.A.L.E.
+ *   ◇ SEGNALA   → annotazione del Capitano; i codici nascosti finiscono tra
+ *                 i frammenti del Terminale SVC-07 (anche dal terminale log).
+ *   CONTESTA    → apre una contestazione che si risolve con il task
+ *                 "Verifica dei dati grezzi". Lo stato resta visibile.
  *
  * SCORRIMENTO AUTOMATICO SENZA useEffect
  * Il contenitore ha `flex-direction: column-reverse` e riceve le voci al
@@ -27,7 +29,15 @@
 
 import { CONTESTO_GIOCO } from "../../content/contesto";
 import { useState, type FormEvent } from "react";
-import type { DomandaVale, EsitoContestazione, StatoMissione, VoceLog } from "../../engine/types";
+import {
+  TONI_CAPITANO,
+  type DomandaVale,
+  type EsitoContestazione,
+  type StatoMissione,
+  type TonoCapitano,
+  type VoceLog,
+} from "../../engine/types";
+import { suona } from "../audio";
 import { Finestra } from "../components/Finestra";
 import { Pulsante } from "../components/Pulsante";
 import { formattaOra } from "../format";
@@ -42,24 +52,61 @@ const ETICHETTE_CONTESTAZIONE: Record<EsitoContestazione, { testo: string; class
 };
 
 /**
- * I sei pulsanti-domanda del mockup. ACCUSA, MINACCIA e SALUTO non hanno
- * pulsante: si raggiungono solo scrivendo nel campo di testo.
+ * I pulsanti-domanda (v3.9: dieci). ACCUSA, MINACCIA, SALUTO, PASSATO,
+ * SCUSA e GRAZIE non hanno pulsante: si raggiungono solo scrivendo.
  */
 const PULSANTI_DOMANDA: [DomandaVale, string][] = [
   ["STATO", "Stato"],
-  ["PERCHE", "Perché?"],
   ["DANNI", "Danni"],
   ["EQUIPAGGIO", "Equipaggio"],
+  ["RISORSE", "Scorte"],
+  ["CONSIGLIO", "Consiglio"],
+  ["MISSIONE", "Missione"],
+  ["SEGNALE", "Segnale"],
+  ["PERCHE", "Perché?"],
   ["TRACCE_BIO", "Tracce bio"],
   ["DIRETTIVA", "Direttiva?"],
 ];
+
+/**
+ * La scelta del tono: un gruppo di pulsanti "a interruttore" (aria-pressed).
+ * Sotto, in una riga, cosa cambia il tono attivo.
+ */
+function SceltaTono({ stato, dispatch }: { stato: StatoMissione; dispatch: Dispatch }) {
+  const testi = CONTESTO_GIOCO.testiVale.toni;
+  const attivo = stato.vale.tono;
+  return (
+    <div className={stili.toni}>
+      <div className={stili.tonoPulsanti} role="group" aria-label="Tono del Capitano">
+        <span className={stili.tonoEtichetta}>TONO</span>
+        {TONI_CAPITANO.map((t) => (
+          <button
+            key={t}
+            type="button"
+            className={`${stili.tono} ${stili[`tono_${t}`] ?? ""}`}
+            aria-pressed={t === attivo}
+            title={testi[t].descrizione}
+            onClick={() => {
+              if (t === attivo) return;
+              suona("CLIC");
+              dispatch({ tipo: "IMPOSTA_TONO", tono: t });
+            }}
+          >
+            {testi[t].nome}
+          </button>
+        ))}
+      </div>
+      <p className={stili.tonoDescrizione}>{testi[attivo].descrizione}</p>
+    </div>
+  );
+}
 
 /**
  * Il campo "Scrivi a V.A.L.E." (v3.0). Il testo è stato dell'INTERFACCIA
  * (useState) finché non si preme INVIA: solo allora diventa un'azione di
  * gioco (SCRIVI_VALE) e il campo si svuota. Nessun useEffect.
  */
-function CampoVale({ dispatch }: { dispatch: Dispatch }) {
+function CampoVale({ stato, dispatch }: { stato: StatoMissione; dispatch: Dispatch }) {
   const [testo, setTesto] = useState("");
   function invia(evento: FormEvent) {
     evento.preventDefault(); // niente ricarica della pagina
@@ -69,6 +116,20 @@ function CampoVale({ dispatch }: { dispatch: Dispatch }) {
   }
   return (
     <form className={stili.campo} onSubmit={invia}>
+      {/* Il tono in versione compatta (un menu): lo mostra il CSS solo con
+          tre colonne, dove i pulsanti dei toni non ci stanno in altezza. */}
+      <select
+        className={stili.tonoCompatto}
+        aria-label="Tono del Capitano"
+        value={stato.vale.tono}
+        onChange={(e) => dispatch({ tipo: "IMPOSTA_TONO", tono: e.target.value as TonoCapitano })}
+      >
+        {TONI_CAPITANO.map((t) => (
+          <option key={t} value={t}>
+            {CONTESTO_GIOCO.testiVale.toni[t].nome}
+          </option>
+        ))}
+      </select>
       <label className={stili.prompt} htmlFor="scrivi-vale">
         CAP ›
       </label>
@@ -112,47 +173,53 @@ function Segno({ voce, segnalata, onSegnala }: Pick<VoceProps, "voce" | "segnala
 
 function Voce(props: VoceProps) {
   const { voce, contestazione, onContesta } = props;
-  if (voce.fonte === "VALE") {
-    const etichetta = contestazione ? ETICHETTE_CONTESTAZIONE[contestazione] : null;
+  if (voce.fonte === "CAPITANO") {
+    const tono = voce.tono ? CONTESTO_GIOCO.testiVale.toni[voce.tono].nome.toUpperCase() : null;
     return (
-      <li className={stili.vale}>
-        <span className={stili.mittente}>
-          <span className={stili.occhio} aria-hidden="true" />
-          V.A.L.E. · {formattaOra(voce.tempo)}
-          {etichetta ? (
-            <span className={`${stili.contestazione} ${stili[etichetta.classe]}`}>{etichetta.testo}</span>
-          ) : (
-            <button type="button" className={stili.contesta} onClick={onContesta}>
-              Contesta
-            </button>
-          )}
-          <Segno {...props} />
+      <li className={`${stili.capitano} ${voce.tono ? (stili[`tono_${voce.tono}`] ?? "") : ""}`}>
+        <span className={stili.mittenteCapitano}>
+          CAPITANO · {formattaOra(voce.tempo)}
+          {tono && tono !== "CALMO" && <span className={stili.tonoVoce}>{tono}</span>}
         </span>
         <p>{voce.testo}</p>
       </li>
     );
   }
+  const etichetta = contestazione ? ETICHETTE_CONTESTAZIONE[contestazione] : null;
   return (
-    <li className={voce.fonte === "CREW" ? stili.crew : stili.sistema}>
-      <time className={stili.ora}>{formattaOra(voce.tempo)}</time>
-      <span className={stili.fonte}>{voce.fonte}</span>
-      <span>{voce.testo}</span>
-      <Segno {...props} />
+    <li className={stili.vale}>
+      <span className={stili.mittente}>
+        <span className={stili.occhio} aria-hidden="true" />
+        V.A.L.E. · {formattaOra(voce.tempo)}
+        {etichetta ? (
+          <span className={`${stili.contestazione} ${stili[etichetta.classe]}`}>{etichetta.testo}</span>
+        ) : (
+          <button type="button" className={stili.contesta} onClick={onContesta}>
+            Contesta
+          </button>
+        )}
+        <Segno {...props} />
+      </span>
+      <p>{voce.testo}</p>
     </li>
   );
 }
 
 export function CanaleVale({ stato, dispatch }: { stato: StatoMissione; dispatch: Dispatch }) {
-  // Coppie [voce, indice originale], al contrario. (.reverse() sull'array
-  // dello stato lo modificherebbe: prima si copia.)
-  const vociInverse = stato.log.map((voce, indice) => ({ voce, indice })).reverse();
+  // Solo il dialogo (v3.9): coppie [voce, indice originale], al contrario.
+  // L'indice originale serve a segnalare e contestare la voce giusta del log.
+  const vociInverse = stato.log
+    .map((voce, indice) => ({ voce, indice }))
+    .filter(({ voce }) => voce.fonte === "VALE" || voce.fonte === "CAPITANO")
+    .reverse();
   const segnalate = new Set(stato.terminale.segnalate);
   const contestazioni = new Map(stato.vale.contestazioni.map((c) => [c.indice, c.stato]));
 
   return (
     <Finestra variante="console" titolo="V.A.L.E. // Canale diretto con il Capitano" className={stili.finestra}>
       <div className={stili.canale}>
-        <ol className={stili.registro} aria-live="polite" aria-label="Registro della missione">
+        <SceltaTono stato={stato} dispatch={dispatch} />
+        <ol className={stili.registro} aria-live="polite" aria-label="Dialogo con V.A.L.E.">
           {vociInverse.map(({ voce, indice }) => (
             // Il log cresce solo in coda: l'indice originale è una chiave stabile.
             <Voce
@@ -171,14 +238,15 @@ export function CanaleVale({ stato, dispatch }: { stato: StatoMissione; dispatch
             <Pulsante
               key={d}
               piccolo
-              title={CONTESTO_GIOCO.testiVale.domande[d].etichetta}
+              // Il suggerimento è la frase che dirai, nel tono attivo.
+              title={CONTESTO_GIOCO.testiVale.domande[d].capitano?.[stato.vale.tono] ?? CONTESTO_GIOCO.testiVale.domande[d].etichetta}
               onClick={() => dispatch({ tipo: "INTERROGA_VALE", domanda: d })}
             >
               {etichetta}
             </Pulsante>
           ))}
         </div>
-        <CampoVale dispatch={dispatch} />
+        <CampoVale stato={stato} dispatch={dispatch} />
       </div>
     </Finestra>
   );

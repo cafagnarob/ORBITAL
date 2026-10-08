@@ -6,13 +6,13 @@
  * Mostra giorno, ora, fase della giornata, stato del gioco e INTEGRITÀ DEI
  * DATI (DESIGN §4.6: quanto ci si può fidare delle letture della nave).
  * Tutti i valori sono CALCOLATI dallo stato: l'intestazione non conserva
- * nulla di suo.
+ * nulla di suo. Il luogo (v3.8) viene dalla missione della partita.
  * ============================================================================
  */
 
 import { faseGiornata, scomponiTempo } from "../../engine/clock";
 import type { StatoMissione } from "../../engine/types";
-import { E17_NOTO } from "../../content/pianeti/e17";
+import { definizioneMissione } from "../../content/missioni";
 import { faseViaggio } from "../../engine/storia/viaggio";
 import type { FaseViaggio } from "../../engine/types";
 import { CONTESTO_GIOCO } from "../../content/contesto";
@@ -20,11 +20,13 @@ import { integritaDati } from "../../engine/mission";
 import { etichetta, formattaOra, tonoIntegrita } from "../format";
 import stili from "./Intestazione.module.css";
 
-const LUOGO: Record<FaseViaggio, string> = {
-  ANDATA: `IN VIAGGIO → ${E17_NOTO.id}`,
-  ORBITA: `${E17_NOTO.id} · ORBITA`,
-  RIENTRO: "RIENTRO → TERRA",
-};
+/** Dove siamo, per ogni fase del viaggio: dipende dal bersaglio della missione. */
+function luogo(fase: FaseViaggio, stato: StatoMissione): string {
+  const m = definizioneMissione(stato.missione.id);
+  if (fase === "ANDATA") return `IN VIAGGIO → ${m.nome.toUpperCase()}`;
+  if (fase === "ORBITA") return m.bersaglio.luogo;
+  return "RIENTRO → TERRA";
+}
 
 export function Intestazione({ stato }: { stato: StatoMissione }) {
   const { giorno } = scomponiTempo(stato.tempo);
@@ -45,7 +47,7 @@ export function Intestazione({ stato }: { stato: StatoMissione }) {
         INTEGRITÀ DATI <strong className={stili[tonoIntegrita(integrita)]}>{integrita}%</strong>
       </span>
       {/* Dove siamo nel viaggio (v3.7): andata, orbita o rientro. */}
-      <span className={stili.luogo}>{LUOGO[faseViaggio(stato)]}</span>
+      <span className={stili.luogo}>{luogo(faseViaggio(stato), stato)}</span>
     </header>
   );
 }

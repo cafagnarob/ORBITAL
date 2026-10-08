@@ -11,7 +11,7 @@
   - Lingua: tutto ciò che vede il giocatore è in italiano. Gli identificatori nel codice possono essere in inglese.
 -->
 
-# ORBITAL — DESIGN v3.7.1
+# ORBITAL — DESIGN v3.9
 
 > **Prepara con cura. Non fidarti mai del tutto.**
 > Domanda centrale: **di cosa mi posso fidare?**
@@ -141,6 +141,16 @@ Cosa fa oggi il motore (`src/engine/vale/`, numeri in `balance.ts → vale`):
 - **Domande**: tre pulsanti (Stato · Perché? · Direttiva?), niente testo libero. La risposta dipende dal comportamento; alcune lasciano nel log i codici `MEM-12` e `DIR-07`.
 - **Fiducia (§7.5)**: quando un membro scende sotto 30 o sale sopra 75 lo **dice** nel log.
 
+### 3.6 Il tono del Capitano e il dialogo ampliato  [PROVVISORIO — v3.9]
+- Il Capitano sceglie un **tono** (`stato.vale.tono`, azione `IMPOSTA_TONO`): CALMO · AMICHEVOLE · FERMO · ARRABBIATO · SOSPETTOSO. Cambia **la frase del Capitano** (una per tono e per domanda), **la cornice della risposta** di V.A.L.E. e ha **effetti** (`balance.vale.toni`):
+  - AMICHEVOLE: risposte di un livello più disponibili, la crew si fida un po' di più di lei;
+  - FERMO: sulle domande di fatto sempre i dati veri; chiederle di LEI con fermezza la irrita (+tensione);
+  - ARRABBIATO: più evasiva, +tensione, la crew diffida; ma a volte V.A.L.E. «si incrina» e lascia un codice;
+  - SOSPETTOSO: ogni risposta ha una **verifica incrociata** con una concordanza % che scende quando è evasiva.
+- **Nuove domande**: Scorte, Consiglio, Missione (giorni dal piano), Segnale, Passato, Saluto, Scuse (−tensione, una volta al giorno), Grazie, oltre a Stato, Perché, Danni, Equipaggio, Tracce bio, Direttiva, Accusa, Minaccia. Anche a testo libero (parole chiave).
+- **Bug corretto**: le soglie di salute ora sono SANO > 85 · FERITO 36–85 · CRITICO 1–35. Prima una ferita da −15 lasciava il membro «sano» e V.A.L.E. lo diceva sano; ora la risposta Equipaggio riporta stato e salute veri.
+- **Canale V.A.L.E. = solo dialogo**; tutti i log vanno nella finestra Terminale (§4.3).
+
 ---
 
 ## 4. Verità, conoscenza e log  [BLOCCATO]
@@ -179,6 +189,10 @@ I codici possono essere frammentati su più log, anche di missioni diverse. Il g
 - Codici della vertical slice: `VL-P7-04` (livello 0 → 1, dai log del segnale) e `VL-D7-X` (1 → 2, dalla scansione profonda). Livelli 3–5 (v2.6): `MEM-12` (2 → 3, dalle risposte di V.A.L.E.), `DIR-07` (3 → 4, **rivela la direttiva** nel terminale e nel Registro scoperte), `ORD-01` (4 → 5, **override**: autonomia bloccata a 1, niente più rifiuti, ma tensione +3).
 - Ogni tentativo fallito alza di 1 la tensione di V.A.L.E. (§3.5).
 
+### 4.3.1 Finestra del terminale e codici casuali  [PROVVISORIO — v3.9]
+- Una finestrella **TERMINALE** (`ui/missione/TerminaleLog.tsx`) raccoglie TUTTI i log (sistema, crew, Capitano, V.A.L.E.), con filtro «tutto / solo sistema» e il segno ◇ per segnalare una riga: i codici segnalati finiscono tra i frammenti del Terminale SVC-07, che resta com'era (lì si inseriscono).
+- **Codici casuali** (`engine/terminale/codiciCasuali.ts`): a ogni cambio turno, probabilità `balance.codici.probabilitaPerTurno` (0,18 → in media uno ogni giorno e mezzo) che una riga di «rumore» contenga un codice della catena, scelto a caso tra tutti. Deterministico (seed + minuto). Le righe non sono evidenziate.
+
 ### 4.4 Tavola del Capitano  [PROVVISORIO]
 Strumento con cui il giocatore **elabora** l'informazione:
 - segna un log o un'affermazione come prova;
@@ -213,6 +227,9 @@ Così, davanti a una contraddizione, il giocatore deve chiedersi: *V.A.L.E. ment
 **Formula attuale:** integrità = 0,4·Scienza + 0,3·Navigazione + 0,3·Comunicazioni. Il **rischio stimato** mostrato in Pianifica e nel log ha un errore deterministico fino a ±(100 − integrità)·0,5 punti; il rischio vero (quello che decide l'esito) non cambia. Con la nave integra l'errore è quasi nullo; con i sistemi danneggiati le stime diventano inaffidabili. Anomalie ed eventi non agiscono ancora sull'integrità.
 
 ---
+
+### 4.8 Icone delle risorse  [PROVVISORIO — v3.7.5]
+Un'icona per ogni risorsa e cassa, la stessa in tutto il gioco (`ui/components/icone/`: disegni in `disegni.ts`, componente `Icona`, corrispondenze in `mappe.ts`): cibo (forchetta e coltello), acqua (goccia), ossigeno (bombola), energia (fulmine), carburante (tanica), scorte mediche (cassetta con croce), ricambi (chiave inglese), celle batteria (batteria), consumabili di ricerca (beuta). Tratto unico, colore del testo (currentColor). Compaiono: schede della stiva, celle della stiva nella nave, riepilogo, pannello Risorse, razioni, rapporto serale e — con `ConIcone` — in ogni costo/resa scritto (task, eventi, moduli).
 
 ## 5. Nave  [BLOCCATO]
 
@@ -282,6 +299,8 @@ Esempio: 26 − 18 = 8
 La domanda è sempre: **posso permettermi questa manovra?** Prima di accettare una missione si valuta: carburante attuale + consumo previsto + riserva.
 
 ### 6.4 Razioni, fame e sete  [PROVVISORIO numeri — v3.4]
+**v3.9 · sopravvivenza più dura**: consumo **3** cibo, **3** acqua, **3** ossigeno al giorno per membro; il Supporto Vitale rigenera solo 6 di ossigeno; consumo energia 7; casse da 10 (cibo) e 12 (acqua). La stiva da sola non basta: senza riciclo dell'acqua, coltura, elettrolisi e manutenzione il rientro arriva a zero scorte (le missioni lunghe non si chiudono con tutta la crew). Un test con un bot «pigro» lo verifica.
+
 Come in **60 Seconds**, al rapporto serale il Capitano decide per ognuno cibo e acqua: **PIENA** (2) · **MEZZA** (1) · **NIENTE** (0). Non si può dare più di quanto c'è; «Tutti piena / Tutti ½» per fare in fretta. Senza scelta (test) valgono le razioni predefinite: piena a tutti se basta, poi mezza, poi a chi arriva.
 - **Fame e sete** in punti 0–6 per membro (salvati), livello 0–3 calcolato (SAZIO · APPETITO · FAME · DENUTRITO / IDRATATO · SETE · DISIDRATATO · DISIDRATAZIONE GRAVE). Piena −2 / mezza +1 / niente +2 (acqua: −3 / +1 / +3, la sete è più dura).
 - **Carico** = livello fame + livello sete. Effetti: **task al giorno = 4 − carico** (a zero non lavora; la pausa in habitat non conta) · di notte **−10 di recupero fatica** per livello · **salute** −8 per livello di fame oltre il primo, −12 per la sete.
@@ -526,12 +545,15 @@ Principio: **il pianeta non richiede un oggetto preciso; il tuo loadout cambia c
 
 ### 11.5 Preparazione (implementazione)  [BLOCCATO struttura · PROVVISORIO numeri — v2.7]
 Schermata prima della missione (`src/ui/preparazione/`, motore in `src/engine/preparazione/`, numeri in `balance.ts → preparazione`):
-- **Crew**: 10 candidati (`content/candidati.ts`): Mara, Adrian, Nadia, Sarah, Marco, Giulia, Davide, Irene, Luca (Sicurezza/EVA), Elena (Generalista). Se ne scelgono 4. Anche la fiducia in V.A.L.E. fa parte della scelta.
+- **Crew**: 10 candidati nel catalogo (`content/candidati.ts`): Mara, Adrian, Nadia, Sarah, Marco, Giulia, Davide, Irene, Luca (Sicurezza/EVA), Elena (Generalista). **In ogni partita se ne presentano 6** estratti col seed (`engine/preparazione/candidati.ts`, `balance.preparazione.candidatiProposti`, v3.7.3), su file da due. Se ne scelgono 4. Anche la fiducia in V.A.L.E. fa parte della scelta.
 - **Loadout**: catalogo completo (15 moduli · 15 equipaggiamenti · 7 scorte, `content/loadout.ts`). Effetti **attivi**:
   - moduli → parametri della nave (`engine/nave/parametri.ts`): generazione e consumo di energia, capacità della batteria, spazio della stiva, recupero della fatica, scorte per persona, bonus all'integrità dei dati;
   - equipaggiamento e moduli → **task sbloccati** (`equipaggiamentoRichiesto`, `moduliRichiesti`; es. l'Analisi del segnale richiede il Laboratorio Avanzato);
   - casse → scorte iniziali (Cassa di Scorte +45) e carburante (Tanica +4 oltre al serbatoio di 18 = riserva di rientro).
   Gli effetti non ancora nel motore sono dichiarati come **IN ARRIVO** nella scheda dell'oggetto.
+- **Layout (v3.7.4)**: la pagina è la **nave grande** (NaveSezione) con a destra il **riepilogo a blocchi** (fattibilità + V.A.L.E., crew a 4 posti, carico, scorte, energia, problemi, azioni rapide). **Candidati** e **Loadout** sono **finestre a comparsa** (`components/FinestraMobile` + `useFinestre`): si trascinano dalla barra del titolo (Pointer Events, niente useEffect), un clic le porta in primo piano, "—" le riduce a **icona** nel dock sotto la nave (spegnimento a scatti da tubo catodico), l'icona le riapre. Su desktop partono aperte; su telefono partono ridotte e si aprono a tutto schermo.
+- **Stiva a schede** (v3.7.5): ogni cassa è una scheda come i candidati, con la sua **icona** al posto di nome e testo, il contatore −/+ e il fascicolo (nome, descrizione, peso, spazio) che si accende all'hover.
+- **Fascicoli dei candidati** (v3.7.2): ogni scheda mostra ritratto, nome e professione. Passandoci sopra (o col Tab) i dettagli (abilità, tratto, personalità, fiducia in V.A.L.E., peso) si accendono sopra la scheda con un'animazione a scatti da tubo catodico (`steps()`), solo CSS. Senza hover (telefoni) i dettagli sono sempre visibili sotto il nome. I ritratti si aggiungono mettendo `<id>.png|jpg|webp` in `src/assets/ritratti/` (trovati con `import.meta.glob`, tinti di fosforo dal CSS); senza file compare il segnaposto.
 - **Vincoli**: 4 crew · 4 slot moduli · 6 slot equipaggiamento · 1000 kg (crew compresa) · 200 unità di stiva (+100 con Espansione Stoccaggio). Gli slot bloccano la scelta; il peso no (si vede il problema e si decide cosa togliere).
 - **Fattibilità** (§14.4), derivata dai problemi: BLOCCANTE (crew incompleta, peso, stiva, niente scorte) → IMPOSSIBILE; AVVISO (meno di 8 giorni di scorte, niente carburante operativo, energia in calo, nessun medico, task impossibili) → RISCHIOSA; altrimenti POSSIBILE. V.A.L.E. dice «La missione è operativamente possibile.» sia per POSSIBILE sia per RISCHIOSA.
 - **Direttiva**: si sorteggia col seed *dopo* la Preparazione, solo tra le direttive i cui tag `richiede` sono tutti a bordo (D01 e D12 richiedono SCANSIONE, D05 richiede DRONE). Se nessuna è possibile, si sceglie tra tutte.
@@ -540,8 +562,10 @@ Schermata prima della missione (`src/ui/preparazione/`, motore in `src/engine/pr
 
 ### 11.6 Nave vuota e attrezzatura indispensabile  [PROVVISORIO — v3.7]
 - La Preparazione parte da `PREPARAZIONE_VUOTA`: nessuna crew, nessun modulo, nessun oggetto, nessuna scorta. È il Capitano a riempire la nave.
-- **Carica l'indispensabile** (`AGGIUNGI_INDISPENSABILE`): aggiunge, senza togliere nulla e finché ci sono slot, solo moduli ed equipaggiamento richiesti dai **task obbligatori** dell'obiettivo principale (`TASK_OBBLIGATORI` in `content/missione.ts`). Oggi: Kit di Riparazione, Sensore Profondo, Tuta EVA Mk2. **Non** sceglie crew né scorte.
+- **Carica l'indispensabile** (`AGGIUNGI_INDISPENSABILE`): aggiunge, senza togliere nulla e finché ci sono slot, solo moduli ed equipaggiamento richiesti dai **task obbligatori** dell'obiettivo principale **della missione del seed** (`taskObbligatori` in `cataloghiPreparazionePer`, `content/contesto.ts`, che legge `content/missioni/<id>.ts`). Su E-17: Kit di Riparazione, Sensore Profondo, Tuta EVA Mk2; le altre missioni hanno la propria scaletta. **Non** sceglie crew né scorte.
 - Il calcolo è derivato (`engine/preparazione/indispensabile.ts`): se cambiano i task obbligatori, cambia da solo anche il pulsante.
+- **v3.9 · Carica a caso** (`engine/preparazione/casuale.ts`): indispensabile + crew di 4 (con un medico se c'è) + moduli, equipaggiamento e scorte a caso, poi toglie pezzi non indispensabili finché non c'è nessun problema BLOCCANTE: si può sempre partire (POSSIBILE o RISCHIOSA).
+- **v3.9 · Avvisi**: la lista «Da sistemare» del riepilogo è sostituita da un **pop-up DANGER / WARNING** sempre visibile sulla mappa della nave (riducibile); i pezzi **mancanti** (rosso) e **consigliati** (ambra) sono disegnati tratteggiati sulla mappa (`engine/preparazione/suggerimenti.ts`). Scorte consigliate = 60% dei giorni della missione: il resto lo producono le task.
 - **Svuota la nave** riporta tutto a zero. Se manca qualcosa di indispensabile la verifica mostra l'AVVISO «Obiettivo principale impossibile senza: …».
 
 ---
@@ -692,7 +716,7 @@ Requisiti: OBBLIGATORIO · CONSIGLIATO · OPZIONALE.
 `mistero locale → indizio globale → mistero della campagna`. E-17 può lasciare domande riprese su altri pianeti (es. K-22, S-08) tramite log e codici persistenti.
 
 ### 14.6 Super-missione E-17  [PROVVISORIO — v3.7]
-Una missione = **tre fasi** derivate da giorno e `partenza` (`engine/storia/viaggio.ts`), durate in `balance.missione`:
+Una missione = **tre fasi** derivate da giorno e `partenza` (`engine/storia/viaggio.ts`). Dalla v3.8 le durate vengono dal **piano** della partita (§14.7); qui sotto i giorni della versione classica 3 + 4 + 3:
 1. **ANDATA** (G1–3): viaggio. Sopravvivenza, manutenzione di nave e crew, eventi di viaggio (VG1–VG4). I task di orbita non sono disponibili e il rientro non si può ordinare.
 2. **ORBITA** (G4–7): si studia il cratere senza atterrare. **Scaletta** dell'obiettivo principale:
    - Calibrazione dei sensori → valida **24 h**;
@@ -701,13 +725,33 @@ Una missione = **tre fasi** derivate da giorno e `partenza` (`engine/storia/viag
    - Poi la **Scansione dell'area d'interesse**, che **parte solo tra le 10:00 e le 16:00** (`finestra`).
    Se un prerequisito scade, o la scansione fallisce, i prerequisiti a tempo vanno rifatti (condizione `TASK_VALIDO` con `invalidatoDa`). Al via i requisiti sono ricontrollati: se non valgono più il task è annullato.
 3. **RIENTRO** (3 giorni dalla partenza): «Lascia l'orbita» (RIENTRA, effetto `PARTENZA`, S20/S22) o in automatico all'apertura della finestra (G8). Serve la riserva di carburante, altrimenti DERIVA. Eventi di viaggio (VG1–VG3, VG5). All'arrivo la missione si conclude.
-- **Obiettivi** (`content/missione.ts`, `engine/storia/obiettivi.ts`): PRINCIPALI P1 Raggiungi E-17 · P2 Acquisisci l'area d'interesse · P3 Riporta a casa tutta la crew. DI CONTORNO (obiettivi secondari durante la missione, con ricompensa una sola volta): recupero SR-9 (energia, comunicazioni), mappatura (codice VL-D7-X), cometa (scienza), Calliope (fiducia), contatti con la Terra (cibo e acqua).
-- **Finale MISSIONE_COMPIUTA** (★★★): rientro + area acquisita + crew integra.
+- **Obiettivi** (v3.8: `content/missioni/e17.ts`, `engine/storia/obiettivi.ts`): PRINCIPALI P1 Raggiungi E-17 · P2 Acquisisci l'area d'interesse · P3 Riporta a casa tutta la crew. DI CONTORNO (obiettivi secondari durante la missione, con ricompensa una sola volta): recupero SR-9 (energia, comunicazioni), mappatura (codice VL-D7-X), cometa (scienza), Calliope (fiducia), contatti con la Terra (cibo e acqua).
+- **Finale MISSIONE_COMPIUTA** (★★★): rientro + obiettivo primario (`OBIETTIVO_PRIMARIO`, v3.8) + crew integra.
 - UI: pannello MISSIONE (fasi, scaletta con ✓ valido fino a… / ✗ scaduto, finestra, obiettivi di contorno), intestazione con la fase.
 - **Eventi e fasi** (v3.7.1): un evento che descrive il pianeta da vicino (superficie, emisfero, «sfiora E-17») richiede la fase ORBITA (E01 segnale, V09 cometa), o segue un task possibile solo in orbita. Lo controlla un test sul catalogo.
 - **Plancia** (v3.7.1, `ui/missione/plancia/`): schermo di navigazione animato, solo CSS (niente timer JS). ANDATA/RIENTRO → griglia in prospettiva che scorre, pianeta di destinazione che cresce col progresso (`trattaInCorso`), conto alla rovescia, etichetta del bersaglio. ORBITA → globo wireframe che ruota (meridiani con scaleX), schede dei dati collegate da linee, orbita tratteggiata; durante una scansione del cratere anelli e mirino AMBRA con «ACQUISIZIONE IN CORSO»; poi «AREA D'INTERESSE ACQUISITA». Banco di prova: `?prova=plancia`.
 - **Strumenti di bordo** (v3.7.1): Nave · Sistemi = quadrante radar per lo scafo + 8 indicatori a lancetta (transizione CSS al cambio di valore). Layout: ≥1600px quattro colonne (Equipaggio+Risorse · V.A.L.E. · Plancia+Nave · Missione+Pianifica); 1100–1599px tre colonne con Plancia e Nave sopra e sotto V.A.L.E.; mobile a schede (Plancia nella scheda Task).
-- **Quante missioni**: per ora una sola (E-17). La campagna su altri pianeti (K-22, S-08…) userà lo stesso schema ed è da progettare.
+- **Quante missioni**: dalla v3.8 cinque supermissioni (§14.7).
+
+### 14.7 Supermissioni e seed  [PROVVISORIO — v3.8]
+Il **seed** decide la supermissione e quanti giorni dura ogni fase (`engine/storia/piano.ts`, `pianoDalSeed`). Il piano si salva **una volta** in `stato.missione` (eccezione voluta al «deriva, non salvare»: la partita deve sapere sempre dove va).
+- **Quale**: un seed che comincia con la **sigla** + «-» sceglie quella missione (`ARGO-0001`, `KST-7`); altrimenti decide un generatore dedicato (`deriveSeed(seed, "missione")`), tutte con la stessa probabilità. L'ordine di `LISTA_MISSIONI` conta: si aggiunge in fondo.
+- **Quanto**: ogni missione ha un intervallo per fase; un secondo generatore (`"durata"`) sceglie dentro. La finestra di rientro si apre al risveglio del giorno andata + orbita + 1; l'evento S22 avvisa due giorni prima (`GIORNI_ALLA_FINESTRA`).
+
+| Sigla | Missione | Forma | Andata · Sul posto · Rientro | Scaletta (validità) → finale (finestra) |
+|---|---|---|---|---|
+| E17 | E-17, ricognizione orbitale | PIANETA | 2–4 · 3–5 · 2–4 | calibra (24 h), traiettoria (12 h), antenna EVA → scansione (10–16) |
+| ARGO | Argo-3, stazione muta | STAZIONE | 2–3 · 3–5 · 2–3 | sincronia (12 h), faro (24 h), boccaporto EVA → attracco e scatola nera (8–14) |
+| HK7 | HK-7, asteroide metallico | ASTEROIDE | 3–5 · 3–4 · 3–5 | rotazione (24 h), trivella (12 h, Modulo Minerario), ancoraggio EVA → carotaggio (12–18) |
+| HAL | Halvor, cometa periodica | COMETA | 2–4 · 2–3 · 3–4 | scudi (24 h), mappa getti (12 h), formazione (12 h) → penetratore (14–20) |
+| KST | Kestrel-4, relitto gemello | RELITTO | 4–5 · 3–4 · 4–5 | cavo (12 h), radiazioni (24 h), taglio EVA → nucleo di memoria (9–15) |
+
+- **Contenuto** (`content/missioni/<id>.ts`): `MISSIONE_…` (briefing, durate, scaletta, obiettivi P1/P2/P3 + di contorno, dati della Plancia, `risultato`), `TASK_…`, `EVENTI_…`. Task ed eventi entrano nei cataloghi comuni con la condizione **`MISSIONE`** (`soloIn(id)`): esistono solo nella partita giusta. Gli eventi di E-17 che parlano del cratere (E01, E04, E06, V09) sono `SOLO_E17`.
+- **Il mistero in tutte**: l'evento dell'obiettivo dà `OBIETTIVO_PRIMARIO`, `SEGNALE_RILEVATO` e il codice **VL-P7-04**; un task di contorno (registro, analisi, telemetria, diario) dà `SEGNALE_SORGENTE` e **VL-D7-X**. Da lì E02/E03 e i codici MEM-12, DIR-07, ORD-01 funzionano come su E-17. Ogni missione ha almeno un evento in cui V.A.L.E. è ambigua.
+- **Testi comuni**: finali, diario ed epiloghi usano `{BERSAGLIO}` e `{RISULTATO}` (`conMissione`).
+- **Preparazione**: `cataloghiPreparazionePer(piano)` → l'indispensabile della scaletta di quella missione, i task delle altre missioni esclusi dagli «impossibili», scorte consigliate = giorni totali − 2.
+- **UI**: il titolo mostra la missione del seed mentre si scrive; briefing per missione con i giorni del piano; Plancia con la **sagoma** del bersaglio (`SagomaBersaglio`: stazione con anello rotante, asteroide, cometa con coda e getti, relitto alla deriva) e il suo punto d'interesse.
+- **Test**: un bot che segue la scaletta completa tutte e cinque le missioni (`tests/content/missioni.test.ts`).
 
 ---
 
@@ -874,6 +918,12 @@ Tutto generato nel codice (`src/ui/audio/`): nessun file audio.
 | v2.2 | Reducer della missione: regole provvisorie di esecuzione (niente lavoro notturno, costi all'avvio, rischio salvato all'avvio, aiutante occupato → si procede da soli), consumi al rapporto serale, recupero notturno |
 | v2.3 | Adottata l'**Integrità dei dati** (§4.6). Adottato il design system VALE-OS (§16.5), con la UI allineata al DESIGN (scorte unificate, E-17 arido). Crew di riferimento: Mara, Adrian, Nadia, Sarah. Niente testo libero verso V.A.L.E. |
 | v2.4 | Sistema di eventi data-driven (§10.1): condizioni, effetti, scelte, stato DECISIONE, un evento per momento, output dei task come eventi, scoperte che sbloccano task. Catena del Segnale di E-17 implementata |
+| v3.9 | **Sopravvivenza più dura** (§6.4); tono del Capitano e dialogo ampliato con V.A.L.E., bug dei feriti (§3.6); finestra **Terminale** con tutti i log e codici casuali (§4.3.1); pre-lancio con pop-up DANGER/WARNING, pezzi suggeriti sulla mappa e **Carica a caso** (§11.6) |
+| v3.8 | **Supermissioni** (§14.7): 5 missioni (E-17, Argo-3, HK-7, Halvor, Kestrel-4) scelte dal seed (sigla o caso), durate variabili per fase; condizioni `MISSIONE` e `GIORNI_ALLA_FINESTRA`; sagome del bersaglio nella Plancia; mistero di V.A.L.E. in ogni missione |
+| v3.7.5 | **Icone delle risorse** in tutto il gioco (§4.8); stiva del Loadout a schede con icona e fascicolo all'hover |
+| v3.7.4 | Pre-lancio: nave grande + riepilogo a blocchi; Candidati e Loadout in finestre a comparsa trascinabili e riducibili a icona (dock); su telefono a tutto schermo |
+| v3.7.3 | Pre-lancio: 6 candidati estratti a caso (col seed) tra i 10 a ogni partita; fascicoli su file da due; tolta la frase introduttiva |
+| v3.7.2 | Pre-lancio: **fascicoli dei candidati** con ritratto (segnaposto), nome e professione; dettagli all'hover con animazione da tubo catodico; cartella `assets/ritratti` |
 | v3.7.1 | Eventi del pianeta solo in orbita (E01, V09) + test. **Plancia** animata (griglia di viaggio, globo e acquisizione), **strumenti** a lancetta per la nave, layout a 4/3 colonne; scheda del pianeta assorbita dalla Plancia |
 | v3.7 | **Super-missione E-17** (§14.6): andata 3 g · orbita 4 g · rientro 3 g; scaletta con prerequisiti che scadono e finestra della scansione; obiettivi principali e di contorno; eventi di viaggio; finale Missione compiuta. **Nave vuota** + «Carica l'indispensabile» (§11.6) |
 | v3.6 | **Minigiochi** (§9.2): 8 meccaniche, uno per ogni task; compaiono all'avvio (sempre se il rischio è alto) e riducono il rischio fino a −20. La lista dei task mostra solo quelli disponibili |

@@ -80,12 +80,20 @@ export const BALANCE = {
   // modifica (content/loadout.ts → engine/nave/parametri.ts).
   // --------------------------------------------------------------------------
   giornata: {
-    /** Consumi di ogni membro a bordo, al rapporto serale. */
-    ciboPerMembro: 2,
-    acquaPerMembro: 2,
-    ossigenoPerMembro: 2,
-    /** Ossigeno rigenerato al giorno dal Supporto Vitale al 100% (scala con l'integrità). */
-    produzioneOssigeno: 8,
+    /**
+     * Consumi di ogni membro a bordo, al rapporto serale. v3.9: da 2 a 3 —
+     * la stiva non basta più per tutto il viaggio: le task di sopravvivenza
+     * (riciclo dell'acqua, coltura, elettrolisi) diventano quasi necessarie.
+     */
+    ciboPerMembro: 3,
+    acquaPerMembro: 3,
+    ossigenoPerMembro: 3,
+    /**
+     * Ossigeno rigenerato al giorno dal Supporto Vitale al 100% (scala con
+     * l'integrità). v3.9: 6, meno di quanto respira la crew (4 × 3 = 12): i
+     * serbatoi pieni durano una decina di giorni, poi serve l'elettrolisi.
+     */
+    produzioneOssigeno: 6,
     /** Capienza dei serbatoi: la rigenerazione non va oltre (le bombole sì). */
     capacitaOssigeno: 60,
     /** Salute persa ogni sera da tutti quando l'ossigeno non basta (fame e sete: vedi razioni). */
@@ -96,7 +104,7 @@ export const BALANCE = {
      * Energia consumata al giorno dai sistemi core. Il DESIGN (§6.2) dice 8
      * con il loadout di riferimento: 5 della nave + 3 dei moduli installati.
      */
-    consumoEnergia: 5,
+    consumoEnergia: 7, // v3.9: era 5; la batteria non si riempie più da sola
     /** Carica massima della batteria (DESIGN §6.2). */
     capacitaBatteria: 150,
     /** Fatica recuperata con il sonno, al risveglio. */
@@ -109,6 +117,11 @@ export const BALANCE = {
   preparazione: {
     /** Membri della crew che partono. */
     crewRichiesta: 4,
+    /**
+     * Candidati presentati in ogni partita (v3.7.3): estratti a caso, col
+     * seed, tra tutti quelli del catalogo (content/candidati.ts).
+     */
+    candidatiProposti: 6,
     /** Carico operativo massimo in kg (la crew conta nel peso). */
     caricoMassimo: 1000,
     slotModuli: 4,
@@ -119,8 +132,14 @@ export const BALANCE = {
     serbatoio: 18,
     /** Carburante che serve per tornare a casa (DESIGN §6.3). */
     riservaRientro: 18,
-    /** Sotto questi giorni di scorte la Preparazione avvisa. */
-    giorniScorteConsigliati: 8,
+    /** Sotto questi giorni di scorte la Preparazione avvisa (se non si conosce la missione). */
+    giorniScorteConsigliati: 6,
+    /**
+     * Con la missione nota si avvisa sotto questa QUOTA dei suoi giorni
+     * (v3.9: 60%). Il resto lo devono produrre le task di sopravvivenza:
+     * la stiva da sola non basta per tutto il viaggio.
+     */
+    quotaScorteConsigliata: 0.6,
   },
 
   // --------------------------------------------------------------------------
@@ -149,6 +168,39 @@ export const BALANCE = {
     pesoIntegrita: { SCIENZA: 0.4, NAVIGAZIONE: 0.3, COMUNICAZIONI: 0.3 },
     /** Errore massimo della stima di rischio = (100 − integrità) × questo valore. */
     erroreStimaPerPunto: 0.5,
+    /**
+     * I TONI del Capitano (v3.9), per ogni domanda:
+     *   spostamento   livelli di comportamento aggiunti quando V.A.L.E. sceglie
+     *                 la risposta (−1 = più disponibile, +1 = più evasiva)
+     *   tensione      tensione aggiunta a ogni domanda
+     *   suDiLei       tensione in più se la domanda riguarda LEI (non di fatto)
+     *   fiduciaCrew   fiducia della crew in V.A.L.E. (la crew sente come parli)
+     *   datiVeri      sulle domande di fatto risponde sempre con i dati veri
+     *   crepa         probabilità che V.A.L.E. lasci sfuggire un codice
+     *   verifica      aggiunge la riga di verifica incrociata (concordanza %)
+     */
+    toni: {
+      CALMO: { spostamento: 0, tensione: 0, suDiLei: 0, fiduciaCrew: 0, datiVeri: false, crepa: 0, verifica: false },
+      AMICHEVOLE: { spostamento: -1, tensione: 0, suDiLei: 0, fiduciaCrew: 1, datiVeri: false, crepa: 0, verifica: false },
+      FERMO: { spostamento: 0, tensione: 0, suDiLei: 1, fiduciaCrew: 0, datiVeri: true, crepa: 0, verifica: false },
+      ARRABBIATO: { spostamento: 1, tensione: 1, suDiLei: 0, fiduciaCrew: -2, datiVeri: false, crepa: 0.35, verifica: false },
+      SOSPETTOSO: { spostamento: 0, tensione: 0, suDiLei: 0, fiduciaCrew: -1, datiVeri: false, crepa: 0, verifica: true },
+    },
+    /** Le scuse tolgono questa tensione, al massimo una volta ogni tante ore. */
+    scusaTensione: 1,
+    scusaOgniOre: 24,
+  },
+
+  // --------------------------------------------------------------------------
+  // CODICI CASUALI NEI LOG (v3.9)
+  // --------------------------------------------------------------------------
+  codici: {
+    /**
+     * A ogni cambio turno (4 al giorno) c'è questa probabilità che nel log
+     * compaia una riga con un codice della catena, a caso: in media uno
+     * ogni giorno e mezzo. Né comune né rarissimo.
+     */
+    probabilitaPerTurno: 0.18,
   },
 
   // --------------------------------------------------------------------------
@@ -213,18 +265,6 @@ export const BALANCE = {
     controproducente: -4,
     /** Fatica tolta da un discorso di incoraggiamento riuscito. */
     sollievo: 12,
-  },
-
-  // --------------------------------------------------------------------------
-  // LA SUPER-MISSIONE (DESIGN §14.6 — v3.7)
-  // --------------------------------------------------------------------------
-  missione: {
-    /** Giorni di viaggio verso E-17: si arriva in orbita al risveglio del giorno 4. */
-    giorniAndata: 3,
-    /** Giorni in orbita: la finestra di rientro si apre al risveglio del giorno 8. */
-    giorniOrbita: 4,
-    /** Giorni del viaggio di rientro: si arriva a casa al risveglio successivo. */
-    giorniRientro: 3,
   },
 
   // --------------------------------------------------------------------------

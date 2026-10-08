@@ -91,24 +91,6 @@
   color: var(--c-critico);
 }
 
-/* --- Righe di sistema e crew --------------------------------------------- */
-.sistema,
-.crew {
-  display: grid;
-  grid-template-columns: 44px 72px 1fr auto;
-  gap: var(--sp-2);
-}
-.ora {
-  color: var(--c-fosforo-tenue);
-}
-.fonte {
-  color: var(--c-fosforo-tenue);
-  letter-spacing: 0.08em;
-}
-.crew .fonte {
-  color: var(--c-fosforo);
-}
-
 /* --- Messaggi di V.A.L.E. ------------------------------------------------- */
 .vale {
   margin: var(--sp-1) 0;
@@ -166,16 +148,6 @@
   color: var(--c-vale);
 }
 
-@media (max-width: 700px) {
-  .sistema,
-  .crew {
-    grid-template-columns: 44px 1fr auto;
-  }
-  .fonte {
-    display: none;
-  }
-}
-
 /* --- Campo "Scrivi a V.A.L.E." (v3.0) ------------------------------------- */
 .campo {
   display: flex;
@@ -207,4 +179,159 @@
 }
 .campo:focus-within {
   box-shadow: var(--glow-bordo);
+}
+
+/* --- Battute del Capitano (v3.9) ------------------------------------------- */
+/* A destra, in fosforo: chi parla si riconosce da posizione e colore. */
+.capitano {
+  align-self: flex-end;
+  max-width: 85%;
+  margin: var(--sp-1) 0;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--c-fosforo-tenue);
+  border-radius: 10px 10px 2px 10px;
+  color: var(--c-fosforo-alto);
+  text-align: right;
+}
+.capitano p {
+  margin: 4px 0 0;
+  font-size: var(--fs-testo);
+}
+.mittenteCapitano {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--sp-2);
+  font-family: var(--font-terminale);
+  font-size: 18px;
+  letter-spacing: 0.14em;
+  color: var(--c-fosforo-tenue);
+}
+.tonoVoce {
+  padding: 0 6px;
+  border: 1px solid currentColor;
+  font-size: 14px;
+}
+
+/* --- Scelta del tono (v3.9) ------------------------------------------------ */
+.toni {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-bottom: var(--sp-2);
+  border-bottom: 1px solid var(--c-griglia);
+}
+.tonoPulsanti {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-1);
+}
+.tonoEtichetta {
+  font-family: var(--font-terminale);
+  font-size: 16px;
+  letter-spacing: 0.14em;
+  color: var(--c-fosforo-tenue);
+  margin-right: var(--sp-1);
+}
+.tono {
+  min-height: 32px; /* abbastanza per un dito */
+  padding: 0 var(--sp-2);
+  border: 1px solid var(--colore-tono, var(--c-fosforo-tenue));
+  background: transparent;
+  color: var(--colore-tono, var(--c-fosforo));
+  font-family: var(--font-terminale);
+  font-size: 17px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.tono[aria-pressed="true"] {
+  background: var(--colore-tono, var(--c-fosforo));
+  color: var(--c-vuoto);
+}
+.tono:focus-visible {
+  outline: 2px solid var(--c-fosforo-alto);
+  outline-offset: 2px;
+}
+/* Ogni tono ha un colore (sempre insieme al nome: il colore non è l'unico segnale). */
+.tono_CALMO {
+  --colore-tono: var(--c-fosforo);
+}
+.tono_AMICHEVOLE {
+  --colore-tono: var(--c-vale);
+}
+.tono_FERMO {
+  --colore-tono: var(--c-fosforo-alto);
+}
+.tono_ARRABBIATO {
+  --colore-tono: var(--c-critico);
+}
+.tono_SOSPETTOSO {
+  --colore-tono: var(--c-attenzione);
+}
+.capitano.tono_ARRABBIATO,
+.capitano.tono_SOSPETTOSO,
+.capitano.tono_AMICHEVOLE {
+  border-color: var(--colore-tono);
+}
+.tonoDescrizione {
+  margin: 0;
+  font-size: 12px;
+  color: var(--c-fosforo-tenue);
+}
+
+/* Desktop: i toni su UNA riga, più piccoli; la descrizione resta nel
+   suggerimento (title) di ogni pulsante: lo spazio va ai messaggi. */
+@media (min-width: 1100px) {
+  .tonoPulsanti {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .tono {
+    flex: none;
+    min-height: 26px;
+    padding: 0 6px;
+    font-size: 15px;
+  }
+  .tonoDescrizione {
+    display: none;
+  }
+}
+
+/* Il menu compatto dei toni (nel campo di testo): nascosto di base. */
+.tonoCompatto {
+  display: none;
+  min-height: 32px;
+  border: 1px solid var(--c-fosforo-tenue);
+  background: var(--c-vuoto);
+  color: var(--c-fosforo);
+  font-family: var(--font-terminale);
+  font-size: 17px;
+  letter-spacing: 0.06em;
+}
+
+/* Tre colonne: poco spazio in altezza. Al posto della fila di pulsanti dei
+   toni c'è il menu compatto accanto al campo di testo. */
+@media (min-width: 1100px) and (max-width: 1599px) {
+  .toni {
+    display: none;
+  }
+  .tonoCompatto {
+    display: block;
+  }
+}
+
+/* Su telefono i toni scorrono in orizzontale su una riga. */
+@media (max-width: 700px) {
+  .tonoPulsanti {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .tono {
+    flex: none;
+  }
 }

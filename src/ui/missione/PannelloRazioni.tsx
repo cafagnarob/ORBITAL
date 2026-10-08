@@ -33,6 +33,7 @@ import {
 import { membriAttivi } from "../../engine/storia/fazioni";
 import type { StatoMissione } from "../../engine/types";
 import { suona } from "../audio";
+import { Icona } from "../components/icone/Icona";
 import stili from "./PannelloRazioni.module.css";
 
 interface Props {
@@ -79,10 +80,10 @@ export function PannelloRazioni({ stato, razioni, onCambia }: Props) {
       {/* Il conto: si vede subito se si sta dando più di quanto c'è. */}
       <p className={stili.conto}>
         <span className={costo.cibo > r.cibo ? stili.critico : ""}>
-          CIBO {r.cibo} → {r.cibo - costo.cibo}
+          <Icona tipo="cibo" /> CIBO {r.cibo} → {r.cibo - costo.cibo}
         </span>
         <span className={costo.acqua > r.acqua ? stili.critico : ""}>
-          ACQUA {r.acqua} → {r.acqua - costo.acqua}
+          <Icona tipo="acqua" /> ACQUA {r.acqua} → {r.acqua - costo.acqua}
         </span>
       </p>
 
@@ -104,7 +105,9 @@ export function PannelloRazioni({ stato, razioni, onCambia }: Props) {
               </div>
               {(["cibo", "acqua"] as const).map((risorsa) => (
                 <div key={risorsa} className={stili.gruppo} role="group" aria-label={`${risorsa} per ${m.nome}`}>
-                  <span className={stili.risorsa}>{risorsa.toUpperCase()}</span>
+                  <span className={stili.risorsa}>
+                    <Icona tipo={risorsa} /> {risorsa.toUpperCase()}
+                  </span>
                   {RAZIONI.map((valore) => (
                     <button
                       key={valore}

@@ -1,0 +1,126 @@
+/*
+ * TerminaleLog.module.css — La finestrella dei log (v3.9): piccola, fitta,
+ * monospazio. Scorre al suo interno, con l'ultima riga sempre in fondo.
+ */
+
+/* Classe ripetuta (.finestra.finestra) per vincere su ".blocco > section
+   { flex: 1 }" della schermata: questa finestrella ha un'altezza FISSA e
+   non deve crescere con il numero di righe (scorrono al suo interno). */
+.finestra.finestra {
+  /* Su telefono: un'altezza comoda dentro la scheda V.A.L.E. */
+  height: 260px;
+  flex: none;
+}
+@media (min-width: 1100px) {
+  .finestra.finestra {
+    height: clamp(130px, 19vh, 200px);
+  }
+}
+/* Tre colonne (v3.9): in cima alla colonna di destra, un po' più bassa. */
+@media (min-width: 1100px) and (max-width: 1599px) {
+  .finestra.finestra {
+    height: 180px;
+  }
+}
+
+.righe {
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column-reverse; /* lo scorrimento parte dal fondo */
+  gap: 2px;
+  font-family: var(--font-testo);
+  font-size: var(--fs-piccolo);
+  line-height: 1.35;
+  scrollbar-width: thin;
+  scrollbar-color: var(--c-fosforo-tenue) transparent;
+}
+
+.riga {
+  display: grid;
+  grid-template-columns: 40px 34px 1fr auto;
+  gap: var(--sp-2);
+  align-items: start;
+  color: var(--c-fosforo);
+}
+.ora,
+.fonte {
+  color: var(--c-fosforo-tenue);
+}
+.testo {
+  overflow-wrap: anywhere;
+}
+.vale .fonte,
+.vale .testo {
+  color: var(--c-vale);
+}
+.capitano .testo {
+  color: var(--c-fosforo-alto);
+}
+.crew .fonte {
+  color: var(--c-fosforo);
+}
+
+.segno {
+  min-width: 26px;
+  min-height: 22px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--c-fosforo-tenue);
+  opacity: 0.5;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+}
+.segno:hover,
+.segno:focus-visible {
+  opacity: 1;
+  color: var(--c-fosforo);
+}
+.segnalata {
+  opacity: 1;
+  color: var(--c-fosforo-alto);
+}
+
+/* --- Barra: filtro e contatore ------------------------------------------- */
+.destra {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.filtro {
+  min-height: 24px;
+  padding: 0 6px;
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  font-family: var(--font-terminale);
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  opacity: 0.7;
+}
+.filtro[aria-pressed="true"] {
+  opacity: 1;
+  text-decoration: underline;
+}
+.contatore {
+  margin-left: 4px;
+  font-family: var(--font-terminale);
+  font-size: 16px;
+}
+
+/* Telefono stretto: la colonna della fonte sparisce. */
+@media (max-width: 420px) {
+  .riga {
+    grid-template-columns: 40px 1fr auto;
+  }
+  .fonte {
+    display: none;
+  }
+}

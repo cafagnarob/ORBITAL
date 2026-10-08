@@ -14,9 +14,13 @@
  */
 
 import type { Minuti } from "./comuni";
+import type { TonoCapitano } from "./vale";
 
-/** Chi ha prodotto la voce. */
-export const FONTI_LOG = ["SISTEMA", "VALE", "CREW"] as const;
+/**
+ * Chi ha prodotto la voce. CAPITANO (v3.9): le battute del Capitano a
+ * V.A.L.E. (prima erano righe di SISTEMA "Capitano: …").
+ */
+export const FONTI_LOG = ["SISTEMA", "VALE", "CREW", "CAPITANO"] as const;
 export type FonteLog = (typeof FONTI_LOG)[number];
 
 export interface VoceLog {
@@ -27,4 +31,6 @@ export interface VoceLog {
   testo: string;
   /** Codici nascosti contenuti nella voce (può essere vuoto). */
   codici: string[];
+  /** Solo per le battute del Capitano (v3.9): il tono con cui ha parlato. */
+  tono?: TonoCapitano;
 }

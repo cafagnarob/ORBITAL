@@ -42,16 +42,16 @@ describe("rapporto serale", () => {
     expect(stato.risorse.cibo).toBe(120 - 3 * BALANCE.giornata.ciboPerMembro);
   });
 
-  it("con il Supporto Vitale integro l'ossigeno resta stabile", () => {
-    // 4 membri × 2 consumati, 8 rigenerati: i serbatoi restano pieni.
-    expect(finoAlRapporto().risorse.ossigeno).toBe(BALANCE.giornata.capacitaOssigeno);
+  it("anche con il Supporto Vitale integro l'ossigeno cala piano (v3.9)", () => {
+    // 4 membri × 3 consumati, 6 rigenerati: −6 al giorno. Serve l'elettrolisi.
+    expect(finoAlRapporto().risorse.ossigeno).toBe(BALANCE.giornata.capacitaOssigeno - 6);
   });
 
   it("con il Supporto Vitale danneggiato l'ossigeno cala", () => {
     const iniziale = creaMissioneDiProva();
-    iniziale.nave.sistemi.SUPPORTO_VITALE = 25; // rigenera solo 2
+    iniziale.nave.sistemi.SUPPORTO_VITALE = 25; // rigenera solo 2 (6 × 25% = 1,5, arrotondato)
     const stato = avanzaFinoAPausa(esegui(iniziale, [{ tipo: "AVVIA_OPERAZIONI" }]));
-    expect(stato.risorse.ossigeno).toBe(60 - 8 + 2);
+    expect(stato.risorse.ossigeno).toBe(60 - 12 + 2);
   });
 
   it("la batteria si ricarica ma non supera la capacità massima", () => {

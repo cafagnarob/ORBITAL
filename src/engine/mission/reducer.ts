@@ -34,7 +34,8 @@ import { controllaEventi, risolviEvento, verificaScelta } from "../eventi/attiva
 import type { MomentoEventi } from "../eventi/condizioni";
 import { inserisciCodice, segnalaVoce, verificaSegnalazione } from "../terminale/terminale";
 import { contesta, verificaContestazione } from "../vale/contestazioni";
-import { interrogaVale, scriviAVale } from "../vale/domande";
+import { impostaTono, interrogaVale, scriviAVale } from "../vale/domande";
+import { forseCodiceCasuale } from "../terminale/codiciCasuali";
 import { controllaFine, ordinaRientro, verificaRientro } from "../storia/fine";
 import { iniziativeMattino } from "../storia/iniziative";
 import { distribuisciRazioni, razioniPredefinite, verificaRazioni } from "../crew/razioni";
@@ -191,6 +192,11 @@ export function applicaAzione(stato: StatoMissione, azione: Azione, contesto: Co
       break;
     }
 
+    case "IMPOSTA_TONO": {
+      impostaTono(bozza, azione.tono);
+      break;
+    }
+
     case "RIENTRA": {
       const errore = verificaRientro(bozza);
       if (errore !== null) throw new Error(errore);
@@ -245,6 +251,8 @@ function eseguiMomento(bozza: StatoMissione, contesto: ContestoMissione, rng: Rn
         break;
       case "TURNO":
         perEventi.turno = true;
+        // v3.9: a volte, nel rumore dei sistemi, affiora un codice.
+        forseCodiceCasuale(bozza, contesto);
         break;
       case "RAPPORTO_SERALE":
         rapportoSerale(bozza, contesto);

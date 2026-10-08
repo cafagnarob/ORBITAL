@@ -40,7 +40,8 @@ import { minutoDelGiorno, ORARIO_RISVEGLIO, scomponiTempo } from "../../engine/c
 import { useAccensione } from "../cornice/useAccensione";
 import { suona } from "../audio";
 import { faseViaggio } from "../../engine/storia/viaggio";
-import type { FaseViaggio, Preparazione } from "../../engine/types";
+import type { FaseViaggio, Preparazione, StatoMissione } from "../../engine/types";
+import { definizioneMissione } from "../../content/missioni";
 import type { RazioniSerali } from "../../engine/crew/razioni";
 import { Monitor } from "../cornice/Monitor";
 import { PannelloFrontale } from "../cornice/PannelloFrontale";
@@ -60,14 +61,19 @@ import { PannelloPianifica } from "./PannelloPianifica";
 import { PannelloRisorse } from "./PannelloRisorse";
 import { PannelloScoperte } from "./PannelloScoperte";
 import { Plancia } from "./plancia/Plancia";
+import { TerminaleLog } from "./TerminaleLog";
 import stili from "./SchermataMissione.module.css";
 
-/** La scritta di quando il monitor si riaccende, secondo la fase (v3.7.1). */
-const LUOGO_DIDASCALIA: Record<FaseViaggio, string> = {
-  ANDATA: "IN VIAGGIO VERSO E-17",
-  ORBITA: "ORBITA E-17",
-  RIENTRO: "RIENTRO VERSO LA TERRA",
-};
+/**
+ * La scritta di quando il monitor si riaccende, secondo la fase (v3.7.1;
+ * v3.8: con il nome del bersaglio della missione).
+ */
+function luogoDidascalia(fase: FaseViaggio, stato: StatoMissione): string {
+  const m = definizioneMissione(stato.missione.id);
+  if (fase === "ANDATA") return `IN VIAGGIO VERSO ${m.nome.toUpperCase()}`;
+  if (fase === "ORBITA") return m.bersaglio.luogo;
+  return "RIENTRO VERSO LA TERRA";
+}
 
 const SCHEDE = [
   { id: "crew", nome: "Crew" },
@@ -117,7 +123,7 @@ export function SchermataMissione({ seed, preparazione, onNuovaPartita }: Props)
   const didascalia =
     minutoDelGiorno(stato.tempo) === ORARIO_RISVEGLIO
       ? `GIORNO ${String(giorno).padStart(2, "0")} · 06:00 · BUONGIORNO, CAPITANO`
-      : `${LUOGO_DIDASCALIA[faseViaggio(stato)]} · GIORNO ${String(giorno).padStart(2, "0")}`;
+      : `${luogoDidascalia(faseViaggio(stato), stato)} · GIORNO ${String(giorno).padStart(2, "0")}`;
 
   /** Classe per un blocco: nascosto su mobile se non è della scheda attiva. */
   const blocco = (di: IdScheda, extra = "") => `${stili.blocco} ${extra} ${di === scheda ? "" : stili.nascostoMobile}`;
@@ -155,7 +161,7 @@ export function SchermataMissione({ seed, preparazione, onNuovaPartita }: Props)
         {/*
           DISPOSIZIONE (v3.7.1) — quattro gruppi di pannelli:
             equipaggio  Equipaggio · Risorse
-            centro      Canale di V.A.L.E.
+            centro      Canale di V.A.L.E. (dialogo) · Terminale dei log (v3.9)
             strumenti   Plancia (animata) · Nave e sistemi
             lavoro      Missione · Pianifica · Registro scoperte (scorre)
           ≥ 1600px: quattro colonne. 1100–1599px: tre colonne, con Plancia e
@@ -177,6 +183,13 @@ export function SchermataMissione({ seed, preparazione, onNuovaPartita }: Props)
             <div className={blocco("vale", stili.cresce)}>
               <CanaleVale stato={stato} dispatch={dispatch} />
             </div>
+            {/* v3.9: la finestrella del terminale con TUTTI i log (e i codici).
+                Qui su telefono e con quattro colonne; con tre colonne la
+                colonna centrale non ha spazio e la finestrella va in cima
+                alla colonna di destra (copia qui sotto, il CSS ne mostra una). */}
+            <div className={blocco("vale", stili.terminaleCentro)}>
+              <TerminaleLog stato={stato} dispatch={dispatch} />
+            </div>
           </div>
 
           <div className={`${stili.colonna} ${stili.strumenti}`}>
@@ -191,6 +204,9 @@ export function SchermataMissione({ seed, preparazione, onNuovaPartita }: Props)
           {/* Il gruppo di lavoro scorre al suo interno su desktop (.scorre)
               invece di finire sotto la barra dei comandi. */}
           <div className={`${stili.colonna} ${stili.lavoro} ${stili.scorre}`}>
+            <div className={`${stili.blocco} ${stili.terminaleDestra}`}>
+              <TerminaleLog stato={stato} dispatch={dispatch} />
+            </div>
             <div className={blocco("task")}>
               <PannelloMissione stato={stato} />
             </div>
