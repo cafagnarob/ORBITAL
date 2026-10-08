@@ -1,4 +1,8 @@
-/* PannelloRiepilogo.module.css — carico, valori di missione, V.A.L.E., problemi. */
+/*
+ * PannelloRiepilogo.module.css — il riepilogo a blocchi (v3.7.4).
+ * Ogni blocco è separato dal successivo da una linea sottile; dentro, i
+ * valori importanti sono grandi (font terminale) e le note piccole.
+ */
 
 .normale {
   color: var(--c-fosforo);
@@ -10,98 +14,59 @@
   color: var(--c-critico);
 }
 
-.fattibilita {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  margin: 0 0 var(--sp-3);
-  padding-bottom: var(--sp-2);
+.blocco {
+  padding: var(--sp-3) 0;
   border-bottom: 1px solid var(--c-griglia);
-  font-size: var(--fs-piccolo);
-  letter-spacing: 0.14em;
-  color: var(--c-fosforo-tenue);
 }
-.fattibilita strong {
-  font-family: var(--font-terminale);
-  font-size: var(--fs-terminale-grande);
-  font-weight: 400;
-  letter-spacing: 0.1em;
-  text-shadow: var(--glow-testo);
+.blocco:first-child {
+  padding-top: 0;
 }
-
-.carico {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: var(--sp-1);
-  font-family: var(--font-terminale);
-  font-size: var(--fs-terminale);
-  letter-spacing: 0.08em;
-  color: var(--c-fosforo);
+.blocco:focus {
+  outline: none;
 }
-.carico > :last-child {
-  grid-column: 1 / -1;
-}
-
-.dettaglio {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 2px var(--sp-4);
-  margin: var(--sp-2) 0 0;
-  font-size: var(--fs-piccolo);
-}
-.dettaglio div {
-  display: flex;
-  justify-content: space-between;
-  border-bottom: 1px dotted var(--c-griglia);
-}
-.dettaglio dt {
-  color: var(--c-fosforo-tenue);
-}
-.dettaglio dd {
-  margin: 0;
+.blocco:focus-visible,
+.blocco:target {
+  outline: 1px dashed var(--c-attenzione);
+  outline-offset: 4px;
 }
 
 .sottotitolo {
-  margin: var(--sp-4) 0 var(--sp-2);
+  display: flex;
+  justify-content: space-between;
+  margin: 0 0 var(--sp-2);
   font-family: var(--font-terminale);
   font-size: 18px;
   font-weight: 400;
   letter-spacing: 0.14em;
   color: var(--c-fosforo-tenue);
 }
-
-.valori {
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-1);
+.sottotitolo span {
+  color: var(--c-fosforo);
 }
-.valori div {
+/* Il secondo sottotitolo di un blocco (es. ENERGIA dopo SCORTE). */
+.dati + .sottotitolo {
+  margin-top: var(--sp-3);
+}
+
+/* --- 1. Fattibilità ----------------------------------------------------------- */
+.fattibilita {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: var(--sp-2);
-}
-.valori dt {
-  font-size: var(--fs-piccolo);
-  letter-spacing: 0.1em;
-  color: var(--c-fosforo-tenue);
-}
-.valori dd {
   margin: 0;
-  font-family: var(--font-terminale);
-  font-size: var(--fs-terminale);
-  color: var(--c-fosforo);
-  text-align: right;
-}
-.valori small {
-  font-family: var(--font-testo);
   font-size: var(--fs-piccolo);
+  letter-spacing: 0.14em;
   color: var(--c-fosforo-tenue);
 }
-
+.fattibilita strong {
+  font-family: var(--font-terminale);
+  font-size: 34px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-shadow: var(--glow-testo);
+}
 .vale {
-  margin: var(--sp-4) 0 var(--sp-2);
+  margin: var(--sp-2) 0 0;
   padding: var(--sp-2) var(--sp-3);
   border: 1px solid rgba(92, 239, 216, 0.4);
   border-radius: 10px;
@@ -116,17 +81,122 @@
   letter-spacing: 0.14em;
 }
 
-.problemi {
+/* --- 2. Crew: quattro posti ------------------------------------------------------ */
+.posti {
   list-style: none;
-  margin: 0 0 var(--sp-3);
+  margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: var(--sp-1);
-  font-size: 13px;
+  counter-reset: posto;
+}
+.posti li {
+  counter-increment: posto;
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-1);
+  min-height: 30px;
+  padding: 2px var(--sp-2);
+  border: 1px solid var(--c-griglia);
+  font-size: var(--fs-piccolo);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.posti li::before {
+  content: counter(posto);
+  font-family: var(--font-terminale);
+  font-size: 16px;
+  color: var(--c-fosforo-tenue);
+}
+.pieno {
+  border-color: var(--c-fosforo-tenue) !important;
+}
+.pieno strong {
+  font-family: var(--font-terminale);
+  font-size: 18px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--c-fosforo);
+}
+.pieno span {
+  color: var(--c-fosforo-tenue);
+  text-transform: uppercase;
+  font-size: var(--fs-piccolo);
+}
+.vuoto {
+  border-style: dashed !important;
+  color: var(--c-fosforo-tenue);
 }
 
-/* v3.7: i due tasti rapidi (indispensabile, svuota) e la nota sotto. */
+/* --- 3. Carico ------------------------------------------------------------------- */
+.carico {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--sp-1);
+  font-family: var(--font-terminale);
+  font-size: var(--fs-terminale);
+  letter-spacing: 0.08em;
+  color: var(--c-fosforo);
+}
+.carico > :last-child {
+  grid-column: 1 / -1;
+}
+.ripartizione {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2px var(--sp-4);
+  margin: var(--sp-2) 0 0;
+  font-size: var(--fs-piccolo);
+}
+.ripartizione div {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px dotted var(--c-griglia);
+}
+.ripartizione dt {
+  color: var(--c-fosforo-tenue);
+}
+.ripartizione dd {
+  margin: 0;
+}
+
+/* --- 4. Schede dei valori -------------------------------------------------------- */
+.dati {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-2);
+}
+.dato {
+  display: flex;
+  flex-direction: column;
+  padding: var(--sp-1) var(--sp-2);
+  border: 1px solid var(--c-griglia);
+  background: rgba(125, 245, 165, 0.03);
+}
+.dato dt {
+  font-size: var(--fs-piccolo);
+  letter-spacing: 0.14em;
+  color: var(--c-fosforo-tenue);
+}
+.dato dd {
+  margin: 0;
+}
+.dato dd:nth-of-type(1) {
+  font-family: var(--font-terminale);
+  font-size: 26px;
+  line-height: 1.05;
+}
+.nota {
+  font-size: var(--fs-piccolo);
+  color: var(--c-fosforo-tenue);
+}
+
+/* --- 5. Problemi ----------------------------------------------------------------- */
+/* --- 6. Azioni rapide ------------------------------------------------------------ */
 .azioniRapide {
   display: flex;
   flex-wrap: wrap;

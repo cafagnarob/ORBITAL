@@ -122,6 +122,15 @@
   stroke: var(--c-griglia);
   animation: none;
 }
+/* v3.7.5: la cella è un <g> (rettangolo + icona); fill e stroke valgono
+   per il rettangolo, l'icona ha il suo tratto scuro (sotto). */
+.iconaCella {
+  fill: none !important;
+  stroke: var(--c-vuoto) !important;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
 .cibo {
   fill: rgba(125, 245, 165, 0.55);
   stroke: var(--c-fosforo);
@@ -202,6 +211,53 @@
   .cella,
   .figura,
   .potenziato {
+    animation: none;
+  }
+}
+
+/* --- Pezzi da aggiungere (v3.9) ----------------------------------------------
+   Sagome tratteggiate che "pulsano": ROSSE se mancano, AMBRA se consigliate.
+   Il tratteggio e il "?" restano anche senza colori (accessibilità). */
+.fantasma rect {
+  fill: color-mix(in srgb, var(--colore-fantasma) 10%, transparent);
+  stroke: var(--colore-fantasma);
+  stroke-width: 1.2;
+  stroke-dasharray: 4 3;
+}
+.fantasma {
+  color: var(--colore-fantasma);
+  animation: richiamo 1.6s ease-in-out infinite;
+}
+.mancante {
+  --colore-fantasma: var(--c-critico);
+}
+.consigliato {
+  --colore-fantasma: var(--c-attenzione);
+}
+.fantasmaSigla,
+.fantasmaPiccolo {
+  fill: var(--colore-fantasma);
+  font-family: var(--font-terminale);
+  letter-spacing: 0.08em;
+}
+.fantasmaSigla {
+  font-size: 16px;
+}
+.fantasmaPiccolo {
+  font-size: 9px;
+}
+/* (!important come .iconaCella: qui l'icona è nel colore della sagoma) */
+.fantasma .iconaCella {
+  stroke: var(--colore-fantasma) !important;
+  stroke-width: 2;
+}
+@keyframes richiamo {
+  50% {
+    opacity: 0.45;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fantasma {
     animation: none;
   }
 }

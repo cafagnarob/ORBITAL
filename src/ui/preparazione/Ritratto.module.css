@@ -1,0 +1,43 @@
+/*
+ * Ritratto.module.css — immagine (tinta fosforo) o segnaposto.
+ *
+ * TINTA FOSFORO PER LE IMMAGINI VERE
+ * grayscale(1) toglie i colori, sepia(1) dà un tono caldo uniforme,
+ * hue-rotate lo sposta sul verde, saturate e brightness lo accendono.
+ * Così qualsiasi foto sembra mostrata dallo stesso monitor.
+ */
+
+.immagine,
+.segnaposto {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.immagine {
+  filter: grayscale(1) sepia(1) hue-rotate(80deg) saturate(2.2) brightness(0.85) contrast(1.1);
+}
+
+.segnaposto {
+  background: var(--c-pannello);
+}
+.griglia {
+  stroke: var(--c-griglia);
+  stroke-width: 0.6;
+}
+.sagoma {
+  fill: rgba(125, 245, 165, 0.07);
+  stroke: var(--c-fosforo-tenue);
+  stroke-width: 1.2;
+}
+.mirino {
+  fill: none;
+  stroke: var(--c-fosforo-tenue);
+  stroke-width: 1.2;
+}
+.scritta {
+  fill: var(--c-fosforo-tenue);
+  font-family: var(--font-terminale);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+}

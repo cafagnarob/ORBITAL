@@ -1,27 +1,41 @@
-/* SelezioneCrew.module.css — schede dei candidati, cliccabili. */
+/*
+ * SelezioneCrew.module.css — fascicoli dei candidati (v3.7.2).
+ *
+ * L'ANIMAZIONE "TUBO CATODICO"
+ * Quando un vecchio monitor si accende l'immagine non sfuma: prima c'è una
+ * riga luminosissima, poi lo schermo "salta" in altezza, sfarfalla, trema
+ * di lato e alla fine si ferma. La imitiamo con @keyframes e
+ * `steps()`: invece di passare dolcemente da un fotogramma all'altro, il
+ * valore SALTA (2 scatti per tratto). È lo stesso trucco dei vecchi giochi
+ * a 8 bit: poche pose, nessuna sfumatura.
+ *
+ *   fascicolo   la scheda dei dettagli sopra il ritratto (si accende)
+ *   righe       le righe di scansione, sempre presenti, più forti all'hover
+ *   ritratto    "disturbo" breve quando il fascicolo si accende
+ *
+ * Tutto parte da :hover e :focus-visible (tastiera). Con prefers-reduced-
+ * motion i dettagli compaiono senza animazione. Senza hover (telefoni)
+ * i dettagli sono sempre visibili, sotto il nome.
+ */
 
-.intro {
-  margin: 0 0 var(--sp-3);
-  font-size: var(--fs-piccolo);
-  color: var(--c-fosforo-tenue);
-  letter-spacing: 0.04em;
-}
-
+/* I fascicoli su file da due (v3.7.3): 6 candidati = 3 file. */
 .lista {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  gap: var(--sp-2);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-3);
 }
 
-/* Il candidato è un pulsante: azzeriamo lo stile di default del browser. */
+/* --- IL FASCICOLO (pulsante) ------------------------------------------------- */
 .candidato {
+  position: relative; /* il fascicolo si appoggia sulla scheda intera */
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: var(--sp-2);
-  padding: var(--sp-2) var(--sp-3);
+  gap: 2px;
+  padding: var(--sp-2);
   border: 1.5px solid var(--c-griglia);
   background: transparent;
   color: var(--c-testo);
@@ -42,18 +56,19 @@
   box-shadow: var(--glow-bordo);
 }
 .candidato:disabled {
-  opacity: 0.4;
   cursor: not-allowed;
 }
-
-.testa {
-  display: flex;
-  align-items: baseline;
-  gap: var(--sp-2);
+/* Disattivato (crew completa): ritratto e nome spenti, ma il fascicolo
+   si può ancora leggere passandoci sopra. */
+.candidato:disabled .ritratto > :first-child,
+.candidato:disabled .nome,
+.candidato:disabled .ruolo {
+  opacity: 0.4;
 }
+
 .nome {
   font-family: var(--font-terminale);
-  font-size: var(--fs-terminale-grande);
+  font-size: 24px;
   line-height: 1;
   color: var(--c-fosforo);
   text-transform: uppercase;
@@ -63,39 +78,196 @@
   font-size: var(--fs-piccolo);
   color: var(--c-fosforo-tenue);
   letter-spacing: 0.1em;
-}
-.peso {
-  margin-left: auto;
-  font-size: var(--fs-piccolo);
-  color: var(--c-fosforo-tenue);
+  text-transform: uppercase;
 }
 
-/* --- Abilità: 7 colonnine affiancate ------------------------------------- */
-.abilita {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: var(--sp-1);
+/* --- RITRATTO ------------------------------------------------------------------ */
+.ritratto {
+  order: -1; /* nel codice viene dopo nome e ruolo; a schermo va in cima */
+  margin-bottom: var(--sp-1);
+  position: relative;
+  display: block;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border: 1px solid var(--c-griglia);
+  background: var(--c-pannello);
 }
-.cella {
+.candidato[aria-pressed="true"] .ritratto {
+  border-color: var(--c-fosforo-tenue);
+}
+
+/* Righe di scansione sopra il ritratto (e sopra il fascicolo). */
+.righe {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background: repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0.28) 0 1px, transparent 1px 3px);
+}
+
+/* "▣ IN MISSIONE" in fondo al ritratto dei candidati scelti. */
+.bollino {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  z-index: 2;
+  padding: 0 4px;
+  background: var(--c-fosforo);
+  color: var(--c-vuoto);
+  font-family: var(--font-terminale);
+  font-size: 14px;
+  letter-spacing: 0.08em;
+}
+
+/* --- IL FASCICOLO SOPRA LA SCHEDA ---------------------------------------------- */
+/* Copre ritratto, nome e professione (dentro il bordo della scheda): così
+   c'è posto per tutti i dettagli anche su una scheda stretta. Ha le sue
+   righe di scansione, come il resto dello schermo. */
+.fascicolo {
+  position: absolute;
+  inset: var(--sp-2);
+  z-index: 4;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 1px;
+  gap: 5px;
+  padding: 6px;
+  border: 1px solid var(--c-fosforo-tenue);
+  background:
+    repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0.3) 0 1px, transparent 1px 3px),
+    var(--c-vuoto);
+  font-size: var(--fs-piccolo);
+  letter-spacing: 0.04em;
+  line-height: 1.25;
+  /* Spento: invisibile e "schiacciato" su una riga, come un tubo spento. */
+  opacity: 0;
+  transform: scaleY(0.01);
+  pointer-events: none;
+}
+
+/* ACCENSIONE: :hover col mouse, :focus-visible da tastiera. */
+.candidato:hover .fascicolo,
+.candidato:focus-visible .fascicolo {
+  opacity: 1;
+  transform: none;
+  animation: accensione 0.5s steps(2, end) both;
+}
+.candidato:hover .ritratto > :first-child,
+.candidato:focus-visible .ritratto > :first-child {
+  animation: disturbo 0.35s steps(1, end);
+}
+.candidato:hover .righe,
+.candidato:focus-visible .righe {
+  animation: barra 0.5s steps(5, end);
+}
+
+/*
+ * L'accensione, fotogramma per fotogramma:
+ *   0–10%   una riga sottile e accecante al centro
+ *   10–22%  la riga si allunga a tutta larghezza
+ *   22–40%  lo schermo salta in altezza (un po' troppo)
+ *   40–70%  ricade, sfarfalla e trema a destra e sinistra
+ *   100%    fermo
+ */
+@keyframes accensione {
+  0% {
+    opacity: 1;
+    transform: scale(0.25, 0.02);
+    filter: brightness(4);
+  }
+  10% {
+    transform: scale(1, 0.02);
+    filter: brightness(4);
+  }
+  22% {
+    transform: scale(1, 0.35);
+    filter: brightness(2.5);
+  }
+  40% {
+    transform: scale(1, 1.06);
+    filter: brightness(1.6);
+  }
+  52% {
+    transform: scale(1, 0.97) translateX(3px);
+    opacity: 0.55;
+  }
+  62% {
+    transform: translateX(-2px);
+    opacity: 1;
+  }
+  70% {
+    transform: translateX(1px);
+    opacity: 0.8;
+  }
+  100% {
+    transform: none;
+    opacity: 1;
+    filter: none;
+  }
+}
+
+/* Il ritratto "salta" quando il segnale cambia. */
+@keyframes disturbo {
+  0% {
+    transform: translateX(-3px);
+    filter: brightness(1.8);
+  }
+  30% {
+    transform: translateX(2px) skewX(-4deg);
+  }
+  60% {
+    transform: translateX(-1px);
+    filter: brightness(0.7);
+  }
+  100% {
+    transform: none;
+    filter: none;
+  }
+}
+
+/* Una banda chiara che scorre dall'alto in basso durante l'accensione. */
+@keyframes barra {
+  0% {
+    background:
+      linear-gradient(to bottom, transparent 0%, rgba(201, 255, 218, 0.35) 4%, transparent 9%),
+      repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0.28) 0 1px, transparent 1px 3px);
+  }
+  100% {
+    background:
+      linear-gradient(to bottom, transparent 90%, rgba(201, 255, 218, 0.35) 95%, transparent 100%),
+      repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0.28) 0 1px, transparent 1px 3px);
+  }
+}
+
+/* --- Contenuto del fascicolo ---------------------------------------------------- */
+/* Le 7 abilità in due colonne: sigla, valore, barretta. */
+.abilita {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 8px;
+}
+.cella {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto 2px;
+  column-gap: 4px;
+  align-items: baseline;
 }
 .sigla {
-  font-size: 10px;
-  letter-spacing: 0.08em;
+  font-family: var(--font-terminale);
+  font-size: 14px;
+  letter-spacing: 0.06em;
   color: var(--c-fosforo-tenue);
 }
 .valore {
   font-family: var(--font-terminale);
-  font-size: 20px;
+  font-size: 16px;
   line-height: 1;
+  text-align: right;
   color: var(--c-testo);
 }
 .traccia {
-  width: 100%;
-  height: 3px;
+  grid-column: 1 / -1;
+  height: 2px;
   background: var(--c-griglia);
 }
 .traccia span {
@@ -111,28 +283,85 @@
   background: var(--c-fosforo);
 }
 
-/* --- Tratto, personalità, fiducia ---------------------------------------- */
-.dettagli {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  font-size: var(--fs-piccolo);
+.tratto {
+  color: var(--c-fosforo);
+  text-transform: uppercase;
   letter-spacing: 0.06em;
 }
 .personalita {
   color: var(--c-fosforo-tenue);
 }
-.fiducia {
-  color: var(--c-vale);
-  opacity: 0.85;
-}
-
-.stato {
+.piede {
+  margin-top: auto;
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
   font-family: var(--font-terminale);
-  font-size: 18px;
-  letter-spacing: 0.08em;
+  font-size: 15px;
+  letter-spacing: 0.06em;
   color: var(--c-fosforo-tenue);
 }
-.candidato[aria-pressed="true"] .stato {
-  color: var(--c-fosforo);
+.fiducia {
+  color: var(--c-vale);
+}
+
+/* --- SENZA HOVER (telefoni, tablet) ------------------------------------------- */
+/*
+ * Niente mouse: il fascicolo non può "accendersi" al passaggio, quindi resta
+ * sempre visibile, SOTTO nome e professione, senza animazione.
+ * Trucco: .ritratto diventa `display: contents` (la sua scatola sparisce e i
+ * suoi figli diventano figli diretti della scheda), così con `order`
+ * mettiamo in fila: immagine → nome → professione → fascicolo.
+ */
+@media (hover: none) {
+  .candidato {
+    position: relative; /* per il bollino, ora posizionato sulla scheda */
+  }
+  .ritratto {
+    display: contents;
+  }
+  .ritratto > :first-child {
+    order: 0;
+    aspect-ratio: 3 / 4;
+    border: 1px solid var(--c-griglia);
+  }
+  .righe {
+    display: none;
+  }
+  .bollino {
+    top: calc(var(--sp-2) + 4px);
+    bottom: auto;
+    left: calc(var(--sp-2) + 4px);
+  }
+  .nome {
+    order: 1;
+  }
+  .ruolo {
+    order: 2;
+  }
+  .fascicolo {
+    order: 3;
+    position: static;
+    opacity: 1;
+    transform: none;
+    padding: 6px 0 0;
+    border: none;
+    background: transparent;
+  }
+  .candidato:hover .fascicolo,
+  .candidato:focus-visible .fascicolo,
+  .candidato:hover .ritratto > :first-child {
+    animation: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .candidato:hover .fascicolo,
+  .candidato:focus-visible .fascicolo,
+  .candidato:hover .ritratto > :first-child,
+  .candidato:focus-visible .ritratto > :first-child,
+  .candidato:hover .righe,
+  .candidato:focus-visible .righe {
+    animation: none;
+  }
 }

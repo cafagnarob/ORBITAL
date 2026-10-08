@@ -9,6 +9,9 @@
  */
 
 export { applicaPreparazione } from "./reducer";
+export { candidatiProposti } from "./candidati";
 export { carico, riepilogoPreparazione, risorseIniziali, spazioOccupato, tagABordo, type Riepilogo } from "./riepilogo";
-export { fattibilita, problemiPreparazione, taskNonDisponibili } from "./verifica";
+export { fattibilita, giorniScorteConsigliati, problemiPreparazione, taskNonDisponibili } from "./verifica";
 export { attrezzaturaIndispensabile, indispensabileMancante, type Indispensabile } from "./indispensabile";
+export { pezziSuggeriti, type LivelloSuggerimento, type PezziSuggeriti, type PezzoSuggerito } from "./suggerimenti";
+export { preparazioneCasuale } from "./casuale";

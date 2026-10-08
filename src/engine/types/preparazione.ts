@@ -28,10 +28,11 @@ import type {
 } from "./loadout";
 import type { DefinizioneDirettiva } from "./vale";
 import type { DefinizioneTask } from "./task";
+import type { IdMissione } from "./supermissione";
 
 /** Le scelte del Capitano. */
 export interface Preparazione {
-  /** ID dei candidati scelti (4 su 10). */
+  /** ID dei candidati scelti (4 tra i 6 proposti nella partita, v3.7.3). */
   crew: IdMembro[];
   moduli: IdModulo[];
   equipaggiamento: IdEquipaggiamento[];
@@ -50,6 +51,13 @@ export interface CataloghiPreparazione {
   direttive: Readonly<Record<IdDirettiva, DefinizioneDirettiva>>;
   /** I task obbligatori della missione (v3.7): la loro attrezzatura è «indispensabile». */
   taskObbligatori?: readonly IdDefinizioneTask[];
+  /**
+   * La supermissione di questa partita (v3.8). I task delle ALTRE missioni
+   * (sblocco con condizione MISSIONE) non contano tra quelli "impossibili".
+   */
+  missione?: IdMissione;
+  /** Quanti giorni dura la partita (dal piano): le scorte dovrebbero bastare. */
+  giorniMissione?: number;
 }
 
 /** Le azioni della schermata di Preparazione. */

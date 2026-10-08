@@ -225,7 +225,7 @@ describe("riepilogo della preparazione", () => {
     expect(r.risorse.ossigeno).toBe(BALANCE.giornata.capacitaOssigeno);
     expect(r.risorse.carburante).toBe(BALANCE.preparazione.serbatoio + 8);
     expect(r.carburanteOperativo).toBe(8);
-    expect(r.giorniScorte).toBe(12);
+    expect(r.giorniScorte).toBe(8); // 96 / (4 membri × 3 al giorno, v3.9)
   });
 
   it("la batteria parte piena, anche con la riserva d'emergenza", () => {

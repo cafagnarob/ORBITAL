@@ -11,13 +11,19 @@
  * monitor della Missione, e la barra di avvio in fondo. Lo stato (le scelte)
  * vive in usePreparazione; questa schermata decide solo DOVE mostrare cosa.
  *
- * LAYOUT RESPONSIVE (stesso schema della Missione)
- *   Desktop (≥ 1100px): tre colonne a tutta altezza
- *     Candidati │ Nave + Loadout (moduli · equipaggiamento · stiva) │ Riepilogo
- *   La nave (NaveSezione) sta sopra il catalogo: ogni scelta si vede subito
- *   "montata" sullo schema.
- *   Tablet e mobile: una colonna, SCHEDE in alto (Crew · Loadout ·
- *     Riepilogo) e la barra AVVIA MISSIONE sempre visibile in fondo.
+ * LAYOUT (v3.7.4)
+ *   La pagina è la NAVE, grande, con a destra il RIEPILOGO. Candidati e
+ *   Loadout sono due FINESTRE A COMPARSA (components/FinestraMobile):
+ *   si trascinano dalla barra del titolo, si portano in primo piano con un
+ *   clic, e con "—" si riducono a ICONA nel dock sotto la nave. Un clic
+ *   sull'icona le riapre. Ogni scelta si vede subito "montata" sulla nave.
+ *     Desktop (≥ 1100px): nave │ riepilogo; finestre sopra, aperte all'inizio.
+ *     Telefono: nave, dock, riepilogo in colonna; le finestre si aprono a
+ *       tutto schermo dal dock (all'inizio sono ridotte).
+ *   La barra AVVIA MISSIONE resta sempre in fondo.
+ *
+ * Aperta/ridotta e posizione delle finestre sono stato dell'INTERFACCIA
+ * (useFinestre), non della partita.
  *
  * AUDIO
  * L'atmosfera di partenza è "PREPARAZIONE" (hangar). Premendo AVVIA, nello
@@ -33,65 +39,128 @@
  * ============================================================================
  */
 
-import { useState } from "react";
-import type { Preparazione } from "../../engine/types";
-import { Monitor } from "../cornice/Monitor";
-import { useAccensione } from "../cornice/useAccensione";
-import { PannelloFrontale } from "../cornice/PannelloFrontale";
-import { FRASI_APERTURA } from "../../content/missioneIniziale";
-import { FRASI_FATTIBILITA } from "../../content/vale";
-import { impostaAtmosfera, parla, suona } from "../audio";
-import { usePreparazione } from "../usePreparazione";
-import { Finestra } from "../components/Finestra";
-import { BarraAvvio } from "./BarraAvvio";
-import { NaveSezione } from "./NaveSezione";
-import { PannelloRiepilogo } from "./PannelloRiepilogo";
-import stili from "./SchermataPreparazione.module.css";
-import { SelezioneCrew } from "./SelezioneCrew";
-import { SelezioneLoadout } from "./SelezioneLoadout";
+import type { Preparazione } from "../../engine/types"
+import { Monitor } from "../cornice/Monitor"
+import { useAccensione } from "../cornice/useAccensione"
+import { PannelloFrontale } from "../cornice/PannelloFrontale"
+import { frasiApertura } from "../../content/missioneIniziale"
+import { definizioneMissione } from "../../content/missioni"
+import { FRASI_FATTIBILITA } from "../../content/vale"
+import { impostaAtmosfera, parla, suona } from "../audio"
+import { usePreparazione } from "../usePreparazione"
+import { BALANCE } from "../../content/balance"
+import { Finestra } from "../components/Finestra"
+import { FinestraMobile } from "../components/FinestraMobile"
+import { useFinestre } from "../components/useFinestre"
+import { DockFinestre, IconaCrew, IconaLoadout } from "./DockFinestre"
+import { BarraAvvio } from "./BarraAvvio"
+import { NaveSezione } from "./NaveSezione"
+import { AvvisoPreparazione } from "./AvvisoPreparazione"
+import { candidatiProposti, pezziSuggeriti, preparazioneCasuale } from "../../engine/preparazione"
+import { createRng } from "../../engine/rng"
+import { LISTA_CANDIDATI } from "../../content/candidati"
+import { useState } from "react"
+import { PannelloRiepilogo } from "./PannelloRiepilogo"
+import stili from "./SchermataPreparazione.module.css"
+import { SelezioneCrew } from "./SelezioneCrew"
+import { SelezioneLoadout } from "./SelezioneLoadout"
 
-const SCHEDE = [
-  { id: "crew", nome: "Crew" },
-  { id: "loadout", nome: "Loadout" },
-  { id: "riepilogo", nome: "Riepilogo" },
-] as const;
-type IdScheda = (typeof SCHEDE)[number]["id"];
+/** Le due finestre a comparsa della Preparazione. */
+const FINESTRE = ["candidati", "loadout"] as const
+type IdFinestra = (typeof FINESTRE)[number]
+
+/** Su desktop le finestre partono aperte; su telefono ridotte (sarebbero a tutto schermo). */
+const apertaAllInizio = () =>
+  typeof window === "undefined" ||
+  !window.matchMedia("(max-width: 1099px)").matches
 
 interface Props {
-  seed: string;
-  onAvvia: (preparazione: Preparazione) => void;
+  seed: string
+  onAvvia: (preparazione: Preparazione) => void
   /** true se si arriva da una missione finita (monitor già spento). */
-  daSpento?: boolean;
+  daSpento?: boolean
 }
 
-export function SchermataPreparazione({ seed, onAvvia, daSpento = false }: Props) {
-  const { prep, dispatch, riepilogo, problemi, fattibilita } = usePreparazione();
-  const [scheda, setScheda] = useState<IdScheda>("crew");
+export function SchermataPreparazione({
+  seed,
+  onAvvia,
+  daSpento = false,
+}: Props) {
+  const { prep, dispatch, riepilogo, problemi, fattibilita, piano, cataloghi } =
+    usePreparazione(seed)
+  // La missione estratta dal seed (v3.8): l'intestazione dice dove si va.
+  const missione = definizioneMissione(piano.id)
+  // I pezzi da aggiungere, disegnati sulla mappa (v3.9): derivati, non salvati.
+  const pezzi = pezziSuggeriti(prep, cataloghi)
+  // Il pop-up di avviso: espanso o ridotto a una riga (stato dell'interfaccia).
+  const [avvisoEspanso, setAvvisoEspanso] = useState(true)
+  const finestre = useFinestre(FINESTRE, apertaAllInizio)
+  const p = BALANCE.preparazione
   // Il tubo del monitor: si accende all'avvio del gioco, si spegne al lancio.
-  const tubo = useAccensione(daSpento);
+  const tubo = useAccensione(daSpento)
 
   /**
    * Partenza: rombo dei motori, V.A.L.E. conferma; il monitor si spegne e,
    * al buio, si passa alla Missione (che si accenderà già in orbita).
    */
   function avvia() {
-    suona("AVVIO");
-    parla([FRASI_FATTIBILITA[fattibilita], FRASI_APERTURA[0]]);
-    impostaAtmosfera("MISSIONE");
-    tubo.spegni(() => onAvvia(prep));
+    suona("AVVIO")
+    parla([FRASI_FATTIBILITA[fattibilita], frasiApertura(piano)[0]])
+    impostaAtmosfera("MISSIONE")
+    tubo.spegni(() => onAvvia(prep))
   }
 
-  function cambiaScheda(id: IdScheda) {
-    suona("CLIC");
-    setScheda(id);
+  /** Icona del dock: riapre la finestra ridotta, o riduce quella aperta. */
+  function alternaFinestra(id: IdFinestra) {
+    suona("CLIC")
+    if (finestre.stato[id].fase === "APERTA") finestre.riduci(id)
+    else finestre.ripristina(id)
   }
 
-  /** Su mobile si vede solo il pannello della scheda attiva. */
-  const blocco = (di: IdScheda) => `${stili.blocco} ${di === scheda ? "" : stili.nascostoMobile}`;
+  /**
+   * "Perché?" nella barra di avvio: riapre il pop-up di avviso (v3.9) e ci
+   * porta il fuoco. Il pop-up è già nel DOM (sempre visibile se c'è un
+   * problema), quindi lo si può cercare subito, nel gestore.
+   */
+  function mostraProblemi() {
+    suona("CLIC")
+    setAvvisoEspanso(true)
+    const el = document.getElementById("avviso-preparazione")
+    el?.scrollIntoView({ behavior: "smooth", block: "center" })
+    el?.focus({ preventScroll: true })
+  }
+
+  /**
+   * «Carica a caso» (v3.9): una nave completa e valida. Il caso nasce QUI,
+   * nel gestore del clic (mai durante il disegno): ogni clic, una nave diversa.
+   */
+  function caricaCaso() {
+    const proposti = candidatiProposti(seed, LISTA_CANDIDATI, p.candidatiProposti).map((m) => m.id)
+    const rng = createRng(crypto.getRandomValues(new Uint32Array(1))[0] ?? Date.now())
+    dispatch({ tipo: "CARICA", preparazione: preparazioneCasuale(cataloghi, proposti, rng) })
+  }
+
+  /** Le proprietà comuni a ogni finestra a comparsa. */
+  const gestori = (id: IdFinestra) => ({
+    stato: finestre.stato[id],
+    onPrimoPiano: () => finestre.primoPiano(id),
+    onRiduci: () => {
+      suona("CLIC")
+      finestre.riduci(id)
+    },
+    onFineRiduzione: () => finestre.fineRiduzione(id),
+    onSposta: (x: number, y: number) => finestre.sposta(id, x, y),
+  })
 
   return (
     <Monitor
-      frontale={<PannelloFrontale onApriTerminale={null} allerta={false} standby={tubo.fase === "SPENTO"} />}
+      frontale={
+        <PannelloFrontale
+          onApriTerminale={null}
+          allerta={false}
+          standby={tubo.fase === "SPENTO"}
+        />
+      }
       fase={tubo.fase}
       onFineTransizione={tubo.fineTransizione}
       didascalia="VALE-OS 4.1 · TERMINALE V.A.L.E. MODELLO 7"
@@ -101,44 +170,86 @@ export function SchermataPreparazione({ seed, onAvvia, daSpento = false }: Props
           <span className={stili.logo}>ORBITAL</span>
           <span className={stili.sistema}>VALE-OS 4.1 ▸ PREPARAZIONE</span>
           <span className={stili.fase}>PRE-LANCIO</span>
-          <span className={stili.destinazione}>DESTINAZIONE E-17 · CRATERE SETTENTRIONALE</span>
+          <span className={stili.destinazione}>
+            DESTINAZIONE {missione.nome.toUpperCase()} ·{" "}
+            {missione.bersaglio.puntoInteresse}
+          </span>
           <span className={stili.seed}>PARTITA {seed}</span>
         </header>
 
-        <nav className={stili.schede} aria-label="Sezioni">
-          {SCHEDE.map((s) => (
-            <button
-              key={s.id}
-              type="button"
-              className={stili.scheda}
-              aria-pressed={s.id === scheda}
-              onClick={() => cambiaScheda(s.id)}
+        <main className={stili.area}>
+          {/* --- La nave, grande, con il dock delle finestre sotto --- */}
+          <div className={stili.palco}>
+            <Finestra
+              titolo="ORB-1 · Configurazione"
+              variante="cornice"
+              destra={`${prep.crew.length} A BORDO`}
+              className={stili.nave}
             >
-              {s.nome}
-            </button>
-          ))}
-        </nav>
-
-        <main className={stili.griglia}>
-          <div className={blocco("crew")}>
-            <SelezioneCrew prep={prep} dispatch={dispatch} />
-          </div>
-          <div className={`${blocco("loadout")} ${stili.colonnaNave}`}>
-            {/* La nave che si riempie mentre scegli, sopra il catalogo. */}
-            <Finestra titolo="ORB-1 · Configurazione" variante="cornice" destra={`${prep.crew.length} A BORDO`}>
-              <NaveSezione prep={prep} riepilogo={riepilogo} />
+              <NaveSezione prep={prep} riepilogo={riepilogo} pezzi={pezzi} />
             </Finestra>
-            <SelezioneLoadout prep={prep} riepilogo={riepilogo} dispatch={dispatch} />
+            {/* v3.9: il pop-up WARNING / DANGER, sempre visibile finché qualcosa non va. */}
+            <AvvisoPreparazione
+              problemi={problemi}
+              fattibilita={fattibilita}
+              espanso={avvisoEspanso}
+              onEspandi={setAvvisoEspanso}
+            />
+            <DockFinestre
+              voci={[
+                {
+                  id: "candidati",
+                  nome: "Candidati",
+                  icona: <IconaCrew />,
+                  contatore: `CREW ${prep.crew.length}/${p.crewRichiesta}`,
+                  fase: finestre.stato.candidati.fase,
+                  onClick: () => alternaFinestra("candidati"),
+                },
+                {
+                  id: "loadout",
+                  nome: "Loadout",
+                  icona: <IconaLoadout />,
+                  contatore: `MODULI ${prep.moduli.length}/${p.slotModuli} · EQUIP. ${prep.equipaggiamento.length}/${p.slotEquipaggiamento}`,
+                  fase: finestre.stato.loadout.fase,
+                  onClick: () => alternaFinestra("loadout"),
+                },
+              ]}
+            />
           </div>
-          <div className={blocco("riepilogo")}>
+
+          {/* --- Il riepilogo, sempre visibile --- */}
+          <div className={stili.lato}>
             <PannelloRiepilogo
               prep={prep}
               riepilogo={riepilogo}
-              problemi={problemi}
               fattibilita={fattibilita}
               dispatch={dispatch}
+              cataloghi={cataloghi}
+              onCaricaCaso={caricaCaso}
             />
           </div>
+
+          {/* --- Le due finestre a comparsa (sopra a tutto, dentro l'area) --- */}
+          <FinestraMobile
+            titolo="Candidati"
+            destra={`CREW ${prep.crew.length}/${p.crewRichiesta}`}
+            className={stili.finestraCandidati}
+            {...gestori("candidati")}
+          >
+            <SelezioneCrew prep={prep} dispatch={dispatch} seed={seed} />
+          </FinestraMobile>
+          <FinestraMobile
+            titolo="Loadout"
+            destra={`${riepilogo.carico.totale} / ${p.caricoMassimo} KG`}
+            className={stili.finestraLoadout}
+            {...gestori("loadout")}
+          >
+            <SelezioneLoadout
+              prep={prep}
+              riepilogo={riepilogo}
+              dispatch={dispatch}
+            />
+          </FinestraMobile>
         </main>
 
         <BarraAvvio
@@ -146,9 +257,9 @@ export function SchermataPreparazione({ seed, onAvvia, daSpento = false }: Props
           riepilogo={riepilogo}
           fattibilita={fattibilita}
           onAvvia={avvia}
-          onMostraProblemi={() => cambiaScheda("riepilogo")}
+          onMostraProblemi={mostraProblemi}
         />
       </div>
     </Monitor>
-  );
+  )
 }

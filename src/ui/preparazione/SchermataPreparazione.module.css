@@ -1,7 +1,12 @@
 /*
- * SchermataPreparazione.module.css — tre colonne (desktop) o schede (mobile).
- * Stesso schema di SchermataMissione: si parte dal mobile e si aggiunge il
- * desktop con min-width.
+ * SchermataPreparazione.module.css — nave grande + riepilogo, finestre sopra.
+ * Si parte dal mobile (una colonna) e si aggiunge il desktop con min-width.
+ *
+ * v3.7.4: niente più schede in alto. Le finestre Candidati e Loadout sono
+ * posizionate dentro .area (position: relative): le classi
+ * .finestraCandidati e .finestraLoadout danno la posizione e la misura di
+ * PARTENZA; quando il Capitano le trascina, vince la posizione scritta
+ * dal componente (style inline).
  */
 
 /* ===== MOBILE / TABLET (base) ============================================ */
@@ -51,54 +56,27 @@
   color: var(--c-fosforo-tenue);
 }
 
-.schede {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--sp-1);
-}
-.scheda {
-  min-height: 40px;
-  border: 1.5px solid var(--c-fosforo);
-  background: transparent;
-  color: var(--c-fosforo);
-  font-family: var(--font-terminale);
-  font-size: 20px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  cursor: pointer;
-}
-.scheda[aria-pressed="true"] {
-  background: var(--c-fosforo);
-  color: var(--c-vuoto);
-}
-
-.griglia {
+/* L'area di gioco: il palco con la nave, il riepilogo e le finestre. */
+.area {
   flex: 1;
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--sp-3);
 }
 
-.blocco {
+/* La nave e, sotto, il dock con le icone delle finestre. */
+.palco {
   display: flex;
   flex-direction: column;
-  min-height: 0;
-}
-.blocco > section {
-  flex: 1;
-}
-
-/* Colonna centrale: lo schema della nave ha la sua altezza, il catalogo
-   prende il resto e scorre. */
-.colonnaNave {
   gap: var(--sp-3);
 }
-.colonnaNave > section:first-child {
-  flex: none;
+.lato {
+  display: flex;
+  flex-direction: column;
 }
-
-.nascostoMobile {
-  display: none;
+.lato > section {
+  flex: 1;
 }
 
 /* ===== TABLET: intestazione completa ===================================== */
@@ -122,23 +100,48 @@
     padding: var(--sp-4) var(--sp-5);
   }
 
-  .schede {
-    display: none;
-  }
-
-  .griglia {
+  /* Nave (tutto lo spazio) │ riepilogo (colonna fissa che scorre).
+     isolation: le finestre si ordinano tra loro senza salire sopra le
+     linee del vetro. (Solo su desktop: su telefono le finestre a tutto
+     schermo devono stare SOPRA la barra di avvio, che è fuori dall'area.) */
+  .area {
+    isolation: isolate;
     min-height: 0;
     display: grid;
-    grid-template-columns: minmax(320px, 1fr) minmax(440px, 1.45fr) minmax(320px, 0.95fr);
+    grid-template-columns: minmax(0, 1fr) minmax(340px, 400px);
     gap: var(--sp-4);
   }
-
-  .colonnaNave {
-    gap: var(--sp-4);
+  .palco {
+    min-height: 0;
+    gap: var(--sp-3);
+    position: relative; /* v3.9: il pop-up di avviso si appoggia sulla mappa */
   }
-
-  /* Ogni colonna occupa tutta l'altezza e scorre al suo interno. */
-  .nascostoMobile {
+  /* La finestra della nave prende tutta l'altezza e centra il disegno. */
+  .nave {
+    flex: 1;
+    min-height: 0;
+  }
+  .nave > div {
     display: flex;
+    align-items: center;
+  }
+  .lato {
+    min-height: 0;
+  }
+
+  /* Posizioni e misure di PARTENZA delle finestre a comparsa. */
+  .finestraCandidati {
+    top: 12px;
+    left: 12px;
+    width: 400px;
+    height: min(640px, calc(100% - 90px));
+  }
+  .finestraLoadout {
+    top: 44px;
+    /* a destra della nave, lasciando libero il riepilogo */
+    right: calc(400px + var(--sp-4) + 12px);
+    width: min(580px, calc(100% - 400px - 470px));
+    min-width: 420px;
+    height: min(600px, calc(100% - 120px));
   }
 }

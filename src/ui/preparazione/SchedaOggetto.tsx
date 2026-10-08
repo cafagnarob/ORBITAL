@@ -18,6 +18,7 @@
  */
 
 import { etichetta } from "../format";
+import { ConIcone } from "../components/icone/ConIcone";
 import stili from "./SchedaOggetto.module.css";
 
 interface Props {
@@ -49,7 +50,11 @@ export function SchedaOggetto(props: Props) {
 
       <span className={stili.descrizione}>{descrizione}</span>
 
-      {effetti.length > 0 && <span className={stili.effetti}>{effetti.join(" · ")}</span>}
+      {effetti.length > 0 && (
+        <span className={stili.effetti}>
+          <ConIcone testo={effetti.join(" · ")} />
+        </span>
+      )}
       {sblocca.length > 0 && <span className={stili.sblocca}>SBLOCCA ▸ {sblocca.join(", ")}</span>}
       {inArrivo !== null && <span className={stili.inArrivo}>IN ARRIVO ▸ {inArrivo}</span>}
 

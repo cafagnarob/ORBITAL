@@ -1,0 +1,142 @@
+/*
+ * AvvisoPreparazione.module.css — Il pop-up WARNING / DANGER (v3.9).
+ *
+ * Telefono: un riquadro subito sotto la mappa della nave.
+ * Desktop (≥ 1100px): un pop-up appoggiato sulla mappa, in alto a destra,
+ * con la barra a strisce di pericolo. Il colore non è mai l'unico segnale:
+ * ci sono sempre le parole DANGER / WARNING e i simboli ✖ / ⚠.
+ */
+
+.avviso {
+  --colore: var(--c-attenzione);
+  border: 1.5px solid var(--colore);
+  background: var(--c-pannello);
+  color: var(--colore);
+  box-shadow: 0 0 18px rgba(0, 0, 0, 0.6), 0 0 14px color-mix(in srgb, var(--colore) 25%, transparent);
+  animation: comparsa 0.35s steps(4, end);
+}
+.avviso:focus-visible {
+  outline: 2px solid var(--colore);
+  outline-offset: 3px;
+}
+.danger {
+  --colore: var(--c-critico);
+}
+.warning {
+  --colore: var(--c-attenzione);
+}
+
+/* La barra a strisce oblique, come i nastri di pericolo. */
+.barra {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 4px var(--sp-2) 4px var(--sp-3);
+  background: repeating-linear-gradient(
+    -45deg,
+    color-mix(in srgb, var(--colore) 30%, transparent) 0 8px,
+    transparent 8px 16px
+  );
+  border-bottom: 1px solid var(--colore);
+  font-family: var(--font-terminale);
+  letter-spacing: 0.14em;
+}
+.barra strong {
+  font-size: 22px;
+  font-weight: 400;
+}
+.simbolo {
+  font-size: 20px;
+}
+.danger .simbolo {
+  animation: lampeggio 1s steps(1, end) infinite;
+}
+.sottotitolo {
+  flex: 1;
+  font-size: 16px;
+  opacity: 0.9;
+}
+.riduci {
+  min-width: 32px;
+  min-height: 32px;
+  border: 1px solid var(--colore);
+  background: var(--c-vuoto);
+  color: var(--colore);
+  font-family: var(--font-terminale);
+  font-size: 20px;
+  cursor: pointer;
+}
+.riduci:focus-visible {
+  outline: 2px solid var(--colore);
+}
+
+.corpo {
+  padding: var(--sp-2) var(--sp-3) var(--sp-3);
+}
+.lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: var(--fs-piccolo);
+  line-height: 1.4;
+}
+.bloccante {
+  color: var(--c-critico);
+}
+.rischio {
+  color: var(--c-attenzione);
+}
+.legenda {
+  margin: var(--sp-2) 0 0;
+  font-size: var(--fs-piccolo);
+  color: var(--c-fosforo-tenue);
+}
+.legMancante {
+  color: var(--c-critico);
+}
+.legConsigliato {
+  color: var(--c-attenzione);
+}
+
+/* Desktop: pop-up appoggiato sulla mappa della nave. */
+@media (min-width: 1100px) {
+  .avviso {
+    /* In basso a destra della mappa, SOPRA le finestre Candidati e Loadout:
+       è un avviso, deve restare in vista. */
+    position: absolute;
+    bottom: 64px;
+    right: 14px;
+    z-index: 60;
+    width: min(360px, 46%);
+    max-height: calc(100% - 60px);
+    overflow-y: auto;
+  }
+  .ridotto {
+    width: auto;
+  }
+}
+
+@keyframes comparsa {
+  from {
+    opacity: 0;
+    transform: scaleY(0.2);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes lampeggio {
+  50% {
+    opacity: 0.2;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .avviso,
+  .danger .simbolo {
+    animation: none;
+  }
+}

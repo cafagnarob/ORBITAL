@@ -26,19 +26,43 @@ import type {
   CataloghiPreparazione,
   DefinizioneTask,
   Fattibilita,
+  IdMissione,
   Preparazione,
   ProblemaPreparazione,
 } from "../types";
 import { riepilogoPreparazione } from "./riepilogo";
+
+/**
+ * Il task esiste in questa partita? (v3.8) Un task con una condizione
+ * MISSIONE nello sblocco appartiene solo a quelle supermissioni: in tutte le
+ * altre non c'è, e non va contato tra gli "impossibili".
+ */
+function esisteNellaMissione(t: DefinizioneTask, missione: IdMissione | undefined): boolean {
+  const vincolo = t.sblocco.find((c) => c.tipo === "MISSIONE");
+  if (!vincolo || vincolo.tipo !== "MISSIONE") return true;
+  return missione !== undefined && vincolo.missioni.includes(missione);
+}
 
 /** I task che con questo loadout NON si potranno mai fare (manca un oggetto). */
 export function taskNonDisponibili(prep: Preparazione, cat: CataloghiPreparazione): DefinizioneTask[] {
   return Object.values(cat.task).filter(
     (t) =>
       !t.bonus &&
+      esisteNellaMissione(t, cat.missione) &&
       (t.equipaggiamentoRichiesto.some((e) => !prep.equipaggiamento.includes(e)) ||
         t.moduliRichiesti.some((m) => !prep.moduli.includes(m))),
   );
+}
+
+/**
+ * Per quanti giorni dovrebbero bastare cibo e acqua. Con il piano della
+ * partita: una QUOTA della sua durata (v3.9: il resto lo producono le task
+ * di sopravvivenza); senza piano: il valore di bilancio.
+ */
+export function giorniScorteConsigliati(cat: CataloghiPreparazione): number {
+  const p = BALANCE.preparazione;
+  if (cat.giorniMissione === undefined) return p.giorniScorteConsigliati;
+  return Math.max(1, Math.ceil(cat.giorniMissione * p.quotaScorteConsigliata));
 }
 
 export function problemiPreparazione(prep: Preparazione, cat: CataloghiPreparazione): ProblemaPreparazione[] {
@@ -66,10 +90,12 @@ export function problemiPreparazione(prep: Preparazione, cat: CataloghiPreparazi
   if (r.risorse.acqua === 0) blocca("Nessuna cassa d'acqua a bordo.");
 
   // --- Avvisi ---------------------------------------------------------------
-  if (prep.crew.length > 0 && r.risorse.cibo > 0 && r.giorniCibo < p.giorniScorteConsigliati) {
+  // Le scorte devono coprire la missione (v3.8: la durata viene dal piano).
+  const giorniConsigliati = giorniScorteConsigliati(cat);
+  if (prep.crew.length > 0 && r.risorse.cibo > 0 && r.giorniCibo < giorniConsigliati) {
     avvisa(`Cibo per soli ${r.giorniCibo} giorni.`);
   }
-  if (prep.crew.length > 0 && r.risorse.acqua > 0 && r.giorniAcqua < p.giorniScorteConsigliati) {
+  if (prep.crew.length > 0 && r.risorse.acqua > 0 && r.giorniAcqua < giorniConsigliati) {
     avvisa(`Acqua per soli ${r.giorniAcqua} giorni.`);
   }
   if (r.carburanteOperativo <= 0) {

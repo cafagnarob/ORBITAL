@@ -1,4 +1,4 @@
-/* StivaScorte.module.css — righe delle casse con contatore − n +. */
+/* StivaScorte.module.css — schede delle casse (icona, fascicolo all'hover) con contatore − n +. */
 
 .spazio {
   display: grid;
@@ -17,36 +17,170 @@
   color: var(--c-critico);
 }
 
+/* --- Le casse come schede (v3.7.5), stile dei fascicoli dei candidati ------ */
 .lista {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.riga {
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
   gap: var(--sp-3);
-  padding: var(--sp-2) 0;
-  border-bottom: 1px solid var(--c-griglia);
-}
-.riga:last-child {
-  border-bottom: none;
 }
 
-.info {
-  flex: 1;
-  min-width: 0;
+.cassa {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  font-size: 13px;
+  gap: var(--sp-2);
+  padding: var(--sp-2);
+  border: 1.5px solid var(--c-griglia);
 }
+.cassa:hover,
+.cassa:has(:focus-visible) {
+  border-color: var(--c-fosforo-tenue);
+}
+/* Cassa a bordo: bordo pieno e bagliore, come un candidato scelto. */
+.caricata {
+  border-color: var(--c-fosforo);
+  background: rgba(125, 245, 165, 0.06);
+  box-shadow: var(--glow-bordo);
+}
+
+/* Il riquadro quadrato con l'icona grande al centro, su una griglia. */
+.riquadro {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 1px solid var(--c-griglia);
+  background:
+    linear-gradient(var(--c-griglia) 1px, transparent 1px) 0 0 / 20% 20%,
+    linear-gradient(90deg, var(--c-griglia) 1px, transparent 1px) 0 0 / 20% 20%,
+    var(--c-pannello);
+  color: var(--c-fosforo-tenue);
+}
+.caricata .riquadro {
+  color: var(--c-fosforo);
+  border-color: var(--c-fosforo-tenue);
+}
+.iconaGrande {
+  width: 52%;
+  height: 52%;
+  stroke-width: 1.4;
+  filter: drop-shadow(0 0 4px rgba(125, 245, 165, 0.45));
+}
+.righe {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0.28) 0 1px, transparent 1px 3px);
+}
+/* "+12 🍴": quanto porta ogni cassa, in alto a destra. */
+.resa {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-family: var(--font-terminale);
+  font-size: 16px;
+  letter-spacing: 0.04em;
+  color: var(--c-fosforo);
+}
+/* "×3": quante casse sono a bordo, in basso a sinistra. */
+.bollino {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  padding: 0 4px;
+  background: var(--c-fosforo);
+  color: var(--c-vuoto);
+  font-family: var(--font-terminale);
+  font-size: 15px;
+}
+
+/* --- Il fascicolo: si accende sopra il riquadro --------------------------- */
+.fascicolo {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px;
+  border: 1px solid var(--c-fosforo-tenue);
+  background:
+    repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0.3) 0 1px, transparent 1px 3px),
+    var(--c-vuoto);
+  font-size: var(--fs-piccolo);
+  line-height: 1.25;
+  opacity: 0;
+  transform: scaleY(0.01);
+  pointer-events: none;
+}
+/* :has(:focus-visible) = "contiene un elemento a fuoco DA TASTIERA": col
+   Tab sul + il fascicolo si accende, ma dopo un clic del mouse no (se no
+   coprirebbe l'icona della cassa che stai riempiendo). */
+.cassa:hover .fascicolo,
+.cassa:has(:focus-visible) .fascicolo {
+  opacity: 1;
+  transform: none;
+  animation: accensione 0.5s steps(2, end) both;
+}
+.cassa:hover .iconaGrande,
+.cassa:has(:focus-visible) .iconaGrande {
+  animation: disturbo 0.35s steps(1, end);
+}
+@keyframes accensione {
+  0% {
+    opacity: 1;
+    transform: scale(0.25, 0.02);
+    filter: brightness(4);
+  }
+  10% {
+    transform: scale(1, 0.02);
+    filter: brightness(4);
+  }
+  22% {
+    transform: scale(1, 0.35);
+    filter: brightness(2.5);
+  }
+  40% {
+    transform: scale(1, 1.06);
+    filter: brightness(1.6);
+  }
+  52% {
+    transform: scale(1, 0.97) translateX(3px);
+    opacity: 0.55;
+  }
+  62% {
+    transform: translateX(-2px);
+    opacity: 1;
+  }
+  70% {
+    transform: translateX(1px);
+    opacity: 0.8;
+  }
+  100% {
+    transform: none;
+    opacity: 1;
+    filter: none;
+  }
+}
+@keyframes disturbo {
+  0% {
+    transform: translateX(-3px);
+    filter: brightness(1.8);
+  }
+  40% {
+    transform: translateX(2px) skewX(-6deg);
+  }
+  100% {
+    transform: none;
+  }
+}
+
 .nome {
   font-family: var(--font-terminale);
-  font-size: var(--fs-terminale);
+  font-size: 17px;
   line-height: 1.05;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -56,15 +190,10 @@
   color: var(--c-testo);
 }
 .dati {
-  font-size: var(--fs-piccolo);
+  margin-top: auto;
   color: var(--c-fosforo-tenue);
 }
-.resa {
-  color: var(--c-fosforo);
-  text-transform: uppercase;
-}
 .inArrivo {
-  font-size: var(--fs-piccolo);
   color: var(--c-fosforo-tenue);
 }
 
@@ -73,6 +202,7 @@
   flex: none;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: var(--sp-1);
 }
 .contatore button {
@@ -97,7 +227,7 @@
   cursor: not-allowed;
 }
 .contatore output {
-  min-width: 44px;
+  min-width: 0;
   text-align: center;
   font-family: var(--font-terminale);
   font-size: var(--fs-terminale-grande);
@@ -107,4 +237,44 @@
 .contatore small {
   font-size: 14px;
   color: var(--c-fosforo-tenue);
+}
+
+/* --- Senza hover (telefoni): il fascicolo sta sotto l'icona, sempre visibile --- */
+@media (hover: none) {
+  .riquadro {
+    aspect-ratio: auto;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 8px;
+  }
+  .iconaGrande {
+    width: 64px;
+    height: 64px;
+  }
+  .fascicolo {
+    position: static;
+    opacity: 1;
+    transform: none;
+    width: 100%;
+    border: none;
+    border-top: 1px dashed var(--c-griglia);
+    margin-top: 8px;
+    background: transparent;
+  }
+  .cassa:hover .fascicolo,
+  .cassa:has(:focus-visible) .fascicolo,
+  .cassa:hover .iconaGrande {
+    animation: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cassa:hover .fascicolo,
+  .cassa:has(:focus-visible) .fascicolo,
+  .cassa:hover .iconaGrande,
+  .cassa:has(:focus-visible) .iconaGrande {
+    animation: none;
+  }
 }

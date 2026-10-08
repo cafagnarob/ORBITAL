@@ -13,31 +13,39 @@
  * Il RIEPILOGO (peso, energia, fattibilità…) NON è stato: si ricalcola a
  * ogni render da `prep`. Sono poche somme, e così non può mai essere
  * "indietro" rispetto alle scelte.
+ *
+ * v3.8 · SUPERMISSIONI: i cataloghi dipendono dalla missione estratta dal
+ * SEED (attrezzatura indispensabile, task che esistono, giorni di scorte).
+ * Si ricalcolano dal seed a ogni render: è una funzione pura e veloce, e
+ * il seed non cambia mentre la schermata è aperta (App le dà una key).
  * ============================================================================
  */
 
 import { useRef, useState } from "react";
-import { CATALOGHI_PREPARAZIONE } from "../content/contesto";
+import { cataloghiPreparazionePer } from "../content/contesto";
+import { pianoPartita } from "../content/missioni";
 import { PREPARAZIONE_VUOTA } from "../content/missioneIniziale";
 import { applicaPreparazione, fattibilita, problemiPreparazione, riepilogoPreparazione } from "../engine/preparazione";
 import type { AzionePreparazione, Preparazione } from "../engine/types";
 import { suona, suonoPreparazione } from "./audio";
 
-export function usePreparazione() {
+export function usePreparazione(seed: string) {
+  const piano = pianoPartita(seed);
+  const cataloghi = cataloghiPreparazionePer(piano);
   const [prep, setPrep] = useState<Preparazione>(() => structuredClone(PREPARAZIONE_VUOTA));
   const ultimo = useRef(prep);
 
   function dispatch(azione: AzionePreparazione): void {
     const prima = ultimo.current;
-    const dopo = applicaPreparazione(prima, azione, CATALOGHI_PREPARAZIONE);
+    const dopo = applicaPreparazione(prima, azione, cataloghi);
     ultimo.current = dopo;
     setPrep(dopo);
     suona(suonoPreparazione(prima, dopo, azione));
   }
 
-  const riepilogo = riepilogoPreparazione(prep, CATALOGHI_PREPARAZIONE);
-  const problemi = problemiPreparazione(prep, CATALOGHI_PREPARAZIONE);
-  return { prep, dispatch, riepilogo, problemi, fattibilita: fattibilita(problemi) };
+  const riepilogo = riepilogoPreparazione(prep, cataloghi);
+  const problemi = problemiPreparazione(prep, cataloghi);
+  return { prep, dispatch, riepilogo, problemi, fattibilita: fattibilita(problemi), piano, cataloghi };
 }
 
 export type DispatchPreparazione = (azione: AzionePreparazione) => void;

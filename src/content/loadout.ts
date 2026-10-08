@@ -358,23 +358,23 @@ export const LISTA_SCORTE: readonly DefinizioneScorta[] = [
   {
     id: "CASSA_CIBO",
     nome: "Cassa di Cibo",
-    descrizione: "Razioni sigillate. Ogni membro ne consuma 2 al giorno.",
+    descrizione: "Razioni sigillate. Ogni membro ne consuma 3 al giorno: per arrivare in fondo serve anche la coltura idroponica.",
     peso: 12,
     spazio: 8,
     massimo: 20,
     risorsa: "cibo",
-    quantita: 12,
+    quantita: 10, // v3.9: era 12
     inArrivo: null,
   },
   {
     id: "CASSA_ACQUA",
     nome: "Cassa d'Acqua",
-    descrizione: "Acqua potabile. Ogni membro ne consuma 2 al giorno (meno con il Riciclo).",
+    descrizione: "Acqua potabile. Ogni membro ne consuma 3 al giorno (meno con il Riciclo): il recupero dell'acqua va fatto spesso.",
     peso: 15,
     spazio: 10,
     massimo: 16,
     risorsa: "acqua",
-    quantita: 15,
+    quantita: 12, // v3.9: era 15
     inArrivo: null,
   },
   {

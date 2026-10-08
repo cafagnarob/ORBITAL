@@ -8,7 +8,7 @@
  * monitor), così il pulsante principale è sempre sotto il pollice.
  *
  * Se la missione è IMPOSSIBILE il pulsante è disattivato e accanto compare
- * "Perché?", che porta alla scheda Riepilogo dove sono elencati i problemi:
+ * "Perché?", che riapre il pop-up DANGER sulla mappa della nave (v3.9):
  * un pulsante spento senza spiegazione è frustrante.
  * ============================================================================
  */

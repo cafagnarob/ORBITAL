@@ -16,7 +16,11 @@
  * - la RASTRELLIERA con 6 posti per l'equipaggiamento;
  * - la STIVA a celle da 10 unità, colorate per tipo di cassa;
  * - il SERBATOIO del carburante, con la linea della riserva di rientro;
- * - la CREW, piccole figure al loro posto di lavoro.
+ * - la CREW, piccole figure al loro posto di lavoro;
+ * - (v3.9) i PEZZI DA AGGIUNGERE: sagome tratteggiate negli alloggi, nella
+ *   rastrelliera e nella stiva, ROSSE se mancano (senza, l'obiettivo è
+ *   impossibile o non si parte) e AMBRA se consigliate. Le calcola
+ *   engine/preparazione/suggerimenti.ts; il pop-up di avviso le spiega.
  *
  * ANIMAZIONI SENZA useEffect
  * Ogni elemento che compare ha una `key` legata a ciò che rappresenta
@@ -33,8 +37,10 @@
 import { BALANCE } from "../../content/balance";
 import { CATALOGO_CANDIDATI } from "../../content/candidati";
 import { CATALOGO_EQUIPAGGIAMENTO, CATALOGO_MODULI, LISTA_SCORTE } from "../../content/loadout";
-import type { Riepilogo } from "../../engine/preparazione";
+import type { PezziSuggeriti, Riepilogo } from "../../engine/preparazione";
 import type { Compartimento, Luogo, Preparazione } from "../../engine/types";
+import { DISEGNI, type TipoIcona } from "../components/icone/disegni";
+import { ICONA_SCORTA } from "../components/icone/mappe";
 import stili from "./NaveSezione.module.css";
 
 // ----------------------------------------------------------------------------
@@ -88,21 +94,28 @@ type TipoCella = "cibo" | "acqua" | "ossigeno" | "carburante" | "altro" | "vuota
  * cassa occupa il suo punto centrale: così una cassa da 8 unità e una da
  * 10 si "dividono" le celle in proporzione, senza buchi né doppioni.
  */
-function celleStiva(prep: Preparazione, massimo: number): TipoCella[] {
-  const tratti: { fine: number; tipo: TipoCella }[] = [];
+/** Una cella della stiva: il colore (tipo) e, se è piena, l'icona della cassa (v3.7.5). */
+interface Cella {
+  tipo: TipoCella;
+  icona: TipoIcona | null;
+}
+
+function celleStiva(prep: Preparazione, massimo: number): Cella[] {
+  const tratti: { fine: number; tipo: TipoCella; icona: TipoIcona | null }[] = [];
   let fine = 0;
   for (const s of LISTA_SCORTE) {
     const n = prep.scorte[s.id] ?? 0;
     if (n === 0) continue;
     fine += n * s.spazio;
-    tratti.push({ fine, tipo: s.risorsa ?? "altro" });
+    tratti.push({ fine, tipo: s.risorsa ?? "altro", icona: ICONA_SCORTA[s.id] ?? null });
   }
   const celle = Math.ceil(Math.max(massimo, fine) / 10);
-  return Array.from({ length: celle }, (_, i) => {
+  return Array.from({ length: celle }, (_, i): Cella => {
     const centro = i * 10 + 5;
-    if (centro > fine) return "vuota";
-    if (centro > massimo) return "eccesso";
-    return tratti.find((t) => centro <= t.fine)?.tipo ?? "vuota";
+    if (centro > fine) return { tipo: "vuota", icona: null };
+    const tratto = tratti.find((t) => centro <= t.fine);
+    if (centro > massimo) return { tipo: "eccesso", icona: tratto?.icona ?? null };
+    return tratto ? { tipo: tratto.tipo, icona: tratto.icona } : { tipo: "vuota", icona: null };
   });
 }
 
@@ -113,12 +126,30 @@ function celleStiva(prep: Preparazione, massimo: number): TipoCella[] {
 interface Props {
   prep: Preparazione;
   riepilogo: Riepilogo;
+  /** I pezzi da aggiungere, disegnati come sagome (v3.9). Assente = nessuna. */
+  pezzi?: PezziSuggeriti;
 }
 
-export function NaveSezione({ prep, riepilogo }: Props) {
+/** Le celle "fantasma" della stiva: le casse suggerite, in fila (una ogni 10 unità). */
+function celleSuggerite(pezzi: PezziSuggeriti | undefined) {
+  return (pezzi?.scorte ?? []).flatMap((s) => {
+    const def = LISTA_SCORTE.find((x) => x.id === s.id);
+    if (!def) return [];
+    const n = Math.ceil((s.quante * def.spazio) / 10);
+    return Array.from({ length: n }, () => ({ livello: s.livello, icona: ICONA_SCORTA[s.id] ?? null, nome: def.nome }));
+  });
+}
+
+export function NaveSezione({ prep, riepilogo, pezzi }: Props) {
   const p = BALANCE.preparazione;
   const potenziati = new Set(prep.moduli.map((id) => CATALOGO_MODULI[id]?.compartimento).filter(Boolean));
   const celle = celleStiva(prep, riepilogo.spazio.massimo);
+  // Le casse suggerite occupano, in ordine, le prime celle vuote della stiva.
+  const fantasmi = celleSuggerite(pezzi);
+  const indiceVuota = new Map<number, number>();
+  celle.forEach((c, i) => {
+    if (c.tipo === "vuota") indiceVuota.set(i, indiceVuota.size);
+  });
 
   // Serbatoio: pieno = serbatoio principale + tutte le taniche possibili.
   const tanica = LISTA_SCORTE.find((s) => s.risorsa === "carburante");
@@ -183,12 +214,30 @@ export function NaveSezione({ prep, riepilogo }: Props) {
                 <title>{def.nome}</title>
               </g>
             ) : (
-              <g>
-                <rect className={stili.podVuoto} x={a.x} y={a.y} width={POD.l} height={POD.h} rx={8} />
-                <text className={stili.podNome} x={a.x + POD.l / 2} y={a.y + 21} textAnchor="middle">
-                  SLOT {i + 1}
-                </text>
-              </g>
+              (() => {
+                // Un modulo suggerito per questo alloggio vuoto? (v3.9)
+                const sug = pezzi?.moduli[i - prep.moduli.length];
+                const defSug = sug ? CATALOGO_MODULI[sug.id] : undefined;
+                if (sug && defSug) {
+                  return (
+                    <g key={`sug-${sug.id}`} className={`${stili.fantasma} ${stili[sug.livello.toLowerCase()]}`}>
+                      <rect x={a.x} y={a.y} width={POD.l} height={POD.h} rx={8} />
+                      <text className={stili.fantasmaSigla} x={a.x + POD.l / 2} y={a.y + 22} textAnchor="middle">
+                        {defSug.sigla} ?
+                      </text>
+                      <title>{`${sug.livello === "MANCANTE" ? "Da aggiungere" : "Consigliato"}: ${defSug.nome}`}</title>
+                    </g>
+                  );
+                }
+                return (
+                  <g>
+                    <rect className={stili.podVuoto} x={a.x} y={a.y} width={POD.l} height={POD.h} rx={8} />
+                    <text className={stili.podNome} x={a.x + POD.l / 2} y={a.y + 21} textAnchor="middle">
+                      SLOT {i + 1}
+                    </text>
+                  </g>
+                );
+              })()
             )}
           </g>
         );
@@ -264,31 +313,74 @@ export function NaveSezione({ prep, riepilogo }: Props) {
             </text>
           </g>
         ) : (
-          <rect
-            key={`vuoto-${i}`}
-            className={stili.equipVuoto}
-            x={x}
-            y={RASTRELLIERA.y}
-            width={RASTRELLIERA.cella}
-            height={RASTRELLIERA.alt}
-          />
+          (() => {
+            // Un equipaggiamento suggerito per questo posto vuoto? (v3.9)
+            const sug = pezzi?.equipaggiamento[i - prep.equipaggiamento.length];
+            const defSug = sug ? CATALOGO_EQUIPAGGIAMENTO[sug.id] : undefined;
+            if (sug && defSug) {
+              return (
+                <g key={`sug-${sug.id}`} className={`${stili.fantasma} ${stili[sug.livello.toLowerCase()]}`}>
+                  <rect x={x} y={RASTRELLIERA.y} width={RASTRELLIERA.cella} height={RASTRELLIERA.alt} />
+                  <text className={stili.fantasmaPiccolo} x={x + RASTRELLIERA.cella / 2} y={RASTRELLIERA.y + 11} textAnchor="middle">
+                    {defSug.sigla}
+                  </text>
+                  <title>{`${sug.livello === "MANCANTE" ? "Da aggiungere" : "Consigliato"}: ${defSug.nome}`}</title>
+                </g>
+              );
+            }
+            return (
+              <rect
+                key={`vuoto-${i}`}
+                className={stili.equipVuoto}
+                x={x}
+                y={RASTRELLIERA.y}
+                width={RASTRELLIERA.cella}
+                height={RASTRELLIERA.alt}
+              />
+            );
+          })()
         );
       })}
 
       {/* --- Celle della stiva ---------------------------------------------- */}
-      {celle.map((tipo, i) => {
+      {celle.map(({ tipo, icona }, i) => {
         const col = i % STIVA.colonne;
         const riga = Math.floor(i / STIVA.colonne);
+        const x = STIVA.x + col * STIVA.passo;
+        const y = STIVA.y + riga * STIVA.passoY;
+        // L'icona della cassa (la stessa di tutto il gioco) dentro la cella:
+        // un <svg> dentro l'<svg>, con il suo quadrato 24×24 rimpicciolito.
+        const lato = STIVA.alt - 1.5;
+        // Cella vuota con una cassa suggerita (v3.9): sagoma tratteggiata.
+        const k = indiceVuota.get(i);
+        const fantasma = k !== undefined ? fantasmi[k] : undefined;
+        if (fantasma) {
+          return (
+            <g key={`${i}-sug-${fantasma.livello}`} className={`${stili.fantasma} ${stili[fantasma.livello.toLowerCase()]}`}>
+              <rect x={x} y={y} width={STIVA.cella} height={STIVA.alt} />
+              {fantasma.icona && (
+                <svg className={stili.iconaCella} x={x + (STIVA.cella - lato) / 2} y={y + 0.75} width={lato} height={lato} viewBox="0 0 24 24">
+                  {DISEGNI[fantasma.icona].map((d) => (
+                    <path key={d} d={d} />
+                  ))}
+                </svg>
+              )}
+              <title>{`${fantasma.livello === "MANCANTE" ? "Da aggiungere" : "Consigliato"}: ${fantasma.nome}`}</title>
+            </g>
+          );
+        }
         return (
-          <rect
-            // key con il tipo: quando una cella cambia contenuto si riaccende.
-            key={`${i}-${tipo}`}
-            className={`${stili.cella} ${stili[tipo]}`}
-            x={STIVA.x + col * STIVA.passo}
-            y={STIVA.y + riga * STIVA.passoY}
-            width={STIVA.cella}
-            height={STIVA.alt}
-          />
+          // key con il tipo: quando una cella cambia contenuto si riaccende.
+          <g key={`${i}-${tipo}-${icona ?? ""}`} className={`${stili.cella} ${stili[tipo]}`}>
+            <rect x={x} y={y} width={STIVA.cella} height={STIVA.alt} />
+            {icona && (
+              <svg className={stili.iconaCella} x={x + (STIVA.cella - lato) / 2} y={y + 0.75} width={lato} height={lato} viewBox="0 0 24 24">
+                {DISEGNI[icona].map((d) => (
+                  <path key={d} d={d} />
+                ))}
+              </svg>
+            )}
+          </g>
         );
       })}
 
