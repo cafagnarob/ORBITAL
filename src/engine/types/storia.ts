@@ -96,7 +96,10 @@ export interface DefinizioneFinale {
   condizioni: Condizione[];
   /** Più alto = controllato prima. Il primo che va bene vince. */
   priorita: number;
-  /** L'epilogo, con {CAPITANO}-style segnaposto: {VIVI}, {MORTI}, {GIORNI}. */
+  /**
+   * L'epilogo, con segnaposto: {VIVI}, {MORTI}, {GIORNI} e (v3.8) {BERSAGLIO},
+   * {RISULTATO} della supermissione (engine/storia/piano.ts, conMissione).
+   */
   testo: string;
   tono: "normale" | "attenzione" | "critico";
 }
@@ -156,15 +159,14 @@ export interface ContenutiStoria {
   epiloghiCrew: Readonly<Record<Fazione | "MORTO", readonly string[]>>;
   /** Le risposte della crew ai discorsi del Capitano (v3.4). */
   colloqui: TestiColloqui;
-  /** Gli obiettivi della missione, principali e secondari (v3.7). */
-  obiettivi: readonly DefinizioneObiettivo[];
+  // (v3.8: gli obiettivi stanno nella missione, DefinizioneMissione.obiettivi)
 }
 
 // ----------------------------------------------------------------------------
 // LA SUPER-MISSIONE (v3.7): fasi del viaggio e obiettivi
 // ----------------------------------------------------------------------------
 
-/** ANDATA verso E-17 · ORBITA attorno al pianeta · RIENTRO verso la Terra. */
+/** ANDATA verso il bersaglio · ORBITA (operazioni vicino al bersaglio) · RIENTRO verso la Terra. */
 export const FASI_VIAGGIO = ["ANDATA", "ORBITA", "RIENTRO"] as const;
 export type FaseViaggio = (typeof FASI_VIAGGIO)[number];
 

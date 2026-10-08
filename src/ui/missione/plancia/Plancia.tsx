@@ -14,16 +14,18 @@
  * La Plancia non ha stato suo: guarda lo StatoMissione e sceglie la vista
  * (i calcoli sono in derivati.ts).
  *   - tratta in corso (andata o rientro) → VistaViaggio con il progresso;
- *   - in orbita → VistaOrbita, in modalità:
- *       ACQUISIZIONE  se un task di scansione del cratere è IN_CORSO,
- *       ACQUISITA     se l'area d'interesse è già nel registro,
+ *   - sul posto → VistaOrbita, in modalità:
+ *       ACQUISIZIONE  se il task finale (o una scansione del cratere) è IN_CORSO,
+ *       ACQUISITA     se l'obiettivo primario è conseguito,
  *       OSSERVAZIONE  altrimenti.
+ * v3.8: nome e forma del bersaglio vengono dalla missione della partita.
  * Tutto il movimento è CSS (@keyframes): nessun timer JavaScript, nessun
  * useEffect. React ridisegna solo quando cambia lo stato del gioco; tra un
  * cambio e l'altro le animazioni girano da sole nel browser.
  * ============================================================================
  */
 
+import { definizioneMissione } from "../../../content/missioni";
 import { trattaInCorso } from "../../../engine/storia/viaggio";
 import type { StatoMissione } from "../../../engine/types";
 import { Finestra } from "../../components/Finestra";
@@ -33,15 +35,22 @@ import { VistaViaggio } from "./VistaViaggio";
 
 export function Plancia({ stato }: { stato: StatoMissione }) {
   const tratta = trattaInCorso(stato);
-  const destra = tratta ? (tratta.destinazione === "TERRA" ? "RIENTRO → TERRA" : "ROTTA → E-17") : "ORBITA · E-17";
+  const missione = definizioneMissione(stato.missione.id);
+  const nome = missione.nome.toUpperCase();
+  const destra = tratta ? (tratta.destinazione === "TERRA" ? "RIENTRO → TERRA" : `ROTTA → ${nome}`) : missione.bersaglio.luogo;
 
   return (
     <Finestra titolo="Plancia" destra={destra} pieno>
       {tratta ? (
         // key: se cambia la destinazione (andata → rientro) la vista riparte da zero.
-        <VistaViaggio key={tratta.destinazione} tratta={tratta} seed={stato.seed} />
+        <VistaViaggio
+          key={tratta.destinazione}
+          tratta={tratta}
+          seed={stato.seed}
+          bersaglio={{ nome: missione.nome, forma: missione.bersaglio.forma }}
+        />
       ) : (
-        <VistaOrbita modo={modoOrbita(stato)} seed={stato.seed} />
+        <VistaOrbita modo={modoOrbita(stato)} seed={stato.seed} missione={missione} />
       )}
     </Finestra>
   );

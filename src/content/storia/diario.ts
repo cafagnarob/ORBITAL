@@ -15,7 +15,7 @@ export const DIARIO_VUOTO: readonly string[] = [
   "Giornata tranquilla. Troppo tranquilla.",
   "Nessuna novità. V.A.L.E. ha parlato poco. Meglio così, credo.",
   "Abbiamo mangiato insieme. Per un'ora nessuno ha nominato il segnale.",
-  "E-17 gira sotto di noi, rossa e muta.",
+  "{BERSAGLIO} è là fuori, a portata di mano, e non ci dice niente.",
   "Lavoro, rapporto, sonno. La routine tiene insieme la crew.",
   "Qualcuno ha disegnato una faccina sul pannello di V.A.L.E. Nessuno ammette di essere stato.",
   "Oggi niente da segnalare. Lo scrivo lo stesso: serve a ricordare che è successo.",
@@ -39,7 +39,7 @@ export const EPILOGHI_CREW: Readonly<Record<Fazione | "MORTO", readonly string[]
   ],
   MORTO: [
     "Di {N} restano i log di bordo e una tazza con il nome scritto a pennarello.",
-    "Il nome di {N} è inciso sulla lista dei caduti della missione E-17.",
+    "Il nome di {N} è inciso sulla lista dei caduti della missione {BERSAGLIO}.",
     "Il posto di {N} in mensa è rimasto vuoto per tutto il viaggio di ritorno.",
   ],
 };

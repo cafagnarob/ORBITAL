@@ -14,6 +14,9 @@
  *   - COME SI GIOCA, in quattro righe.
  *
  * I testi stanno in content/briefing.ts: qui c'è solo l'impaginazione.
+ * v3.8: il fascicolo è quello della supermissione scelta dal SEED, con i
+ * giorni del suo piano (briefingDi). Si ricalcola a ogni render: è una
+ * funzione pura e veloce, non serve memorizzarla né metterla nello stato.
  *
  * LAYOUT
  *   Mobile: una colonna che scorre, con il pulsante sempre in fondo.
@@ -25,7 +28,8 @@
  * ============================================================================
  */
 
-import { BRIEFING } from "../../content/briefing";
+import { briefingDi } from "../../content/briefing";
+import { pianoPartita } from "../../content/missioni";
 import { suona } from "../audio";
 import { Monitor } from "../cornice/Monitor";
 import { PannelloFrontale } from "../cornice/PannelloFrontale";
@@ -45,6 +49,8 @@ function stelle(n: number): string {
 export function SchermataBriefing({ seed, onAccetta }: Props) {
   // Si arriva sempre dal titolo, che ha spento il monitor.
   const tubo = useAccensione(true);
+  // Derivato dal seed, non salvato: stesso seed → stesso fascicolo.
+  const briefing = briefingDi(pianoPartita(seed));
 
   function accetta() {
     suona("CONFERMA");
@@ -60,19 +66,20 @@ export function SchermataBriefing({ seed, onAccetta }: Props) {
     >
       <div className={stili.schermo}>
         <header className={stili.intestazione}>
-          <span>{BRIEFING.mittente}</span>
+          <span>{briefing.mittente}</span>
           <span className={stili.protocollo}>
-            {BRIEFING.protocollo} · PARTITA {seed}
+            {briefing.protocollo} · PARTITA {seed}
           </span>
         </header>
 
         <main className={stili.griglia}>
           <article className={stili.fascicolo}>
-            {/* \u2060 = "word joiner": impedisce di andare a capo dentro «E-17». */}
-            <h1 className={stili.titolo}>{BRIEFING.titolo.replace("E-17", "E\u2060-\u206017")}</h1>
+            {/* \u2060 = "word joiner": impedisce di andare a capo dentro il nome
+                del bersaglio («E-17», «Argo-3»), che ha un trattino. */}
+            <h1 className={stili.titolo}>{briefing.titolo.replace(briefing.nome, briefing.nome.replaceAll("-", "\u2060-\u2060"))}</h1>
 
             <dl className={stili.scheda}>
-              {BRIEFING.scheda.map((v) => (
+              {briefing.scheda.map((v) => (
                 <div key={v.etichetta}>
                   <dt>{v.etichetta}</dt>
                   <dd>{v.valore}</dd>
@@ -82,7 +89,7 @@ export function SchermataBriefing({ seed, onAccetta }: Props) {
 
             <section>
               <h2 className={stili.sezione}>CONTESTO</h2>
-              {BRIEFING.contesto.map((p) => (
+              {briefing.contesto.map((p) => (
                 <p key={p} className={stili.paragrafo}>
                   {p}
                 </p>
@@ -92,7 +99,7 @@ export function SchermataBriefing({ seed, onAccetta }: Props) {
             <section>
               <h2 className={stili.sezione}>OBIETTIVI</h2>
               <ol className={stili.obiettivi}>
-                {BRIEFING.obiettivi.map((o) => (
+                {briefing.obiettivi.map((o) => (
                   <li key={o.testo} className={o.tipo === "RISERVATO" ? stili.riservato : ""}>
                     <span className={stili.tipo}>{o.tipo}</span>
                     <span>{o.testo}</span>
@@ -105,9 +112,9 @@ export function SchermataBriefing({ seed, onAccetta }: Props) {
           <aside className={stili.laterale}>
             <section className={stili.finale}>
               <h2 className={stili.sezione}>OBIETTIVO FINALE</h2>
-              <p className={stili.obiettivoFinale}>{BRIEFING.obiettivoFinale}</p>
+              <p className={stili.obiettivoFinale}>{briefing.obiettivoFinale}</p>
               <ul className={stili.esiti}>
-                {BRIEFING.esiti.map((e) => (
+                {briefing.esiti.map((e) => (
                   <li key={e.titolo} className={e.stelle === 0 ? stili.perduta : ""}>
                     <span className={stili.stelle} aria-label={`${e.stelle} stelle`}>
                       {stelle(e.stelle)}
@@ -123,7 +130,7 @@ export function SchermataBriefing({ seed, onAccetta }: Props) {
             <section>
               <h2 className={stili.sezione}>COME SI GIOCA</h2>
               <ul className={stili.regole}>
-                {BRIEFING.comeSiGioca.map((r) => (
+                {briefing.comeSiGioca.map((r) => (
                   <li key={r}>{r}</li>
                 ))}
               </ul>
@@ -132,7 +139,7 @@ export function SchermataBriefing({ seed, onAccetta }: Props) {
         </main>
 
         <footer className={stili.piede}>
-          <span className={stili.domanda}>{BRIEFING.domanda}</span>
+          <span className={stili.domanda}>{briefing.domanda}</span>
           <button type="button" className={stili.accetta} onClick={accetta} autoFocus>
             Accetta e prepara ▶
           </button>

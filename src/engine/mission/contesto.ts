@@ -25,11 +25,13 @@ import type {
   DefinizioneCodice,
   DefinizioneDirettiva,
   DefinizioneEvento,
+  DefinizioneMissione,
   DefinizioneModulo,
   DefinizioneTask,
   IdDefinizioneTask,
   IdDirettiva,
   IdEvento,
+  IdMissione,
   IdModulo,
   TestiVale,
 } from "../types";
@@ -47,4 +49,9 @@ export interface ContestoMissione {
   catalogoModuli: Readonly<Record<IdModulo, DefinizioneModulo>>;
   /** La storia emergente (v3.0): finali, battute della crew, frasi del diario. */
   storia: ContenutiStoria;
+  /**
+   * Le supermissioni (v3.8), per id. La partita usa quella del suo piano
+   * (stato.missione.id): obiettivi, scaletta, nomi.
+   */
+  missioni: Readonly<Record<IdMissione, DefinizioneMissione>>;
 }

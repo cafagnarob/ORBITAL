@@ -165,7 +165,7 @@ describe("fine della missione", () => {
   const inOrbita = (tensione = 0) => ({ ...stato(tensione), tempo: 4 * 1440 + 360 });
 
   it("durante il viaggio d'andata il rientro non si può ordinare", () => {
-    expect(() => esegui(stato(), c, [{ tipo: "RIENTRA" }])).toThrow(/in viaggio verso E-17/);
+    expect(() => esegui(stato(), c, [{ tipo: "RIENTRA" }])).toThrow(/viaggio d'andata/);
   });
 
   it("RIENTRA senza carburante oltre la riserva porta alla deriva", () => {

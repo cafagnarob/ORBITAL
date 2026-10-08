@@ -29,6 +29,7 @@ import type { Risorse } from "./risorse";
 import type { CausaFine, EsitoCasuale, Fazione, FaseViaggio, SelettoreMembro } from "./storia";
 import type { EsitoTask } from "./task";
 import type { ClasseDirettiva, FiltroVale } from "./vale";
+import type { IdMissione } from "./supermissione";
 
 export const CATEGORIE_EVENTO = [
   "SISTEMA",
@@ -114,6 +115,13 @@ export type Condizione =
   | { tipo: "FASE"; fasi: FaseViaggio[] }
   /** Nessun membro della crew è morto o disperso (v3.7). */
   | { tipo: "CREW_INTEGRA" }
+  /** La partita è una di queste supermissioni (v3.8): contenuti di una missione sola. */
+  | { tipo: "MISSIONE"; missioni: IdMissione[] }
+  /**
+   * Mancano esattamente `giorni` giorni all'apertura della finestra di
+   * rientro (v3.8: le durate cambiano col seed, i giorni fissi non bastano).
+   */
+  | { tipo: "GIORNI_ALLA_FINESTRA"; giorni: number }
   /**
    * Un evento è accaduto da MENO di `ore` ore (eventualmente con una certa
    * scelta). Serve ai task temporanei: «il meteorite resta a portata per 18 ore».

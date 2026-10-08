@@ -14,12 +14,15 @@
 
 import { CONTESTO_GIOCO } from "../../../content/contesto";
 import type { Tratta } from "../../../engine/storia/viaggio";
-import type { StatoMissione } from "../../../engine/types";
+import type { FormaBersaglio, StatoMissione } from "../../../engine/types";
 
 /** In orbita: stiamo osservando, acquisendo, o abbiamo già acquisito? */
 export type ModoOrbita = "OSSERVAZIONE" | "ACQUISIZIONE" | "ACQUISITA";
 
-/** I tag dei task che puntano i sensori sul cratere. */
+/**
+ * I tag dei task che puntano i sensori sul bersaglio: OBIETTIVO è il task
+ * finale di ogni supermissione (v3.8), CRATERE le scansioni di E-17.
+ */
 const TAG_SCANSIONE = ["OBIETTIVO", "CRATERE"];
 
 export function modoOrbita(stato: StatoMissione): ModoOrbita {
@@ -27,7 +30,8 @@ export function modoOrbita(stato: StatoMissione): ModoOrbita {
     (t) => t.stato === "IN_CORSO" && CONTESTO_GIOCO.catalogoTask[t.idDefinizione]?.tag.some((tag) => TAG_SCANSIONE.includes(tag)),
   );
   if (inCorso) return "ACQUISIZIONE";
-  if (stato.conoscenza.scoperte.includes("AREA_ACQUISITA")) return "ACQUISITA";
+  // v3.8: ogni supermissione, quando riesce, registra OBIETTIVO_PRIMARIO.
+  if (stato.conoscenza.scoperte.includes("OBIETTIVO_PRIMARIO")) return "ACQUISITA";
   return "OSSERVAZIONE";
 }
 
@@ -69,4 +73,35 @@ export function numeriDalSeed(seed: string, quanti: number, max: number): number
     h = Math.imul(h ^ (h >>> 13), 1274126177);
     return Math.abs(h % max);
   });
+}
+
+/**
+ * Dove sta il PUNTO D'INTERESSE sulla sagoma del bersaglio (v3.8), in
+ * frazioni del raggio rispetto al centro: lì si posano il bersaglio
+ * luminoso e il mirino. Deve combaciare con SagomaBersaglio.tsx.
+ */
+export function puntoInteresse(forma: FormaBersaglio): { kx: number; ky: number } {
+  switch (forma) {
+    case "PIANETA":
+      return { kx: 0.37, ky: -0.5 }; // il Cratere Settentrionale, in alto a destra
+    case "STAZIONE":
+      return { kx: 0, ky: -0.2 }; // il boccaporto sul mozzo
+    case "ASTEROIDE":
+      return { kx: 0.25, ky: -0.3 }; // la zona regolare (la "cicatrice")
+    case "COMETA":
+      return { kx: 0.2, ky: 0.2 }; // il nucleo
+    case "RELITTO":
+      return { kx: 0.3, ky: -0.05 }; // il vano del nucleo di memoria
+  }
+}
+
+/**
+ * La riga di coordinate sotto la vista d'orbita. Per un pianeta latitudine
+ * e longitudine; per gli altri bersagli, piccoli e vicini, la distanza in
+ * metri (un numero stabile ricavato dal seed).
+ */
+export function rigaCoordinate(forma: FormaBersaglio, seed: string): string {
+  if (forma === "PIANETA") return "LAT 71.4°N · LON 012.8°E · QUOTA 412 km";
+  const [distanza = 0, deriva = 0] = numeriDalSeed(seed, 2, 100);
+  return `DIST ${200 + distanza * 3} m · DERIVA ${(deriva / 40).toFixed(2)} m/s`;
 }

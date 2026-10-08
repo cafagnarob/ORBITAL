@@ -14,6 +14,13 @@
  *   - il menu: INIZIA MISSIONE, il SEED (per rigiocare una partita precisa),
  *     l'interruttore AUDIO.
  *
+ * IL SEED SCEGLIE LA MISSIONE (v3.8)
+ * Sotto il campo del seed compare la supermissione che quel seed sorteggia,
+ * con la sua durata: si aggiorna mentre si scrive. Non è stato: si DERIVA
+ * dal testo del campo a ogni render (pianoPartita è una funzione pura).
+ * Un seed che comincia con la sigla di una missione (E17-, ARGO-, HK7-,
+ * HAL-, KST-) sceglie quella.
+ *
  * PERCHÉ UN <form>
  * Il seed e il pulsante d'inizio stanno in un form: premere INVIO nel campo
  * del seed (o ovunque sul pulsante) avvia la missione. È il comportamento
@@ -26,6 +33,8 @@
  */
 
 import { useState, type FormEvent } from "react";
+import { definizioneMissione, LISTA_MISSIONI, pianoPartita } from "../../content/missioni";
+import { giorniTotali } from "../../engine/storia/piano";
 import { impostaAtmosfera, interruttoreAudio, sbloccaAudio, suona, useVolumi } from "../audio";
 import { Monitor } from "../cornice/Monitor";
 import { PannelloFrontale } from "../cornice/PannelloFrontale";
@@ -33,16 +42,27 @@ import { useAccensione } from "../cornice/useAccensione";
 import { GloboOrbita } from "./GloboOrbita";
 import stili from "./SchermataIngresso.module.css";
 
-/** Le righe del registro di avvio: compaiono una dopo l'altra (CSS). */
-const AVVIO: [string, string][] = [
-  ["CONTROLLO MEMORIA", "OK"],
-  ["NUCLEO V.A.L.E.", "ONLINE"],
-  ["SUPPORTO VITALE", "NOMINALE"],
-  ["NAVIGAZIONE", "STABILE"],
-  ["DESTINAZIONE", "E-17"],
-  ["CREW MANIFEST", "IN ATTESA"],
-  ["DIRETTIVA INTERNA", "[RISERVATO]"],
-];
+/**
+ * Le righe del registro di avvio: compaiono una dopo l'altra (CSS). La
+ * destinazione dipende dal seed (v3.8), quindi la lista è una funzione.
+ */
+function righeAvvio(destinazione: string): [string, string][] {
+  return [
+    ["CONTROLLO MEMORIA", "OK"],
+    ["NUCLEO V.A.L.E.", "ONLINE"],
+    ["SUPPORTO VITALE", "NOMINALE"],
+    ["NAVIGAZIONE", "STABILE"],
+    ["DESTINAZIONE", destinazione],
+    ["CREW MANIFEST", "IN ATTESA"],
+    ["DIRETTIVA INTERNA", "[RISERVATO]"],
+  ];
+}
+
+/** Le sigle che scelgono la missione, per la nota sotto il seed: "E17-, ARGO-…". */
+const SIGLE = LISTA_MISSIONI.map((m) => `${m.sigla}-`).join(", ");
+
+/** Seed: maiuscolo e senza spazi; vuoto → quello proposto. */
+const normalizza = (testo: string, ripiego: string) => testo.trim().toUpperCase().replace(/\s+/g, "-") || ripiego;
 
 interface Props {
   /** Il seed proposto (casuale, o quello dell'indirizzo ?seed=). */
@@ -58,14 +78,16 @@ export function SchermataIngresso({ seed, onInizia, daSpento = false }: Props) {
   const [testoSeed, setTestoSeed] = useState(seed);
   const volumi = useVolumi();
   const audioAcceso = volumi.ambiente > 0 || volumi.voce > 0;
+  // La missione che il seed scritto sorteggia (derivata, non salvata).
+  const piano = pianoPartita(normalizza(testoSeed, seed));
+  const missione = definizioneMissione(piano.id);
 
   function inizia(evento: FormEvent) {
     evento.preventDefault();
     sbloccaAudio(); // è un clic: l'audio, se acceso, può partire
     suona("CONFERMA");
     impostaAtmosfera("PREPARAZIONE");
-    // Seed: maiuscolo e senza spazi; vuoto → quello proposto.
-    const scelto = testoSeed.trim().toUpperCase().replace(/\s+/g, "-") || seed;
+    const scelto = normalizza(testoSeed, seed);
     tubo.spegni(() => onInizia(scelto));
   }
 
@@ -97,7 +119,7 @@ export function SchermataIngresso({ seed, onInizia, daSpento = false }: Props) {
           </div>
 
           <ol className={stili.avvio} aria-label="Registro di avvio">
-            {AVVIO.map(([voce, esito], i) => (
+            {righeAvvio(missione.nome.toUpperCase()).map(([voce, esito], i) => (
               // Ogni riga compare dopo la precedente (ritardo crescente).
               <li key={voce} style={{ animationDelay: `${1.4 + i * 0.35}s` }}>
                 <span className={stili.voce}>&gt; {voce}</span>
@@ -126,8 +148,15 @@ export function SchermataIngresso({ seed, onInizia, daSpento = false }: Props) {
                 aria-describedby="nota-seed"
               />
             </label>
+            {/* La missione del seed: aria-live la annuncia a chi usa un lettore di schermo. */}
+            <p className={stili.missione} aria-live="polite">
+              <span>MISSIONE</span> <strong>{missione.titolo}</strong>{" "}
+              <span className={stili.durata}>
+                · {giorniTotali(piano)} GIORNI ({piano.durate.andata}+{piano.durate.orbita}+{piano.durate.rientro})
+              </span>
+            </p>
             <p id="nota-seed" className={stili.nota}>
-              Lo stesso seed rigioca la stessa partita. Cambialo per una storia nuova.
+              Lo stesso seed rigioca la stessa partita. Comincialo con {SIGLE} per scegliere la missione.
             </p>
 
             <button type="button" className={stili.audio} aria-pressed={audioAcceso} onClick={interruttoreAudio}>
@@ -139,7 +168,7 @@ export function SchermataIngresso({ seed, onInizia, daSpento = false }: Props) {
 
         <footer className={stili.piede}>
           <span className={stili.lampeggia}>PREMI INVIO PER INIZIARE</span>
-          <span>ORBITAL · PROTOTIPO v3.2</span>
+          <span>ORBITAL · PROTOTIPO v3.8</span>
         </footer>
       </div>
     </Monitor>

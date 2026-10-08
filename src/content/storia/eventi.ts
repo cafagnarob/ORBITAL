@@ -120,9 +120,9 @@ export const EVENTI_STORIA: DefinizioneEvento[] = [
             id: "PERSUASIONE",
             peso: 2,
             requisiti: [{ tipo: "CLASSE_DIRETTIVA", classi: ["NEUTRALE", "IN_CONFLITTO", "CONFLITTO_CRITICO"] }],
-            testo: "V.A.L.E. (registrazione): «…se il Capitano volesse scendere nel cratere, {P}, sarebbe un errore. Lei lo capirebbe?»",
+            testo: "V.A.L.E. (registrazione): «…se il Capitano volesse avvicinarsi troppo alla sorgente, {P}, sarebbe un errore. Lei lo capirebbe?»",
             effetti: [{ tipo: "TENSIONE", delta: 1 }],
-            diario: "V.A.L.E. sta convincendo {P} a non avvicinarsi al cratere.",
+            diario: "V.A.L.E. sta convincendo {P} a tenersi lontano dalla sorgente del segnale.",
           },
           {
             id: "MEMORIA",
@@ -295,9 +295,9 @@ export const EVENTI_STORIA: DefinizioneEvento[] = [
             id: "GEOLOGIA",
             peso: 1,
             requisiti: [{ tipo: "CLASSE_DIRETTIVA", classi: ["NEUTRALE"] }],
-            testo: "CALIBRAZIONE · SENSORI GEOLOGICI · PRIORITÀ: STRUTTURA DEL CRATERE",
+            testo: "CALIBRAZIONE · SENSORI · PRIORITÀ: SORGENTE A 1.42 GHz",
             effetti: [],
-            diario: "V.A.L.E. ha ricalibrato i sensori… puntandoli tutti sul cratere.",
+            diario: "V.A.L.E. ha ricalibrato i sensori… puntandoli tutti sulla sorgente del segnale.",
           },
         ],
       },
@@ -1016,7 +1016,8 @@ export const EVENTI_STORIA: DefinizioneEvento[] = [
     probabilita: 1,
     peso: 5,
     // v3.7: la finestra si apre da sola al giorno 8; qui si può partire prima.
-    condizioni: [MATTINA, dalGiorno(6), { tipo: "FASE", fasi: ["ORBITA"] }],
+    // v3.8: due giorni prima della finestra, qualunque sia la durata della missione.
+    condizioni: [MATTINA, { tipo: "GIORNI_ALLA_FINESTRA", giorni: 2 }, { tipo: "FASE", fasi: ["ORBITA"] }],
     fonte: "VALE",
     testo: "Capitano. La finestra di rientro si apre tra due giorni. Con la riserva di carburante possiamo anche partire ora.",
     codici: [],

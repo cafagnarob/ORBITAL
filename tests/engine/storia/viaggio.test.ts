@@ -18,11 +18,12 @@ const GIORNO = 1440;
 const alle = (s: StatoMissione, tempo: number): StatoMissione => ({ ...s, tempo });
 
 describe("trattaInCorso", () => {
-  const inizio = creaMissioneIniziale("TRATTA-1");
+  // v3.8: le durate vengono dal piano; qui un piano esplicito 3 + 4 + 3.
+  const inizio = creaMissioneIniziale("TRATTA-1", undefined, { id: "E17", durate: { andata: 3, orbita: 4, rientro: 3 } });
 
-  it("al via si parte verso E-17 con progresso 0 e 3 giorni all'arrivo", () => {
+  it("al via si parte verso il bersaglio con progresso 0 e 3 giorni all'arrivo", () => {
     const t = trattaInCorso(inizio);
-    expect(t?.destinazione).toBe("E-17");
+    expect(t?.destinazione).toBe("BERSAGLIO");
     expect(t?.progresso).toBe(0);
     expect(t?.minutiAllArrivo).toBe(3 * GIORNO);
   });

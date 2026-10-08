@@ -15,7 +15,6 @@ import { BATTUTE } from "./battute";
 import { DIARIO_VUOTO, EPILOGHI_CREW } from "./diario";
 import { CATALOGO_FINALI } from "./finali";
 import { TESTI_COLLOQUI } from "./colloqui";
-import { OBIETTIVI_MISSIONE } from "../missione";
 
 export const CONTENUTI_STORIA: ContenutiStoria = {
   finali: CATALOGO_FINALI,
@@ -23,7 +22,6 @@ export const CONTENUTI_STORIA: ContenutiStoria = {
   diarioVuoto: DIARIO_VUOTO,
   epiloghiCrew: EPILOGHI_CREW,
   colloqui: TESTI_COLLOQUI,
-  obiettivi: OBIETTIVI_MISSIONE,
 };
 
 export { EVENTI_STORIA } from "./eventi";

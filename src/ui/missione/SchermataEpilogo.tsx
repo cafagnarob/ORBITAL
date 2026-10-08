@@ -18,6 +18,7 @@
  */
 
 import { CONTESTO_GIOCO } from "../../content/contesto";
+import { definizioneMissione } from "../../content/missioni";
 import { epilogo } from "../../engine/storia/fine";
 import type { StatoMissione } from "../../engine/types";
 import { Pulsante } from "../components/Pulsante";
@@ -41,7 +42,7 @@ export function SchermataEpilogo({ stato, onNuovaPartita }: Props) {
   return (
     <div className={stili.sfondo}>
       <article className={stili.epilogo} aria-labelledby="titolo-epilogo">
-        <p className={stili.etichetta}>MISSIONE E-17 · CONCLUSA · GIORNO {e.giorni}</p>
+        <p className={stili.etichetta}>MISSIONE {definizioneMissione(stato.missione.id).nome.toUpperCase()} · CONCLUSA · GIORNO {e.giorni}</p>
         <h1 id="titolo-epilogo" className={`${stili.titolo} ${stili[e.finale?.tono ?? "normale"]}`}>
           {e.finale?.titolo ?? "Fine"}
         </h1>

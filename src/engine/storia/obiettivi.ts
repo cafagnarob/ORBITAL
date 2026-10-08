@@ -5,7 +5,7 @@
  *
  * Riferimento design: DESIGN.md §14.6.
  *
- * Un obiettivo è un DATO (content/missione.ts): quando compare (visibile),
+ * Un obiettivo è un DATO (v3.8: dentro ogni missione, content/missioni/): quando compare (visibile),
  * quando è raggiunto (completato), cosa si guadagna (ricompensa). Sono
  * condizioni ed effetti, lo stesso linguaggio degli eventi.
  *
@@ -25,7 +25,9 @@ import { scriviDiario } from "./diario";
 
 /** Gli obiettivi che il Capitano vede in questo momento. */
 export function obiettiviVisibili(stato: StatoMissione, contesto: ContestoMissione): DefinizioneObiettivo[] {
-  return contesto.storia.obiettivi.filter(
+  // Gli obiettivi sono quelli della supermissione della partita (v3.8).
+  const obiettivi = contesto.missioni[stato.missione.id]?.obiettivi ?? [];
+  return obiettivi.filter(
     (o) => stato.obiettiviCompletati.includes(o.id) || verificaTutte(stato, contesto, o.visibile, MOMENTO_VUOTO),
   );
 }

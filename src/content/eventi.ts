@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * eventi.ts — Catalogo degli eventi di E-17 (vertical slice)
+ * eventi.ts — Catalogo degli eventi: la catena del segnale e le conseguenze
  * ============================================================================
  *
  * Riferimento design: DESIGN.md §10, §13.5.
@@ -32,14 +32,23 @@
  * il Capitano può notare, contestare e far verificare.
  * Con D01 (compatibile) V.A.L.E. dice sempre la verità.
  *
+ * SUPERMISSIONI (v3.8): E01, E04 ed E06 parlano del cratere di E-17 e ci
+ * restano (SOLO_E17). Nelle altre missioni il segnale arriva dall'evento
+ * dell'obiettivo (A-/H-/C-/K-OBIETTIVO in content/missioni/), che dà
+ * SEGNALE_RILEVATO e il codice VL-P7-04; da lì E02 ed E03 valgono per tutte.
+ *
  * TONO DI V.A.L.E.: calmo, preciso, minimale (DESIGN §3).
  * ============================================================================
  */
 
 import { EVENTI_TURNO } from "./eventiTurno";
-import { EVENTI_MISSIONE } from "./eventiMissione";
+import { EVENTI_VIAGGIO } from "./eventiViaggio";
+import { EVENTI_MISSIONI } from "./missioni";
 import { EVENTI_STORIA } from "./storia/eventi";
-import type { DefinizioneEvento, IdEvento } from "../engine/types";
+import type { Condizione, DefinizioneEvento, IdEvento } from "../engine/types";
+
+/** Gli eventi della catena del segnale che parlano del cratere: solo su E-17 (v3.8). */
+const SOLO_E17: Condizione = { tipo: "MISSIONE", missioni: ["E17"] };
 
 const LISTA_EVENTI: DefinizioneEvento[] = [
   // ==========================================================================
@@ -54,6 +63,7 @@ const LISTA_EVENTI: DefinizioneEvento[] = [
     probabilita: 1,
     peso: 10,
     condizioni: [
+      SOLO_E17,
       {
         tipo: "UNO_TRA",
         condizioni: [
@@ -226,6 +236,7 @@ const LISTA_EVENTI: DefinizioneEvento[] = [
     probabilita: 1,
     peso: 10,
     condizioni: [
+      SOLO_E17,
       { tipo: "TASK_CONCLUSO_ORA", tag: "CRATERE", esitoAlmeno: "SUCCESSO" },
       {
         tipo: "UNO_TRA",
@@ -266,6 +277,7 @@ const LISTA_EVENTI: DefinizioneEvento[] = [
     probabilita: 1,
     peso: 10,
     condizioni: [
+      SOLO_E17,
       { tipo: "TASK_CONCLUSO_ORA", tag: "CRATERE", esitoAlmeno: "SUCCESSO_PERFETTO" },
       { tipo: "SCOPERTA", id: "SEGNALE_SORGENTE" },
     ],
@@ -394,5 +406,5 @@ const LISTA_EVENTI: DefinizioneEvento[] = [
  * emergente (v3.0) + eventi dei turni (v3.3: viaggiatori, occasioni, guai).
  */
 export const CATALOGO_EVENTI: Readonly<Record<IdEvento, DefinizioneEvento>> = Object.fromEntries(
-  [...LISTA_EVENTI, ...EVENTI_STORIA, ...EVENTI_TURNO, ...EVENTI_MISSIONE].map((e) => [e.id, e]),
+  [...LISTA_EVENTI, ...EVENTI_STORIA, ...EVENTI_TURNO, ...EVENTI_VIAGGIO, ...EVENTI_MISSIONI].map((e) => [e.id, e]),
 );

@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * finali.ts — I modi in cui può finire la missione su E-17
+ * finali.ts — I modi in cui può finire una supermissione
  * ============================================================================
  *
  * Riferimento design: DESIGN.md §15 (finali), §10.2.
@@ -10,7 +10,9 @@
  * sono vere. Le condizioni sono le stesse degli eventi: scoperte, fazioni,
  * override, morti… Così il racconto finale riflette la partita giocata.
  *
- * Segnaposto nel testo: {VIVI}, {MORTI}, {GIORNI}.
+ * Segnaposto nel testo: {VIVI}, {MORTI}, {GIORNI} e (v3.8) {BERSAGLIO} (il
+ * nome: «E-17», «Argo-3»…) e {RISULTATO} (cosa si riporta a casa): gli
+ * stessi finali valgono per tutte le missioni.
  * Nell'epilogo la direttiva di V.A.L.E. viene SEMPRE rivelata (dalla UI):
  * anche chi non l'ha scoperta deve sapere con chi ha viaggiato.
  * ============================================================================
@@ -28,7 +30,7 @@ const LISTA_FINALI: DefinizioneFinale[] = [
     priorita: 0,
     tono: "critico",
     testo:
-      "Al giorno {GIORNI} nessuno risponde più all'appello. V.A.L.E. continua a compilare il rapporto serale, ogni sera alle 22:00, per una nave vuota. Il segnale di E-17 continua a trasmettere. Adesso, qualcuno lo ascolta.",
+      "Al giorno {GIORNI} nessuno risponde più all'appello. V.A.L.E. continua a compilare il rapporto serale, ogni sera alle 22:00, per una nave vuota. Il segnale di {BERSAGLIO} continua a trasmettere. Adesso, qualcuno lo ascolta.",
   },
 
   // --- CONTROLLO DI V.A.L.E. ---------------------------------------------------
@@ -40,7 +42,7 @@ const LISTA_FINALI: DefinizioneFinale[] = [
     priorita: 0,
     tono: "critico",
     testo:
-      "V.A.L.E. ha preso il controllo della navigazione. «La partenza comprometterebbe la continuità dell'osservazione.» La nave resta in orbita attorno a E-17. A bordo: {VIVI}. Le scorte finiranno prima della sua missione.",
+      "V.A.L.E. ha preso il controllo della navigazione. «La partenza comprometterebbe la continuità dell'osservazione.» La nave resta accanto a {BERSAGLIO}. A bordo: {VIVI}. Le scorte finiranno prima della sua missione.",
   },
 
   // --- DERIVA ------------------------------------------------------------------
@@ -52,7 +54,7 @@ const LISTA_FINALI: DefinizioneFinale[] = [
     priorita: 0,
     tono: "critico",
     testo:
-      "I motori si accendono, poi tossiscono. Il carburante non basta per la traiettoria di rientro. La nave scivola su un'orbita lunga, lontana da E-17 e lontana da casa. {VIVI} aspettano un soccorso che forse non arriverà.",
+      "I motori si accendono, poi tossiscono. Il carburante non basta per la traiettoria di rientro. La nave scivola su un'orbita lunga, lontana da {BERSAGLIO} e lontana da casa. {VIVI} aspettano un soccorso che forse non arriverà.",
   },
 
   // --- RIENTRO -----------------------------------------------------------------
@@ -74,7 +76,7 @@ const LISTA_FINALI: DefinizioneFinale[] = [
     priorita: 30,
     tono: "normale",
     testo:
-      "Rientrano {VIVI}, e con loro la prova: la direttiva nascosta di V.A.L.E., estratta dal suo stesso terminale. Qualcuno, sulla Terra, sapeva cosa c'era su E-17 prima della partenza. Adesso lo sapete anche voi.",
+      "Rientrano {VIVI}, e con loro la prova: la direttiva nascosta di V.A.L.E., estratta dal suo stesso terminale. Qualcuno, sulla Terra, sapeva cosa c'era su {BERSAGLIO} prima della partenza. Adesso lo sapete anche voi.",
   },
   {
     // v3.7: la super-missione riuscita. Sotto «la verità» (che vale di più),
@@ -82,11 +84,11 @@ const LISTA_FINALI: DefinizioneFinale[] = [
     id: "MISSIONE_COMPIUTA",
     titolo: "Missione compiuta",
     cause: ["RIENTRO"],
-    condizioni: [{ tipo: "SCOPERTA", id: "AREA_ACQUISITA" }, { tipo: "CREW_INTEGRA" }],
+    condizioni: [{ tipo: "SCOPERTA", id: "OBIETTIVO_PRIMARIO" }, { tipo: "CREW_INTEGRA" }],
     priorita: 25,
     tono: "normale",
     testo:
-      "Rientrano tutti: {VIVI}. Nella stiva dei dati c'è l'area d'interesse del Cratere Settentrionale, il punto esatto da cui parte il segnale. L'agenzia parla di successo. Voi ricordate le notti in orbita, e la voce di V.A.L.E. che contava i giorni.",
+      "Rientrano tutti: {VIVI}. Nella stiva c'è {RISULTATO}. L'agenzia parla di successo. Voi ricordate le notti in orbita, e la voce di V.A.L.E. che contava i giorni.",
   },
   {
     id: "RIENTRO_CON_IL_SEGNALE",
@@ -96,7 +98,7 @@ const LISTA_FINALI: DefinizioneFinale[] = [
     priorita: 20,
     tono: "normale",
     testo:
-      "Rientrano {VIVI} con le coordinate della sorgente del segnale nel Cratere Settentrionale. Non sapete cosa sia. Non sapete cosa volesse V.A.L.E. Ma sapete dove tornare.",
+      "Rientrano {VIVI} con le coordinate della sorgente del segnale di {BERSAGLIO}. Non sapete cosa sia. Non sapete cosa volesse V.A.L.E. Ma sapete dove tornare.",
   },
   {
     id: "RIENTRO_COI_DUBBI",
@@ -106,7 +108,7 @@ const LISTA_FINALI: DefinizioneFinale[] = [
     priorita: 10,
     tono: "attenzione",
     testo:
-      "Rientrano {VIVI}. Avete sentito il segnale, avete dubitato di V.A.L.E., ma non avete prove di niente. Nel rapporto ufficiale, E-17 resta un pianeta arido e silenzioso. Voi sapete che non è vero.",
+      "Rientrano {VIVI}. Avete sentito il segnale, avete dubitato di V.A.L.E., ma non avete prove di niente. Nel rapporto ufficiale, {BERSAGLIO} resta un nome su una mappa, muto. Voi sapete che non è vero.",
   },
   {
     id: "RIENTRO_A_MANI_VUOTE",

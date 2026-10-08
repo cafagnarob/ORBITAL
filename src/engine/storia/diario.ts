@@ -23,6 +23,7 @@ import { parametriNave } from "../nave/parametri";
 import { hashSeed } from "../rng";
 import type { StatoMissione, VoceDiario } from "../types";
 import { fazioneDi, membriAttivi } from "./fazioni";
+import { conMissione } from "./piano";
 
 export function giornoDi(stato: StatoMissione): number {
   return scomponiTempo(stato.tempo).giorno;
@@ -98,6 +99,6 @@ export function diarioSerale(bozza: StatoMissione, contesto: ContestoMissione): 
   if (vuota && paginaDiario(bozza, giorno).length === 0) {
     const frasi = contesto.storia.diarioVuoto;
     const frase = frasi[hashSeed(`${bozza.seed}:diario:${giorno}`) % Math.max(1, frasi.length)];
-    if (frase) scriviDiario(bozza, frase);
+    if (frase) scriviDiario(bozza, conMissione(frase, bozza, contesto));
   }
 }

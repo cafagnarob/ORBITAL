@@ -18,13 +18,16 @@ import { describe, it, expect } from "vitest";
 import { CONTESTO_GIOCO } from "../../src/content/contesto";
 import { CATALOGO_EVENTI } from "../../src/content/eventi";
 import { creaMissioneIniziale } from "../../src/content/missioneIniziale";
+
+/** Il piano della missione storica: E-17, 3 giorni d'andata, 4 in orbita, 3 di rientro. */
+const PIANO_E17_CLASSICO: PianoMissione = { id: "E17", durate: { andata: 3, orbita: 4, rientro: 3 } };
 import { EVENTI_STORIA, LISTA_IMPREVISTI } from "../../src/content/storia";
 import { EVENTI_TURNO } from "../../src/content/eventiTurno";
 import { TASK_DISPONIBILI } from "../../src/content/tasks";
 import { scomponiTempo } from "../../src/engine/clock";
 import { applicaAzione, verificaAssegnazione, verificaScelta, type Azione } from "../../src/engine/mission";
 import { verificaRientro } from "../../src/engine/storia/fine";
-import type { StatoMissione } from "../../src/engine/types";
+import type { PianoMissione, StatoMissione } from "../../src/engine/types";
 
 const gioca = (s: StatoMissione, a: Azione) => applicaAzione(s, a, CONTESTO_GIOCO);
 
@@ -45,7 +48,8 @@ function pianifica(stato: StatoMissione, n: number): StatoMissione {
 }
 
 function partita(seed: string, n: number, stile: Stile): StatoMissione {
-  let s = creaMissioneIniziale(seed);
+  // v3.8: la storia E-17 classica (3 + 4 + 3 giorni), qualunque sia il seed.
+  let s = creaMissioneIniziale(seed, undefined, PIANO_E17_CLASSICO);
   for (let passi = 0; passi < 2000 && s.statoGioco !== "CONCLUSA"; passi++) {
     const giorno = scomponiTempo(s.tempo).giorno;
     switch (s.statoGioco) {

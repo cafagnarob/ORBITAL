@@ -18,7 +18,7 @@
 import { scomponiTempo } from "../clock";
 import type { ContestoMissione } from "../mission/contesto";
 import { contaFazione, membriAttivi } from "../storia/fazioni";
-import { faseViaggio } from "../storia/viaggio";
+import { faseViaggio, giornoFinestraRientro } from "../storia/viaggio";
 import { livelloAutonomia } from "../vale/comportamento";
 import { ESITI_TASK, type Condizione, type EsitoTask, type IdIstanzaTask, type StatoMissione } from "../types";
 
@@ -140,6 +140,12 @@ export function verificaCondizione(
       return c.fasi.includes(faseViaggio(stato));
     case "CREW_INTEGRA":
       return Object.values(stato.crew).every((m) => m.stato !== "MORTO" && m.stato !== "DISPERSO");
+
+    // --- Supermissioni (v3.8) ----------------------------------------------
+    case "MISSIONE":
+      return c.missioni.includes(stato.missione.id);
+    case "GIORNI_ALLA_FINESTRA":
+      return stato.partenza === null && giornoFinestraRientro(stato) - scomponiTempo(stato.tempo).giorno === c.giorni;
   }
 }
 

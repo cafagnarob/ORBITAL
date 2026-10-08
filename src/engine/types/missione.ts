@@ -33,6 +33,7 @@ import type { EsitoMissione, RegistroColloquio, VoceDiario } from "./storia";
 import type { VoceLog } from "./log";
 import type { Nave } from "./nave";
 import type { Risorse } from "./risorse";
+import type { PianoMissione } from "./supermissione";
 import type { IstanzaTask, MinigiocoInAttesa } from "./task";
 
 /** In quale momento del ciclo di gioco ci troviamo (DESIGN §8). */
@@ -123,13 +124,18 @@ export interface StatoMissione {
    */
   minigioco: MinigiocoInAttesa | null;
   /**
-   * Il viaggio (v3.7): il minuto in cui la nave ha lasciato l'orbita di
-   * E-17 per tornare a casa, o null. La FASE (andata, orbita, rientro) si
+   * Il viaggio (v3.7): il minuto in cui la nave ha lasciato il bersaglio
+   * per tornare a casa, o null. La FASE (andata, orbita, rientro) si
    * calcola dal giorno e da questo valore (engine/storia/viaggio.ts).
    */
   partenza: Minuti | null;
   /** Gli obiettivi già raggiunti (e ricompensati), in ordine. */
   obiettiviCompletati: string[];
+  /**
+   * La supermissione di questa partita e la durata delle sue fasi (v3.8):
+   * le ha scelte il seed alla creazione (engine/storia/piano.ts).
+   */
+  missione: PianoMissione;
 
   /**
    * Contatore per creare nuovi ID ("task-1", "task-2"...).

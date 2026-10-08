@@ -109,4 +109,6 @@ export const CONTESTO_DI_PROVA: ContestoMissione = {
   catalogoModuli: {},
   // Storia emergente: finali e battute brevi, senza eventi narrativi.
   storia: STORIA_DI_PROVA,
+  // Nessuna supermissione: i test del motore non dipendono dal contenuto.
+  missioni: {},
 };

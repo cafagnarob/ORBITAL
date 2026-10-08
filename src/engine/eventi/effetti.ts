@@ -104,8 +104,10 @@ function applicaEffetto(bozza: StatoMissione, effetto: Effetto, ambito: Ambito, 
         bozza.vale.override = true;
         bozza.vale.tensione += BALANCE.vale.tensioneOverride;
         for (const testo of contesto.testiVale.override) {
-          // Le battute che iniziano con "Capitano:" sono del Capitano, le altre di V.A.L.E.
-          scriviLog(bozza, testo.startsWith("Capitano:") ? "SISTEMA" : "VALE", testo);
+          // Le battute che iniziano con "Capitano:" sono del Capitano (v3.9:
+          // fonte CAPITANO, senza il prefisso), le altre di V.A.L.E.
+          if (testo.startsWith("Capitano:")) scriviLog(bozza, "CAPITANO", testo.slice("Capitano:".length).trim());
+          else scriviLog(bozza, "VALE", testo);
         }
         // Con l'override anche le porte chiuse da V.A.L.E. si riaprono.
         if (sbloccaTutto(bozza)) scriviLog(bozza, "SISTEMA", "OVERRIDE · ACCESSI RIPRISTINATI");

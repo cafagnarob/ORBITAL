@@ -33,6 +33,7 @@
  */
 
 import type { Condizione, DefinizioneTask, IdDefinizioneTask, IdEvento } from "../engine/types";
+import { TASK_MISSIONI } from "./missioni";
 
 // --- Piccoli aiuti per leggere meglio le condizioni di sblocco --------------
 const dalGiorno = (giorno: number): Condizione => ({ tipo: "GIORNO_ALMENO", giorno });
@@ -41,10 +42,8 @@ const dopo = (task: IdDefinizioneTask, volte = 1): Condizione => ({ tipo: "TASK_
 const dopoEvento = (id: IdEvento, scelta: string | undefined, ore: number): Condizione =>
   scelta === undefined ? { tipo: "EVENTO_RECENTE", id, ore } : { tipo: "EVENTO_RECENTE", id, scelta, ore };
 
-/** Solo in orbita attorno a E-17 (v3.7): durante i viaggi il cratere non si vede. */
+/** Solo vicino al bersaglio (fase ORBITA): durante i viaggi non si può. */
 const IN_ORBITA: Condizione = { tipo: "FASE", fasi: ["ORBITA"] };
-/** I preparativi della scansione, che scadono (v3.7): validi per `ore`, annullati da una scansione fallita. */
-const valido = (task: IdDefinizioneTask, ore: number): Condizione => ({ tipo: "TASK_VALIDO", task, ore, invalidatoDa: "T-SCANSIONE-OBIETTIVO" });
 
 /**
  * Valori di default: ogni task li sovrascrive dove serve. Lo "spread"
@@ -115,24 +114,6 @@ const LISTA_TASK: DefinizioneTask[] = [
     tag: ["MANOVRA"],
     ricaricaOre: 12,
     resa: { sistema: { id: "NAVIGAZIONE", delta: 6 } },
-  },
-  {
-    ...BASE,
-    id: "T-SCANSIONE-CRATERE",
-    minigioco: { tipo: "RADAR", titolo: "Scansione del cratere", istruzioni: "Muovi lo scanner sul cratere, segui il segnale e aggancia il punto più intenso." },
-    nome: "Scansione orbitale del cratere",
-    categoria: "SCIENZA",
-    abilitaPrincipale: "SCIENZA",
-    abilitaSecondaria: "PILOTAGGIO",
-    durataBase: 150,
-    rischioBase: 25,
-    luogo: "LABORATORIO",
-    equipaggiamentoRichiesto: ["SENSORE_PROFONDO"],
-    costoRisorse: { energia: 4 },
-    costoFatica: 12,
-    sblocco: [IN_ORBITA],
-    tag: ["SCANSIONE", "CRATERE"],
-    ricaricaOre: 24,
   },
   {
     ...BASE,
@@ -230,31 +211,13 @@ const LISTA_TASK: DefinizioneTask[] = [
     costoFatica: 8,
     tag: ["ACQUA"],
     ricaricaOre: 24,
-    resa: { risorse: { acqua: 6 } },
+    // v3.9: la fonte d'acqua principale del viaggio (era 6).
+    resa: { risorse: { acqua: 10 } },
   },
 
   // ==========================================================================
   // A CATENA E PER GIORNO: la missione si apre
   // ==========================================================================
-  {
-    ...BASE,
-    id: "T-RICOGNIZIONE-DRONE",
-    minigioco: { tipo: "MANOVRA", titolo: "Pilotaggio del drone", istruzioni: "Guida il drone nel canyon: resta nel corridoio mentre il vento lo spinge." },
-    nome: "Ricognizione con drone",
-    categoria: "PILOTAGGIO",
-    abilitaPrincipale: "PILOTAGGIO",
-    abilitaSecondaria: "SCIENZA",
-    durataBase: 120,
-    rischioBase: 30,
-    luogo: "COMANDO",
-    equipaggiamentoRichiesto: ["DRONE_RICOGNIZIONE"],
-    costoRisorse: { energia: 5 },
-    costoFatica: 8,
-    tag: ["DRONE", "CRATERE"],
-    ricaricaOre: 24,
-    // Prima si guarda il cratere dall'orbita, poi si manda il drone.
-    sblocco: [IN_ORBITA, dopo("T-SCANSIONE-CRATERE")],
-  },
   {
     ...BASE,
     id: "T-ANALISI-SEGNALE",
@@ -288,7 +251,7 @@ const LISTA_TASK: DefinizioneTask[] = [
     costoFatica: 10,
     tag: ["OSSIGENO"],
     ricaricaOre: 24,
-    resa: { risorse: { ossigeno: 10 } },
+    resa: { risorse: { ossigeno: 12 } }, // v3.9: era 10
     // Si sa farla solo dopo aver messo le mani nel supporto vitale.
     sblocco: [dopo("T-MANUTENZIONE-SV")],
   },
@@ -307,7 +270,7 @@ const LISTA_TASK: DefinizioneTask[] = [
     costoFatica: 8,
     tag: ["CIBO"],
     ricaricaOre: 24,
-    resa: { risorse: { cibo: 6 } },
+    resa: { risorse: { cibo: 9 } }, // v3.9: era 6
     sblocco: [dalGiorno(2)],
   },
   {
@@ -416,25 +379,6 @@ const LISTA_TASK: DefinizioneTask[] = [
     ricaricaOre: 48,
     resa: { sistema: { id: "PROPULSIONE", delta: 10 } },
     sblocco: [dalGiorno(3)],
-  },
-  {
-    ...BASE,
-    id: "T-MAPPATURA",
-    minigioco: { tipo: "RADAR", titolo: "Punto di riferimento", istruzioni: "Cerca con lo scanner il punto di riferimento della mappa e aggancialo." },
-    nome: "Mappatura completa del cratere",
-    categoria: "SCIENZA",
-    abilitaPrincipale: "SCIENZA",
-    abilitaSecondaria: "PILOTAGGIO",
-    durataBase: 210,
-    rischioBase: 25,
-    luogo: "LABORATORIO",
-    equipaggiamentoRichiesto: ["SENSORE_PROFONDO"],
-    costoRisorse: { energia: 5 },
-    costoFatica: 15,
-    tag: ["CRATERE", "MAPPATURA"],
-    ricaricaOre: null, // una mappa si fa una volta
-    resa: { sistema: { id: "NAVIGAZIONE", delta: 12 } },
-    sblocco: [IN_ORBITA, dopo("T-SCANSIONE-CRATERE", 2), dalGiorno(3)],
   },
   {
     ...BASE,
@@ -649,77 +593,7 @@ const LISTA_TASK: DefinizioneTask[] = [
     sblocco: [{ tipo: "EVENTO_ACCADUTO", id: "V03" }],
   },
 
-  // ==========================================================================
-  // LA SCALETTA DELLA MISSIONE (v3.7): in orbita, per acquisire l'area
-  // d'interesse servono calibrazione (valida 24 h), traiettoria (12 h) e
-  // antenna riparata; poi la scansione, solo nella finestra 10:00–16:00.
-  // ==========================================================================
-  {
-    ...BASE,
-    id: "T-RIPARA-ANTENNA",
-    minigioco: { tipo: "TEMPISMO", titolo: "Saldatura dell'antenna", istruzioni: "Premi quando la torcia è sul giunto rotto: tre punti di saldatura sull'antenna del sensore." },
-    nome: "Riparazione dell'antenna del sensore",
-    categoria: "EVA",
-    abilitaPrincipale: "EVA",
-    abilitaSecondaria: "INGEGNERIA",
-    durataBase: 150,
-    rischioBase: 40,
-    luogo: "ESTERNO_NAVE",
-    equipaggiamentoRichiesto: ["TUTA_EVA_MK2", "KIT_RIPARAZIONE"],
-    costoRisorse: { energia: 3 },
-    costoFatica: 22,
-    tag: ["EVA", "RIPARAZIONE", "ANTENNA"],
-    ricaricaOre: null, // riparata una volta, resta riparata
-    resa: { sistema: { id: "SCIENZA", delta: 15 } },
-    sblocco: [IN_ORBITA],
-  },
-  {
-    ...BASE,
-    id: "T-SCANSIONE-OBIETTIVO",
-    minigioco: { tipo: "RADAR", titolo: "L'area d'interesse", istruzioni: "Muovi lo scanner profondo sul cratere e aggancia il punto da cui partono le anomalie." },
-    nome: "Scansione dell'area d'interesse",
-    categoria: "SCIENZA",
-    abilitaPrincipale: "SCIENZA",
-    abilitaSecondaria: "PILOTAGGIO",
-    durataBase: 180,
-    rischioBase: 35,
-    luogo: "LABORATORIO",
-    equipaggiamentoRichiesto: ["SENSORE_PROFONDO"],
-    costoRisorse: { energia: 6 },
-    costoFatica: 15,
-    tag: ["SCANSIONE", "CRATERE", "OBIETTIVO"],
-    ricaricaOre: null, // riuscita una volta, l'obiettivo è raggiunto
-    finestra: { da: 10, a: 16 },
-    sblocco: [
-      IN_ORBITA,
-      valido("T-RICALIBRAZIONE", 24),
-      valido("T-CORREZIONE-ORBITA", 12),
-      dopo("T-RIPARA-ANTENNA"),
-    ],
-  },
 
-  // ==========================================================================
-  // DI CONTORNO (v3.7)
-  // ==========================================================================
-  {
-    ...BASE,
-    id: "T-RECUPERO-SR9",
-    minigioco: { tipo: "MANOVRA", titolo: "Aggancio della sonda", istruzioni: "Guida il drone verso la sonda alla deriva: resta nel corridoio di avvicinamento." },
-    nome: "Recupero della sonda SR-9",
-    categoria: "PILOTAGGIO",
-    abilitaPrincipale: "PILOTAGGIO",
-    abilitaSecondaria: "INGEGNERIA",
-    durataBase: 150,
-    rischioBase: 35,
-    luogo: "COMANDO",
-    equipaggiamentoRichiesto: ["DRONE_RICOGNIZIONE"],
-    costoRisorse: { energia: 4, carburante: 1 },
-    costoFatica: 12,
-    tag: ["DRONE", "SR9"],
-    ricaricaOre: null,
-    bonus: true,
-    sblocco: [IN_ORBITA, dopo("T-SCANSIONE-CRATERE")],
-  },
 
   // ==========================================================================
   // LEGATI A V.A.L.E.
@@ -764,8 +638,8 @@ const LISTA_TASK: DefinizioneTask[] = [
 
 /** Il catalogo indicizzato per ID, come lo vuole il reducer. */
 export const CATALOGO_TASK: Readonly<Record<IdDefinizioneTask, DefinizioneTask>> = Object.fromEntries(
-  LISTA_TASK.map((t) => [t.id, t]),
+  [...LISTA_TASK, ...TASK_MISSIONI].map((t) => [t.id, t]),
 );
 
 /** La stessa lista in ordine, per mostrarla nei menu. */
-export const TASK_DISPONIBILI: readonly DefinizioneTask[] = LISTA_TASK;
+export const TASK_DISPONIBILI: readonly DefinizioneTask[] = [...LISTA_TASK, ...TASK_MISSIONI];

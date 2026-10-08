@@ -86,6 +86,9 @@ export function creaMissioneDiProva(seed = "E17-73A9"): StatoMissione {
   return {
     seed,
     rngState: hashSeed(seed),
+    // Il piano della partita (v3.8): una missione di prova (non nel
+    // catalogo: niente obiettivi) con le durate classiche 3 + 4 + 3.
+    missione: { id: "PROVA", durate: { andata: 3, orbita: 4, rientro: 3 } },
 
     tempo: 360, // Giorno 1, ore 06:00
     statoGioco: "PIANIFICAZIONE",
@@ -145,7 +148,7 @@ export function creaMissioneDiProva(seed = "E17-73A9"): StatoMissione {
     conoscenza: { scoperte: [] },
     eventi: { accaduti: [], inAttesa: null },
     terminale: { livello: 0, frammenti: [], segnalate: [], tentativi: [] },
-    vale: { direttiva: "D-NEUTRA", tensione: 0, override: false, affermazioni: [], contestazioni: [] },
+    vale: { direttiva: "D-NEUTRA", tensione: 0, tono: "CALMO", ultimaScusa: null, override: false, affermazioni: [], contestazioni: [] },
     log: [
       { tempo: 360, fonte: "VALE", testo: "Capitano. Sistemi nominali. In attesa di istruzioni.", codici: [] },
     ],

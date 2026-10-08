@@ -1,13 +1,14 @@
 /**
  * ============================================================================
- * eventiMissione.ts — Eventi della super-missione: arrivo, scaletta, viaggio
+ * eventiViaggio.ts — Gli imprevisti di viaggio, comuni a tutte le missioni
  * ============================================================================
  *
- * Riferimento design: DESIGN.md §14.6 (v3.7).
+ * Riferimento design: DESIGN.md §14.6 (v3.7), §14.7 (v3.8).
  *
- *   M-…   la scaletta della missione: l'arrivo in orbita (con l'antenna del
- *         sensore danneggiata dal viaggio), l'esito della scansione
- *         dell'area d'interesse, il recupero della sonda SR-9.
+ * Fino alla v3.7 si chiamava eventiMissione.ts e conteneva anche gli eventi
+ * della scaletta di E-17 (M-…): dalla v3.8 stanno in content/missioni/e17.ts,
+ * accanto a quelli delle altre supermissioni.
+ *
  *   VG…   gli IMPREVISTI DI VIAGGIO: compaiono ai cambi turno solo durante
  *         l'andata o il rientro, quando la nave è sola nello spazio
  *         profondo e la sopravvivenza è tutto.
@@ -16,103 +17,12 @@
 
 import type { Condizione, DefinizioneEvento } from "../engine/types";
 
-const MATTINA: Condizione = { tipo: "MOMENTO", momento: "RISVEGLIO" };
 const TURNO: Condizione = { tipo: "MOMENTO", momento: "TURNO" };
 const IN_VIAGGIO: Condizione = { tipo: "FASE", fasi: ["ANDATA", "RIENTRO"] };
-const riuscito = (tag: string): Condizione => ({ tipo: "TASK_CONCLUSO_ORA", tag, esitoAlmeno: "SUCCESSO_PARZIALE" });
-const fallito = (tag: string): Condizione => ({ tipo: "TASK_CONCLUSO_ORA", tag, esitoAlPiu: "FALLIMENTO" });
 /** Non di nuovo entro `ore` ore (per gli imprevisti che possono ripetersi). */
 const nonDiRecente = (id: string, ore: number): Condizione => ({ tipo: "NON", condizione: { tipo: "EVENTO_RECENTE", id, ore } });
 
-export const EVENTI_MISSIONE: DefinizioneEvento[] = [
-  // ==========================================================================
-  // LA SCALETTA
-  // ==========================================================================
-  {
-    id: "M-ARRIVO",
-    titolo: "In orbita attorno a E-17",
-    categoria: "NARRATIVO",
-    priorita: "CRITICO",
-    unaVolta: true,
-    probabilita: 1,
-    peso: 1,
-    condizioni: [MATTINA, { tipo: "FASE", fasi: ["ORBITA"] }],
-    fonte: "SISTEMA",
-    testo: "SENSORE PRINCIPALE · ANTENNA ESTERNA DANNEGGIATA DURANTE IL VIAGGIO · RIPARAZIONE EVA NECESSARIA",
-    codici: [],
-    diario: "Siamo in orbita attorno a E-17. Il cratere è laggiù, ma l'antenna del sensore è rotta.",
-    effetti: [
-      { tipo: "LOG", fonte: "VALE", testo: "Capitano. Per acquisire l'area d'interesse servono sensori calibrati, traiettoria corretta e l'antenna riparata." },
-    ],
-    scelte: [],
-  },
-  {
-    id: "M-OBIETTIVO",
-    titolo: "Area d'interesse acquisita",
-    categoria: "SCIENTIFICO",
-    priorita: "CRITICO",
-    unaVolta: true,
-    probabilita: 1,
-    peso: 1,
-    condizioni: [riuscito("OBIETTIVO")],
-    fonte: "SISTEMA",
-    testo: "SCAN.PROFONDO · AREA D'INTERESSE ACQUISITA · SORGENTE EM PUNTIFORME · 1.42 GHz · PROTOCOLLO VL-P7-04",
-    codici: ["VL-P7-04"],
-    diario: "Abbiamo acquisito l'area d'interesse. Da quel punto parte un segnale.",
-    effetti: [
-      { tipo: "SCOPERTA", id: "AREA_ACQUISITA" },
-      { tipo: "SCOPERTA", id: "SEGNALE_RILEVATO" },
-    ],
-    scelte: [],
-  },
-  {
-    id: "M-OBIETTIVO-X",
-    titolo: "Acquisizione fallita",
-    categoria: "SISTEMA",
-    priorita: "CRITICO",
-    unaVolta: false,
-    probabilita: 1,
-    peso: 1,
-    condizioni: [fallito("OBIETTIVO")],
-    fonte: "SISTEMA",
-    testo: "SCAN.PROFONDO · ACQUISIZIONE FALLITA · DERIVA ORBITALE 0,4° · TRAIETTORIA E CALIBRAZIONE DA RIPETERE",
-    codici: [],
-    diario: "La scansione è fallita e la nave è derivata. Si ricomincia: traiettoria e calibrazione.",
-    effetti: [],
-    scelte: [],
-  },
-  {
-    id: "M-SR9",
-    titolo: "Il registro della SR-9",
-    categoria: "ESPLORAZIONE",
-    priorita: "IMPORTANTE",
-    unaVolta: true,
-    probabilita: 1,
-    peso: 1,
-    condizioni: [riuscito("SR9")],
-    fonte: "SISTEMA",
-    testo: "SR-9 · ULTIMO PACCHETTO · RICHIESTA DI HANDSHAKE · ORIGINE: SUPERFICIE · PROTOCOLLO VL-P7-04",
-    codici: ["VL-P7-04"],
-    diario: "La SR-9 non si è guastata: qualcosa, dalla superficie, le ha chiesto di identificarsi.",
-    effetti: [{ tipo: "SCOPERTA", id: "REGISTRO_SR9" }, { tipo: "FIDUCIA", delta: -2 }],
-    scelte: [],
-  },
-  {
-    id: "M-SR9-X",
-    titolo: "La sonda sfugge",
-    categoria: "ESPLORAZIONE",
-    priorita: "IMPORTANTE",
-    unaVolta: false,
-    probabilita: 1,
-    peso: 1,
-    condizioni: [fallito("SR9")],
-    fonte: "SISTEMA",
-    testo: "DRONE · AGGANCIO FALLITO · URTO CON LA SONDA · BRACCIO DANNEGGIATO",
-    codici: [],
-    effetti: [{ tipo: "SISTEMA", sistema: "OPERAZIONI_ESTERNE", delta: -10 }],
-    scelte: [],
-  },
-
+export const EVENTI_VIAGGIO: DefinizioneEvento[] = [
   // ==========================================================================
   // IMPREVISTI DI VIAGGIO (andata e rientro)
   // ==========================================================================

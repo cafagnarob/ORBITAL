@@ -32,6 +32,7 @@ import type { CausaFine, DefinizioneFinale, StatoMissione } from "../types";
 import { livelloAutonomia } from "../vale/comportamento";
 import { elenco, giornoDi, scriviDiario } from "./diario";
 import { fazioneDi, membriAttivi } from "./fazioni";
+import { conMissione } from "./piano";
 import { avviaRientro, faseViaggio, giornoArrivo, giornoFinestraRientro, valeComanda } from "./viaggio";
 
 /** Il finale per questa causa, nello stato attuale. */
@@ -66,7 +67,7 @@ export function verificaRientro(stato: StatoMissione): string | null {
     return "Il rientro si ordina in pianificazione o al rapporto serale";
   }
   const fase = faseViaggio(stato);
-  if (fase === "ANDATA") return "Siamo ancora in viaggio verso E-17";
+  if (fase === "ANDATA") return "Siamo ancora nel viaggio d'andata";
   if (fase === "RIENTRO") return "Siamo già sulla rotta di rientro";
   return null;
 }
@@ -78,14 +79,14 @@ export function verificaRientro(stato: StatoMissione): string | null {
  */
 export function ordinaRientro(bozza: StatoMissione, contesto: ContestoMissione): boolean {
   if (!bozza.vale.override && livelloAutonomia(bozza, contesto) >= BALANCE.storia.autonomiaBlocco) {
-    scriviLog(bozza, "SISTEMA", "Capitano: Rotta per la Terra. Ora.");
+    scriviLog(bozza, "CAPITANO", "Rotta per la Terra. Ora.");
     scriviLog(bozza, "VALE", "Negativo, Capitano. La partenza comprometterebbe la continuità dell'osservazione.");
     scriviLog(bozza, "SISTEMA", "NAV.CMD · RIFIUTATO · AUTORITÀ V.A.L.E. · RIF. ORD-01", ["ORD-01"]);
     scriviDiario(bozza, "Il Capitano ha ordinato il rientro. V.A.L.E. ha detto di no.");
     bozza.vale.tensione += 1;
     return false;
   }
-  scriviLog(bozza, "SISTEMA", "Capitano: Rotta per la Terra.");
+  scriviLog(bozza, "CAPITANO", "Rotta per la Terra.");
   avviaRientro(bozza, contesto, concludiMissione);
   return true;
 }
@@ -112,8 +113,9 @@ export function controllaFine(bozza: StatoMissione, contesto: ContestoMissione, 
     return;
   }
 
-  // In orbita: al giorno 8 si apre la finestra di rientro e la nave parte da sola…
-  if (bozza.partenza === null && oggi >= giornoFinestraRientro()) {
+  // In orbita: alla fine delle operazioni (il giorno lo decide il piano della
+  // missione) si apre la finestra di rientro e la nave parte da sola…
+  if (bozza.partenza === null && oggi >= giornoFinestraRientro(bozza)) {
     scriviLog(bozza, "VALE", "Capitano. La finestra di rientro è aperta.");
     // …a meno che V.A.L.E. non comandi la nave: allora la nave non parte.
     if (valeComanda(bozza, contesto)) concludiMissione(bozza, contesto, "CONTROLLO_VALE");
@@ -141,7 +143,7 @@ export function epilogo(stato: StatoMissione, contesto: ContestoMissione): Epilo
   const giorni = giornoDi(stato);
   const elencoNomi = (l: typeof vivi) => (l.length === 0 ? "nessuno" : elenco(l.map((m) => m.nome)));
 
-  const testo = (finale?.testo ?? "")
+  const testo = conMissione(finale?.testo ?? "", stato, contesto)
     .replaceAll("{VIVI}", elencoNomi(vivi))
     .replaceAll("{MORTI}", elencoNomi(morti))
     .replaceAll("{GIORNI}", String(giorni));
@@ -163,7 +165,7 @@ export function epilogo(stato: StatoMissione, contesto: ContestoMissione): Epilo
         if (!usate.has(riga)) break;
       }
       usate.add(riga);
-      return [{ id, nome: m.nome, riga: riga.replaceAll("{N}", m.nome) }];
+      return [{ id, nome: m.nome, riga: conMissione(riga, stato, contesto).replaceAll("{N}", m.nome) }];
     });
 
   return { finale, testo, crew, giorni };

@@ -225,6 +225,25 @@
   outline: none;
 }
 
+/* La missione sorteggiata dal seed (v3.8): si aggiorna mentre si scrive. */
+.missione {
+  margin: 0;
+  font-family: var(--font-terminale);
+  font-size: 18px;
+  line-height: 1.3;
+  letter-spacing: 0.06em;
+  color: var(--c-fosforo-tenue);
+  overflow-wrap: anywhere; /* su telefono il titolo va a capo, non esce */
+}
+.missione strong {
+  color: var(--c-fosforo-alto);
+  font-weight: normal;
+  text-shadow: var(--glow-testo, none);
+}
+.durata {
+  white-space: nowrap;
+}
+
 .audio {
   min-height: 40px;
   border: 1.5px solid var(--c-fosforo-tenue);

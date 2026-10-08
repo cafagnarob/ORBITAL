@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * scoperte.ts — Catalogo delle scoperte possibili su E-17 (vertical slice)
+ * scoperte.ts — Catalogo delle scoperte possibili (tutte le supermissioni)
  * ============================================================================
  *
  * Il motore conosce solo gli ID ("SEGNALE_RILEVATO"); qui ci sono titolo e
@@ -21,7 +21,7 @@ export interface DefinizioneScoperta {
 export const CATALOGO_SCOPERTE: Readonly<Record<IdScoperta, DefinizioneScoperta>> = {
   SEGNALE_RILEVATO: {
     titolo: "Segnale artificiale",
-    descrizione: "Un segnale a bassa potenza proveniente dall'emisfero nord. Origine sconosciuta.",
+    descrizione: "Un segnale a bassa potenza, a 1,42 GHz, che viene dal bersaglio della missione. Origine sconosciuta.",
   },
   SEGNALE_DIREZIONE: {
     titolo: "Direzione del segnale",
@@ -41,7 +41,7 @@ export const CATALOGO_SCOPERTE: Readonly<Record<IdScoperta, DefinizioneScoperta>
   },
   SEGNALE_SORGENTE: {
     titolo: "Sorgente localizzata",
-    descrizione: "Cratere Settentrionale, settore 7. Circa quaranta metri sotto la superficie.",
+    descrizione: "Il punto esatto da cui parte il segnale. Ovunque sia, risponde allo stesso protocollo di V.A.L.E.",
   },
   GEOMETRIA_REGOLARE: {
     titolo: "Geometria regolare",
@@ -75,6 +75,27 @@ export const CATALOGO_SCOPERTE: Readonly<Record<IdScoperta, DefinizioneScoperta>
   REGISTRO_SR9: {
     titolo: "Il registro della SR-9",
     descrizione: "L'ultimo pacchetto della sonda: una richiesta di contatto da un'origine sconosciuta, poi il silenzio.",
+  },
+  // --- Le supermissioni (v3.8) -------------------------------------------------
+  OBIETTIVO_PRIMARIO: {
+    titolo: "Obiettivo primario conseguito",
+    descrizione: "Quello per cui l'agenzia ci ha mandati è a bordo. Ora bisogna riportarlo a casa.",
+  },
+  SCATOLA_ARGO: {
+    titolo: "La scatola nera di Argo-3",
+    descrizione: "Quaranta giorni di registri della stazione. L'ultimo pacchetto è a 1,42 GHz.",
+  },
+  CAROTA_HK7: {
+    titolo: "Il nucleo di HK-7",
+    descrizione: "Tre metri di carota. Quando l'abbiamo toccata, i ricevitori hanno fischiato.",
+  },
+  PENETRATORE_HALVOR: {
+    titolo: "Il penetratore nel nucleo di Halvor",
+    descrizione: "Trasmette da quaranta metri sotto il ghiaccio. Sotto di lui, qualcosa batte.",
+  },
+  NUCLEO_KESTREL: {
+    titolo: "Il nucleo della Kestrel-4",
+    descrizione: "La memoria del prototipo di V.A.L.E. È ancora accesa, e trasmette.",
   },
   // --- Storia emergente (v3.0) ------------------------------------------------
   BLOCCO_VALE: {

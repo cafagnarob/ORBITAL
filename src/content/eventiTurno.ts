@@ -366,20 +366,21 @@ export const EVENTI_TURNO: DefinizioneEvento[] = [
     peso: 2,
     condizioni: [TURNO, dalGiorno(4)],
     fonte: "CREW",
-    testo: "«Nave senza nome a ORB-1. Abbiamo carburante. Vogliamo i vostri dati su E-17, o acqua.»",
+    testo: "«Nave senza nome a ORB-1. Abbiamo carburante. Vogliamo i vostri dati di missione, o acqua.»",
     codici: [],
     effetti: [],
     scelte: [
       {
         id: "DATI",
-        etichetta: "Vendi i dati delle scansioni",
-        requisiti: [{ tipo: "TASK_COMPLETATO", task: "T-SCANSIONE-CRATERE" }],
+        etichetta: "Vendi i dati della missione",
+        // v3.8: i dati ci sono quando l'obiettivo principale è conseguito, in ogni missione.
+        requisiti: [{ tipo: "SCOPERTA", id: "OBIETTIVO_PRIMARIO" }],
         effetti: [
           { tipo: "RISORSA", risorsa: "carburante", delta: 7 },
           { tipo: "TENSIONE", delta: 2 },
           { tipo: "LOG", fonte: "VALE", testo: "Capitano. Quei dati erano classificati. Ho registrato la cessione." },
         ],
-        diario: "Abbiamo venduto i dati di E-17 ai contrabbandieri. V.A.L.E. non ha gradito.",
+        diario: "Abbiamo venduto i dati della missione ai contrabbandieri. V.A.L.E. non ha gradito.",
       },
       {
         id: "ACQUA",
@@ -587,8 +588,9 @@ export const EVENTI_TURNO: DefinizioneEvento[] = [
     unaVolta: true,
     probabilita: 0.05,
     peso: 2,
-    // v3.7.1: la cometa «sfiora E-17» → succede solo quando siamo in orbita.
-    condizioni: [TURNO, { tipo: "FASE", fasi: ["ORBITA"] }],
+    // v3.7.1: la cometa «sfiora E-17» → succede solo quando siamo in orbita,
+    // e (v3.8) solo nella missione su E-17.
+    condizioni: [TURNO, { tipo: "FASE", fasi: ["ORBITA"] }, { tipo: "MISSIONE", missioni: ["E17"] }],
     fonte: "VALE",
     testo: "Capitano. Una piccola cometa sfiora E-17. La coda è ghiaccio d'acqua: resterà raggiungibile per dieci ore.",
     codici: [],
@@ -801,7 +803,7 @@ export const EVENTI_TURNO: DefinizioneEvento[] = [
     fonte: "CREW",
     testo: "«Cristalli che non conosco. Risuonano a 1,42 gigahertz. Come il segnale.»",
     codici: [],
-    diario: "Nel meteorite c'erano cristalli che risuonano come il segnale di E-17.",
+    diario: "Nel meteorite c'erano cristalli che risuonano come il nostro segnale.",
     effetti: [{ tipo: "SISTEMA", sistema: "SCIENZA", delta: 12 }, { tipo: "FIDUCIA", delta: -2 }],
     scelte: [],
   },

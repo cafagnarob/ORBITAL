@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * VistaOrbita.tsx — E-17 in orbita: globo wireframe, schede dati, aggancio
+ * VistaOrbita.tsx — Sul posto: il bersaglio, le schede dati, l'aggancio
  * ============================================================================
  *
  * Riferimento grafico: il secondo video di Roberto (globo che ruota, schede
@@ -33,14 +33,20 @@
  *                 testo ("ACQUISIZIONE IN CORSO");
  *   ACQUISITA     il mirino resta fisso sul cratere: obiettivo raggiunto.
  *
- * I dati delle schede sono la CONOSCENZA del pianeta (content/pianeti/e17),
- * mai la verità nascosta.
+ * I dati delle schede sono la CONOSCENZA del bersaglio (DefinizioneMissione
+ * .dati, per E-17 da content/pianeti/e17), mai la verità nascosta.
+ *
+ * v3.8 · SUPERMISSIONI: il bersaglio può essere un pianeta (il globo che
+ * ruota, come prima) o una stazione, un asteroide, una cometa, un relitto
+ * (SagomaBersaglio). Il punto d'interesse e le schede cambiano di
+ * conseguenza; anelli, fascio e mirino restano gli stessi per tutti.
  * ============================================================================
  */
 
 import { useId, type CSSProperties } from "react";
-import { E17_NOTO } from "../../../content/pianeti/e17";
-import { numeriDalSeed, type ModoOrbita } from "./derivati";
+import type { DefinizioneMissione } from "../../../engine/types";
+import { numeriDalSeed, puntoInteresse, rigaCoordinate, type ModoOrbita } from "./derivati";
+import { SagomaBersaglio } from "./SagomaBersaglio";
 import stili from "./VistaOrbita.module.css";
 
 // ----------------------------------------------------------------------------
@@ -95,24 +101,20 @@ const ALTA: Disposizione = {
   ],
 };
 
-/** Solo la prima parte di un valore lungo: "SOTTILE · NON RESPIRABILE" → "SOTTILE". */
-const breve = (v: string) => v.split(" · ")[0] ?? v;
+type Righe = readonly (readonly [string, string])[];
 
-const RIGHE: Record<IdScheda, readonly (readonly [string, string])[]> = {
-  a: [
-    ["ATMOSFERA", breve(E17_NOTO.atmosfera)],
-    ["TEMP.", E17_NOTO.temperatura],
-  ],
-  b: [
-    ["RADIAZIONI", E17_NOTO.radiazioni],
-    ["GRAVITÀ", E17_NOTO.gravita],
-  ],
-  c: [["SPETTRO", ""]],
-  d: [
-    ["BIOLOGIA", E17_NOTO.biologia],
-    ["VENTO", E17_NOTO.vento],
-  ],
-};
+/**
+ * Le righe di ogni scheda: a, b e d dai tre gruppi di dati della missione,
+ * c è lo spettro (barre animate).
+ */
+function righeSchede(dati: DefinizioneMissione["dati"]): Record<IdScheda, Righe> {
+  return {
+    a: dati[0] ?? [],
+    b: dati[1] ?? [],
+    c: [["SPETTRO", ""]],
+    d: dati[2] ?? [],
+  };
+}
 
 const PARALLELI = [-0.72, -0.4, 0, 0.4, 0.72];
 const MERIDIANI = 6;
@@ -123,32 +125,42 @@ const GIRO = 18;
 // LA VISTA
 // ----------------------------------------------------------------------------
 
-export function VistaOrbita({ modo, seed }: { modo: ModoOrbita; seed: string }) {
+export function VistaOrbita({ modo, seed, missione }: { modo: ModoOrbita; seed: string; missione: DefinizioneMissione }) {
   const testoModo =
     modo === "ACQUISIZIONE"
       ? "▲ ACQUISIZIONE IN CORSO"
       : modo === "ACQUISITA"
-        ? "✓ AREA D'INTERESSE ACQUISITA"
-        : "CRATERE SETTENTRIONALE · IN VISTA";
+        ? "✓ OBIETTIVO CONSEGUITO"
+        : `${missione.bersaglio.puntoInteresse} · IN VISTA`;
 
   return (
-    <div className={`${stili.vista} ${stili[modo.toLowerCase()]}`} role="img" aria-label={`Pianeta E-17 in orbita. ${testoModo}.`}>
-      <Scena d={LARGA} seed={seed} testoModo={testoModo} />
-      <Scena d={ALTA} seed={seed} testoModo={testoModo} />
+    <div className={`${stili.vista} ${stili[modo.toLowerCase()]}`} role="img" aria-label={`${missione.nome}, sul posto. ${testoModo}.`}>
+      <Scena d={LARGA} seed={seed} testoModo={testoModo} missione={missione} />
+      <Scena d={ALTA} seed={seed} testoModo={testoModo} missione={missione} />
     </div>
   );
 }
 
-/** Una disposizione della scena: globo, orbita, schede, anelli, testi. */
-function Scena({ d, seed, testoModo }: { d: Disposizione; seed: string; testoModo: string }) {
+interface PropsScena {
+  d: Disposizione;
+  seed: string;
+  testoModo: string;
+  missione: DefinizioneMissione;
+}
+
+/** Una disposizione della scena: bersaglio, orbita, schede, anelli, testi. */
+function Scena({ d, seed, testoModo, missione }: PropsScena) {
   // Un id unico per il clipPath: con più scene nella stessa pagina un id
   // fisso farebbe usare a tutte il ritaglio della prima. useId dà valori
   // tipo «r1» o :r1:, che in url(#…) non sono validi: si puliscono.
   const idClip = `clip-globo-${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
   const barre = numeriDalSeed(seed, 7, 100);
   const { cx, cy, r } = d;
-  // Il Cratere Settentrionale: in alto a destra del centro.
-  const cratere = { x: cx + r * 0.37, y: cy - r * 0.5 };
+  const forma = missione.bersaglio.forma;
+  const righe = righeSchede(missione.dati);
+  // Il punto d'interesse (cratere, boccaporto, nucleo…): dipende dalla forma.
+  const p = puntoInteresse(forma);
+  const cratere = { x: cx + r * p.kx, y: cy + r * p.ky };
   // Dove le linee delle schede toccano il globo (a 45° nei quattro quadranti).
   const tocca = (id: IdScheda) => {
     const sx = id === "a" || id === "c" ? -1 : 1;
@@ -172,30 +184,40 @@ function Scena({ d, seed, testoModo }: { d: Disposizione; seed: string; testoMod
           <ellipse className={stili.orbita} cx={cx} cy={cy} rx={d.orbita.rx} ry={d.orbita.ry} />
         </g>
 
-        {/* Il globo */}
-        <circle className={stili.disco} cx={cx} cy={cy} r={r} />
-        <g className={stili.reticolo} clipPath={`url(#${idClip})`}>
-          {PARALLELI.map((k) => {
-            const rx = r * Math.sqrt(1 - k * k);
-            return <ellipse key={k} cx={cx} cy={cy + k * r} rx={rx} ry={rx * 0.16} />;
-          })}
-          {Array.from({ length: MERIDIANI }, (_, i) => (
-            <ellipse
-              key={i}
-              className={stili.meridiano}
-              cx={cx}
-              cy={cy}
-              rx={r}
-              ry={r}
-              style={{ animationDelay: `${-(i * GIRO) / MERIDIANI}s` } as CSSProperties}
-            />
-          ))}
-          {/* Crateri minori: dettagli fissi della superficie. */}
-          <ellipse className={stili.crateri} cx={cx - r * 0.35} cy={cy + r * 0.25} rx={7 * s} ry={4 * s} />
-          <ellipse className={stili.crateri} cx={cx + r * 0.1} cy={cy + r * 0.56} rx={5 * s} ry={2.6 * s} />
-          <ellipse className={stili.crateri} cx={cx - r * 0.54} cy={cy - r * 0.25} rx={4 * s} ry={2.4 * s} />
-        </g>
-        <circle className={stili.bordo} cx={cx} cy={cy} r={r} />
+        {/* Il bersaglio: un globo che ruota, oppure la sua sagoma (v3.8). */}
+        {forma === "PIANETA" ? (
+          <>
+            <circle className={stili.disco} cx={cx} cy={cy} r={r} />
+            <g className={stili.reticolo} clipPath={`url(#${idClip})`}>
+              {PARALLELI.map((k) => {
+                const rx = r * Math.sqrt(1 - k * k);
+                return <ellipse key={k} cx={cx} cy={cy + k * r} rx={rx} ry={rx * 0.16} />;
+              })}
+              {Array.from({ length: MERIDIANI }, (_, i) => (
+                <ellipse
+                  key={i}
+                  className={stili.meridiano}
+                  cx={cx}
+                  cy={cy}
+                  rx={r}
+                  ry={r}
+                  style={
+                    {
+                      animationDelay: `${-(i * GIRO) / MERIDIANI}s`,
+                    } as CSSProperties
+                  }
+                />
+              ))}
+              {/* Crateri minori: dettagli fissi della superficie. */}
+              <ellipse className={stili.crateri} cx={cx - r * 0.35} cy={cy + r * 0.25} rx={7 * s} ry={4 * s} />
+              <ellipse className={stili.crateri} cx={cx + r * 0.1} cy={cy + r * 0.56} rx={5 * s} ry={2.6 * s} />
+              <ellipse className={stili.crateri} cx={cx - r * 0.54} cy={cy - r * 0.25} rx={4 * s} ry={2.4 * s} />
+            </g>
+            <circle className={stili.bordo} cx={cx} cy={cy} r={r} />
+          </>
+        ) : (
+          <SagomaBersaglio forma={forma} cx={cx} cy={cy} r={r * 0.85} />
+        )}
 
         {/* La metà davanti dell'orbita, sopra il globo. */}
         <g transform={`rotate(-10 ${cx} ${cy})`}>
@@ -205,7 +227,7 @@ function Scena({ d, seed, testoModo }: { d: Disposizione; seed: string; testoMod
           />
         </g>
 
-        {/* Il bersaglio: il Cratere Settentrionale. */}
+        {/* Il punto d'interesse (il cratere di E-17, il boccaporto di Argo-3…). */}
         <circle className={stili.bersaglio} cx={cratere.x} cy={cratere.y} r={3.5 * s} />
         <circle className={stili.impulso} cx={cratere.x} cy={cratere.y} r={3.5 * s} />
 
@@ -240,7 +262,7 @@ function Scena({ d, seed, testoModo }: { d: Disposizione; seed: string; testoMod
       {/* --- Schede dei dati (HTML: testo sempre leggibile) ------------------- */}
       {d.schede.map(({ id }) => (
         <dl key={id} className={`${stili.scheda} ${stili[`scheda_${id}`]}`} aria-hidden="true">
-          {RIGHE[id].map(([k, v]) => (
+          {righe[id].map(([k, v]) => (
             <div key={k}>
               <dt>{k}</dt>
               {v && <dd>{v}</dd>}
@@ -249,7 +271,13 @@ function Scena({ d, seed, testoModo }: { d: Disposizione; seed: string; testoMod
           {id === "c" && (
             <div className={stili.spettro}>
               {barre.map((b, i) => (
-                <span key={i} style={{ height: `${25 + (b * 75) / 100}%`, animationDelay: `${i * 0.12}s` }} />
+                <span
+                  key={i}
+                  style={{
+                    height: `${25 + (b * 75) / 100}%`,
+                    animationDelay: `${i * 0.12}s`,
+                  }}
+                />
               ))}
             </div>
           )}
@@ -258,7 +286,7 @@ function Scena({ d, seed, testoModo }: { d: Disposizione; seed: string; testoMod
 
       <p className={stili.modo}>{testoModo}</p>
       <p className={stili.coordinate} aria-hidden="true">
-        LAT 71.4°N · LON 012.8°E · QUOTA 412 km
+        {rigaCoordinate(forma, seed)}
       </p>
     </div>
   );
